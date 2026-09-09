@@ -8,14 +8,13 @@ export default function AppServiceWorker() {
     // 1. Initialize offline feedback auto-sync on mount
     initOfflineQueueAutoSync();
 
-    // 2. In development mode, unregister any service worker and wipe caches so dev changes are never stale
+    // 2. In development or local testing, unregister service worker and clear caches to prevent stale bundles
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      if (process.env.NODE_ENV === 'development') {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for (const reg of registrations) {
-            reg.unregister();
-          }
-        });
+      const isLocalhost =
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1';
+
+      if (process.env.NODE_ENV === 'development' || isLocalhost) {
         if ('caches' in window) {
           caches.keys().then((keys) => {
             for (const key of keys) {
@@ -23,6 +22,11 @@ export default function AppServiceWorker() {
             }
           });
         }
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const reg of registrations) {
+            reg.unregister();
+          }
+        });
         return;
       }
 
@@ -34,7 +38,6 @@ export default function AppServiceWorker() {
             console.log('[SW] ServiceWorker registered with scope:', registration.scope);
           })
           .catch((err) => {
-            // Non-fatal if service workers are disabled
             console.debug('[SW] Registration notice:', err);
           });
       });

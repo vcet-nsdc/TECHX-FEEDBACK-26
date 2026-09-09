@@ -12,8 +12,10 @@ import {
 } from '@/lib/expeditionData';
 import ProductObservationModal from './ProductObservationModal';
 import { CheckpointIcon } from './RusticIcons';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { enqueueSubmission, fetchWithTimeout } from '@/lib/offline-queue';
+import PixelNathanDrake, { NathanAnimationState } from './uncharted/PixelNathanDrake';
+import VolumeControl from './VolumeControl';
 
 const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 
@@ -69,6 +71,80 @@ interface LabMapViewProps {
   userEmail?: string;
 }
 
+// Helper: calculate smooth spline intermediate keyframes between two product checkpoints
+function getSplinePathBetweenNodes(
+  products: CheckpointNode[],
+  fromIdx: number,
+  toIdx: number,
+  stepsPerSegment: number = 20
+): { x: string[]; y: string[] } {
+  if (products.length < 2 || fromIdx === toIdx) {
+    const pt = products[toIdx] || products[0];
+    return { x: [`${pt.x}%`], y: [`${pt.y}%`] };
+  }
+
+  const tension = 0.68;
+  const n = products.length;
+
+  const tangents = products.map((p, i) => {
+    if (i === 0) {
+      return {
+        x: (products[1].x - p.x) * tension,
+        y: (products[1].y - p.y) * tension,
+      };
+    }
+    if (i === n - 1) {
+      return {
+        x: (p.x - products[n - 2].x) * tension,
+        y: (p.y - products[n - 2].y) * tension,
+      };
+    }
+    return {
+      x: ((products[i + 1].x - products[i - 1].x) / 2) * tension,
+      y: ((products[i + 1].y - products[i - 1].y) / 2) * tension,
+    };
+  });
+
+  const kfX: string[] = [];
+  const kfY: string[] = [];
+
+  const stepDir = toIdx > fromIdx ? 1 : -1;
+  const segCount = Math.abs(toIdx - fromIdx);
+
+  for (let sIdx = 0; sIdx < segCount; sIdx++) {
+    const i1 = fromIdx + sIdx * stepDir;
+    const i2 = i1 + stepDir;
+    const p1 = products[i1];
+    const p2 = products[i2];
+    const t1 = tangents[i1];
+    const t2 = tangents[i2];
+
+    const cp1 =
+      stepDir > 0
+        ? { x: p1.x + t1.x, y: p1.y + t1.y }
+        : { x: p1.x - t1.x, y: p1.y - t1.y };
+    const cp2 =
+      stepDir > 0
+        ? { x: p2.x - t2.x, y: p2.y - t2.y }
+        : { x: p2.x + t2.x, y: p2.y + t2.y };
+
+    for (let s = sIdx === 0 ? 0 : 1; s <= stepsPerSegment; s++) {
+      const t = s / stepsPerSegment;
+      const u = 1 - t;
+      const tt = t * t;
+      const uu = u * u;
+      const uuu = uu * u;
+      const ttt = tt * t;
+      const curX = uuu * p1.x + 3 * uu * t * cp1.x + 3 * u * tt * cp2.x + ttt * p2.x;
+      const curY = uuu * p1.y + 3 * uu * t * cp1.y + 3 * u * tt * cp2.y + ttt * p2.y;
+      kfX.push(`${curX.toFixed(2)}%`);
+      kfY.push(`${curY.toFixed(2)}%`);
+    }
+  }
+
+  return { x: kfX, y: kfY };
+}
+
 export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapViewProps) {
   const router = useRouter();
   const { user } = useUser();
@@ -108,6 +184,45 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
   );
   const [activeModalProduct, setActiveModalProduct] = useState<CheckpointNode | null>(null);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+
+  // Miniature Nathan Drake Map Explorer State
+  const activeNathanNode = selectedProduct || products[0];
+  const [nathanState, setNathanState] = useState<NathanAnimationState>('idle');
+  const [nathanFacing, setNathanFacing] = useState<'right' | 'left'>('right');
+  const [journeyKeyframes, setJourneyKeyframes] = useState<{ x: string[]; y: string[] } | null>(null);
+
+  const navigateToProduct = useCallback(
+    (targetProduct: CheckpointNode) => {
+      if (!selectedProduct || selectedProduct.id === targetProduct.id) {
+        setSelectedProduct(targetProduct);
+        return;
+      }
+
+      const fromIdx = products.findIndex((p) => p.id === selectedProduct.id);
+      const toIdx = products.findIndex((p) => p.id === targetProduct.id);
+
+      if (fromIdx !== -1 && toIdx !== -1) {
+        const kf = getSplinePathBetweenNodes(products, fromIdx, toIdx, 18);
+        setNathanFacing(targetProduct.x >= selectedProduct.x ? 'right' : 'left');
+        setNathanState('run');
+        setJourneyKeyframes(kf);
+        setSelectedProduct(targetProduct);
+
+        setTimeout(() => {
+          setJourneyKeyframes(null);
+          setNathanState('idle');
+        }, 1300);
+      } else {
+        setSelectedProduct(targetProduct);
+      }
+    },
+    [products, selectedProduct]
+  );
+
+  const handleNathanArrival = () => {
+    setJourneyKeyframes(null);
+    setNathanState('idle');
+  };
 
   // Dynamic Map Container Size & Node Coordinates
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -227,6 +342,18 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
 
     setSubmittedIds(updated);
     setActiveModalProduct(null);
+
+    // Automatically run Nathan Drake along the trail to the next product after review submission
+    const currentIndex = products.findIndex((p) => p.id === productId);
+    if (currentIndex !== -1) {
+      const nextUnsubmitted = products.slice(currentIndex + 1).find((p) => !updated.includes(p.id));
+      const nextProduct = nextUnsubmitted || (currentIndex < products.length - 1 ? products[currentIndex + 1] : null);
+      if (nextProduct) {
+        setTimeout(() => {
+          navigateToProduct(nextProduct);
+        }, 120);
+      }
+    }
   };
 
   const completedCount = products.filter((p) => submittedIds.includes(p.id)).length;
@@ -415,8 +542,8 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
           </div>
         </div>
 
-        {/* View Switcher & Relics Counter */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* View Switcher & Volume Control */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           <div className="flex p-0.5 rounded bg-[#0d0704] border border-[#52351e]">
             <button
               onClick={() => setViewMode('map')}
@@ -440,19 +567,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
             </button>
           </div>
 
-          <div className="text-right pl-2 border-l border-[#4d321d]/60 flex items-center gap-1.5">
-            <div>
-              <span className="block text-[7px] sm:text-[8px] tracking-widest uppercase text-[#8c6b41] font-mono font-bold leading-tight">
-                RELICS
-              </span>
-              <span className="text-xs sm:text-sm font-mono font-bold text-[#e5a842] leading-tight">
-                {completedCount}/{totalCount}
-              </span>
-            </div>
-            <div className="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full bg-[#241308] border border-[#8c6d23] flex items-center justify-center shadow-inner">
-              <span className="text-[8.5px] sm:text-[9px] text-[#ffd700]">✦</span>
-            </div>
-          </div>
+          <VolumeControl embedded={true} />
         </div>
       </header>
 
@@ -470,6 +585,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
             <div className="relative w-full flex-1 min-h-0 lg:w-1/2 lg:h-full z-10 flex items-center justify-center overflow-hidden py-0.5">
               <div
                 ref={mapContainerRef}
+                data-nathan-container="true"
                 style={{
                   backgroundImage: `url('${mapBgImage}')`,
                   backgroundSize: '200% 100%',
@@ -607,7 +723,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                       <button
                         type="button"
                         onClick={() => {
-                          setSelectedProduct(product);
+                          navigateToProduct(product);
                           setActiveModalProduct(product);
                         }}
                         className="relative flex flex-col items-center -translate-x-1/2 -translate-y-[14px] sm:-translate-y-[16px] focus:outline-none touch-manipulation cursor-pointer group"
@@ -664,6 +780,40 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                     </div>
                   );
                 })}
+
+                {/* Miniature Pixel Nathan Drake Character traversing the map */}
+                {activeNathanNode && (
+                  <motion.div
+                    initial={{ left: `${activeNathanNode.x}%`, top: `${activeNathanNode.y}%` }}
+                    animate={
+                      journeyKeyframes
+                        ? { left: journeyKeyframes.x, top: journeyKeyframes.y }
+                        : { left: `${activeNathanNode.x}%`, top: `${activeNathanNode.y}%` }
+                    }
+                    transition={
+                      journeyKeyframes
+                        ? { duration: 1.25, ease: 'linear' }
+                        : { duration: 0.35, ease: 'easeOut' }
+                    }
+                    onAnimationStart={() => {
+                      if (journeyKeyframes) setNathanState('run');
+                    }}
+                    onAnimationComplete={handleNathanArrival}
+                    className="absolute z-30 pointer-events-auto -translate-x-1/2 -translate-y-[44px] sm:-translate-y-[48px] flex flex-col items-center cursor-pointer group"
+                  >
+                    <PixelNathanDrake
+                      state={nathanState}
+                      facing={nathanFacing}
+                      size={42}
+                      showDust={true}
+                      tooltipText={`Nathan Drake at ${activeNathanNode.name} • Click to open Recon`}
+                      onClick={() => {
+                        navigateToProduct(activeNathanNode);
+                        setActiveModalProduct(activeNathanNode);
+                      }}
+                    />
+                  </motion.div>
+                )}
               </div>
             </div>
 
@@ -776,7 +926,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                           key={p.id}
                           type="button"
                           onClick={() => {
-                            setSelectedProduct(p);
+                            navigateToProduct(p);
                             setActiveModalProduct(p);
                           }}
                           className={`py-2 px-1 rounded-md border flex flex-col items-center justify-between gap-1 transition-all cursor-pointer ${
@@ -833,7 +983,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                 <div
                   key={product.id}
                   onClick={() => {
-                    setSelectedProduct(product);
+                    navigateToProduct(product);
                     setActiveModalProduct(product);
                   }}
                   className="p-3.5 rounded bg-[#160f0a]/90 border border-[#5c4033]/40 flex items-center justify-between cursor-pointer hover:border-[#c49b4d]/60 active:scale-[0.99] transition shadow text-[#e8d5b5]"

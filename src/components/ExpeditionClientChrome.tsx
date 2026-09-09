@@ -15,9 +15,11 @@ export default function ExpeditionClientChrome() {
     return null;
   }
 
+  const isLabDetailPage = pathname?.startsWith('/labs/') && pathname !== '/labs';
+
   return (
     <>
-      <VolumeControl />
+      {!isLabDetailPage && <VolumeControl />}
       <CompletionChecker />
       <ExpeditionBottomDock />
       <FlyingCoinsOverlay />
