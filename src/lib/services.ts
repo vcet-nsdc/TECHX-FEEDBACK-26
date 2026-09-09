@@ -146,7 +146,8 @@ export async function getFeedbackStats(): Promise<{
 
 // ---------- User / expedition progress ----------
 
-function applyProgressRules(user: ExpeditionUser): void {
+async function applyProgressRules(user: ExpeditionUser): Promise<void> {
+  // 1. Legacy rules: static product catalog (mock-data) completion.
   for (const labId of LAB_ORDER) {
     if (user.completedLabs.includes(labId)) continue;
     const lab = getLabById(labId);
@@ -162,6 +163,29 @@ function applyProgressRules(user: ExpeditionUser): void {
       }
     }
   }
+
+  // 2. Checkpoint rules (active journal flow): sectors are admin-editable
+  //    and live in MongoDB, so completion is evaluated against the live
+  //    catalog (static seed fallback while MongoDB is unreachable). Shards
+  //    use canonical lab ids, shared with rule 1.
+  try {
+    const { getCheckpointGroups } = await import('./lab-service');
+    const groups = await getCheckpointGroups();
+    for (const group of groups) {
+      if (group.checkpointIds.length === 0) continue;
+      if (user.completedLabs.includes(group.canonicalLabId)) continue;
+      const allDone = group.checkpointIds.every((id) => user.completedProducts.includes(id));
+      if (!allDone) continue;
+      user.completedLabs.push(group.canonicalLabId);
+      if (!user.shards.includes(group.canonicalLabId)) user.shards.push(group.canonicalLabId);
+      const idx = LAB_ORDER.indexOf(group.canonicalLabId);
+      const next = LAB_ORDER[idx + 1];
+      if (next && !user.unlockedLabs.includes(next)) user.unlockedLabs.push(next);
+    }
+  } catch {
+    // Catalog unavailable — skip checkpoint-based progression this pass.
+  }
+
   if (user.shards.length >= LAB_ORDER.length && !user.completionDate) {
     user.completionDate = new Date().toISOString();
   }
@@ -189,6 +213,7 @@ export async function updateUserProgress(
       discoveredTreasures: [],
     };
     memoryStore.users.set(email, user);
+    await applyProgressRules(user);
     return user;
   }
 
@@ -197,7 +222,7 @@ export async function updateUserProgress(
   if (!user.completedProducts.includes(productId)) {
     user.completedProducts.push(productId);
   }
-  applyProgressRules(user);
+  await applyProgressRules(user);
   return user;
 }
 
@@ -245,6 +270,24 @@ export async function getProductStats(): Promise<Array<{
 }>> {
   const { getProductLookup } = await import('./mock-store');
   const productMap = getProductLookup();
+
+  // Overlay the admin-managed checkpoint catalog so waypoints submitted by
+  // the active journal flow resolve to human-readable names instead of raw
+  // checkpoint ids (static seed fallback applies while MongoDB is down).
+  try {
+    const { getCheckpointCatalog } = await import('./lab-service');
+    for (const ref of (await getCheckpointCatalog()).values()) {
+      if (!productMap.has(ref.tableId)) {
+        productMap.set(ref.tableId, {
+          name: ref.name,
+          labName: ref.labName,
+          labId: ref.canonicalLabId,
+        });
+      }
+    }
+  } catch {
+    // Catalog unavailable — fall back to static product names only.
+  }
 
   const mongoStats = await withMongo(() => mongo.getProductStatsAggregated());
   if (mongoStats) {

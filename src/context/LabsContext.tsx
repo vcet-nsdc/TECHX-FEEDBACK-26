@@ -31,7 +31,10 @@ export function LabsProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const res = await fetch('/api/admin/labs');
+      // Public, read-only expedition config. Admin writes stay on
+      // /api/admin/labs (guarded by src/proxy.ts); attendee clients must
+      // not need an admin session to load sector/waypoint data.
+      const res = await fetch('/api/labs');
       if (!res.ok) throw new Error('Failed to load labs');
       const data = await res.json();
       const fetched = (data?.labs ?? {}) as Record<string, ExpeditionLab>;

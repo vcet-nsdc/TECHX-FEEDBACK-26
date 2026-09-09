@@ -112,3 +112,81 @@ async function seedLabs(): Promise<Record<string, ExpeditionLab>> {
   await saveLabsToDb(seed);
   return seed;
 }
+
+// ---------- Checkpoint catalog ----------
+//
+// The active expedition flow rates *checkpoints* (e.g. "c1-p1") rather than
+// the static product catalog in mock-data.ts (e.g. "a1"). These helpers
+// resolve checkpoint ids against the admin-editable labs collection, with a
+// fallback to the static seed config so submissions keep working while
+// MongoDB is unreachable.
+
+export type CheckpointRef = {
+  tableId: string; // checkpoint id, e.g. "c1-p1"
+  name: string; // human-readable waypoint name
+  labKey: string; // labs-collection key: '1' | '2' | '3'
+  canonicalLabId: string; // canonical expedition lab id: 'a' | 'c' | 'd'
+  labName: string; // sector title, e.g. "LAB 502"
+};
+
+export type CheckpointGroup = {
+  labKey: string;
+  canonicalLabId: string;
+  checkpointIds: string[];
+};
+
+// Reverse of the labAliases map in expeditionData.ts.
+const CANONICAL_LAB_BY_KEY: Record<string, string> = {
+  '1': 'a',
+  '2': 'c',
+  '3': 'd',
+};
+
+export async function getCheckpointCatalog(): Promise<Map<string, CheckpointRef>> {
+  let labs: Record<string, ExpeditionLab>;
+  try {
+    labs = await getLabsFromDb();
+  } catch {
+    // MongoDB unreachable — validate against the static seed config so the
+    // submission flow keeps working (mirrors the services.ts fallbacks).
+    const { baseExpeditionLabs } = await import('./expeditionData');
+    labs = baseExpeditionLabs;
+  }
+
+  const catalog = new Map<string, CheckpointRef>();
+  for (const [key, lab] of Object.entries(labs)) {
+    for (const cp of lab.checkpoints ?? []) {
+      if (!cp?.id) continue;
+      catalog.set(cp.id, {
+        tableId: cp.id,
+        name: cp.name,
+        labKey: key,
+        canonicalLabId: CANONICAL_LAB_BY_KEY[key] ?? key,
+        labName: lab.title || lab.name,
+      });
+    }
+  }
+  return catalog;
+}
+
+// Resolve a single tableId to its checkpoint (or null when unknown).
+export async function findCheckpoint(tableId: string): Promise<CheckpointRef | null> {
+  const catalog = await getCheckpointCatalog();
+  return catalog.get(tableId) ?? null;
+}
+
+// Checkpoint ids grouped per lab — used by the server-side progress rules to
+// award shards/unlocks once every waypoint of a sector has been rated.
+export async function getCheckpointGroups(): Promise<CheckpointGroup[]> {
+  const catalog = await getCheckpointCatalog();
+  const byLab = new Map<string, CheckpointGroup>();
+  for (const ref of catalog.values()) {
+    let group = byLab.get(ref.labKey);
+    if (!group) {
+      group = { labKey: ref.labKey, canonicalLabId: ref.canonicalLabId, checkpointIds: [] };
+      byLab.set(ref.labKey, group);
+    }
+    group.checkpointIds.push(ref.tableId);
+  }
+  return Array.from(byLab.values());
+}

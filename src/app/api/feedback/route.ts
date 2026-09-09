@@ -1,20 +1,36 @@
 import { NextResponse } from 'next/server';
 import { saveFeedback, updateUserProgress, DuplicateFeedbackError } from '@/lib/services';
 import { getProductById } from '@/lib/mock-data';
+import { findCheckpoint } from '@/lib/lab-service';
 
 function asString(value: unknown, max: number): string {
   return typeof value === 'string' ? value.trim().slice(0, max) : '';
 }
 
-// POST /api/feedback — submit one discovery (feedback entry).
-// Server-side validation: the product must exist, rating must be 1–5,
+// POST /api/feedback — submit one observation (feedback entry).
+// Server-side validation: the table must exist, rating must be 1–5,
 // timestamps are always generated server-side (client values ignored).
+//
+// tableId resolution order:
+//   1. Admin-managed checkpoint ids from the labs catalog (active journal
+//      flow, e.g. "c1-p1") — falls back to the static seed config while
+//      MongoDB is unreachable.
+//   2. Static product ids from mock-data (legacy /discover flow, e.g. "a1").
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
     const tableId = asString(body?.tableId, 64);
-    if (!tableId || !getProductById(tableId)) {
+    if (!tableId) {
+      return NextResponse.json(
+        { message: 'Unknown product id.' },
+        { status: 400 }
+      );
+    }
+
+    const checkpoint = await findCheckpoint(tableId);
+    const staticProduct = checkpoint ? null : getProductById(tableId);
+    if (!checkpoint && !staticProduct) {
       return NextResponse.json(
         { message: 'Unknown product id.' },
         { status: 400 }
@@ -44,7 +60,7 @@ export async function POST(request: Request) {
       studentName: asString(body?.studentName, 80) || 'Anonymous Explorer',
       studentEmail,
       studentDepartment: asString(body?.studentDepartment, 80),
-      labId: getProductById(tableId)!.lab.labId,
+      labId: checkpoint ? checkpoint.canonicalLabId : staticProduct!.lab.labId,
       tableId,
       rating: rating as 1 | 2 | 3 | 4 | 5,
       comment: asString(body?.comment, 1000),

@@ -207,10 +207,22 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
           body: JSON.stringify(feedbackPayload),
         },
         5000
-      ).catch((err) => {
-        console.warn('[LabMapView] Online submission failed, enqueuing offline:', err);
-        enqueueSubmission(feedbackPayload);
-      });
+      )
+        .then((res) => {
+          if (res.ok || res.status === 409) return;
+          if (res.status >= 500) {
+            // Server outage — queue for automatic retry once it recovers.
+            enqueueSubmission(feedbackPayload);
+            return;
+          }
+          // 4xx: permanently rejected (e.g. a checkpoint that no longer
+          // exists). Queueing would retry forever, so drop it here.
+          console.warn('[LabMapView] Feedback rejected by server:', res.status, productId);
+        })
+        .catch((err) => {
+          console.warn('[LabMapView] Online submission failed, enqueuing offline:', err);
+          enqueueSubmission(feedbackPayload);
+        });
     }
 
     setSubmittedIds(updated);

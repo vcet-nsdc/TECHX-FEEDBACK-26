@@ -117,9 +117,18 @@ export function dequeueSubmission(id: string): void {
 
 let isFlushing = false;
 
+// Retry budget per entry before it is dropped (network/5xx failures only —
+// 4xx rejections are dropped immediately).
+const MAX_ATTEMPTS = 8;
+
 /**
  * Flush queue: processes pending submissions sequentially with exponential backoff.
  * Backoff schedule: 1s, 2s, 4s, 8s, 16s, max 30s.
+ *
+ * Entries are removed when:
+ *  - the server accepts them (2xx) or reports them already recorded (409);
+ *  - the server permanently rejects them (4xx) — retrying can never succeed;
+ *  - they exceed MAX_ATTEMPTS failed network/server retries.
  */
 export async function flushSubmissionQueue(): Promise<{
   synced: number;
@@ -140,6 +149,13 @@ export async function flushSubmissionQueue(): Promise<{
 
   try {
     for (const item of queue) {
+      // Retry budget exhausted — drop instead of retrying forever.
+      if (item.attempts >= MAX_ATTEMPTS) {
+        console.warn(`[offline-queue] Dropping ${item.id} after ${item.attempts} failed attempts`);
+        dequeueSubmission(item.id);
+        continue;
+      }
+
       // Calculate exponential backoff delay based on attempts
       const backoffMs = Math.min(1000 * Math.pow(2, item.attempts), 30000);
       if (item.lastAttemptAt && now - item.lastAttemptAt < backoffMs) {
@@ -161,20 +177,29 @@ export async function flushSubmissionQueue(): Promise<{
           8000
         );
 
-        // 200, 201, or 409 (already recorded/idempotent) consider successful
+        // 2xx or 409 (already recorded/idempotent) consider successful
         if (res.ok || res.status === 409) {
           dequeueSubmission(item.id);
           synced += 1;
-        } else {
-          // Server returned an error, update attempt in queue
-          const currentQueue = getPendingQueue();
-          const target = currentQueue.find((q) => q.id === item.id);
-          if (target) {
-            target.attempts = item.attempts;
-            target.lastAttemptAt = item.lastAttemptAt;
-            saveQueue(currentQueue);
-          }
+          continue;
         }
+
+        // Server returned an error — persist the attempt state first
+        const currentQueue = getPendingQueue();
+        const target = currentQueue.find((q) => q.id === item.id);
+        if (target) {
+          target.attempts = item.attempts;
+          target.lastAttemptAt = item.lastAttemptAt;
+          saveQueue(currentQueue);
+        }
+
+        if (res.status >= 400 && res.status < 500) {
+          // Permanent rejection (validation failure, unknown tableId, …).
+          // Retrying can never succeed — drop the entry.
+          console.warn(`[offline-queue] Dropping ${item.id}: server rejected with ${res.status}`);
+          dequeueSubmission(item.id);
+        }
+        // 5xx: keep the entry; the backoff schedule will retry it later.
       } catch (err) {
         // Network failure or timeout; update attempt state
         console.warn(`[offline-queue] Attempt ${item.attempts} failed for ${item.id}:`, err);

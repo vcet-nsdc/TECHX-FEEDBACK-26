@@ -13,7 +13,15 @@ export async function GET() {
     return NextResponse.json({ labs });
   } catch (err) {
     console.error('GET /api/admin/labs failed:', err);
-    return NextResponse.json({ error: 'Failed to load labs' }, { status: 500 });
+    // MongoDB unreachable — fall back to the static seed config so the
+    // admin dashboard still renders. Writes (PUT/DELETE) keep failing
+    // loudly until the database is back.
+    try {
+      const { baseExpeditionLabs } = await import('@/lib/expeditionData');
+      return NextResponse.json({ labs: baseExpeditionLabs });
+    } catch {
+      return NextResponse.json({ error: 'Failed to load labs' }, { status: 500 });
+    }
   }
 }
 

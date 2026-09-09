@@ -249,6 +249,28 @@ export async function updateUserProgress(
     }
   }
 
+  // Checkpoint rules (active journal flow): sectors are admin-editable and
+  // live in the `labs` collection, so completion is evaluated against the
+  // live catalog (static seed fallback while MongoDB is unreachable).
+  // Shards use canonical lab ids so both rule sets stay compatible.
+  try {
+    const { getCheckpointGroups } = await import('./lab-service');
+    const groups = await getCheckpointGroups();
+    for (const group of groups) {
+      if (group.checkpointIds.length === 0) continue;
+      if (user.completedLabs.includes(group.canonicalLabId)) continue;
+      const allDone = group.checkpointIds.every((id) => user!.completedProducts.includes(id));
+      if (!allDone) continue;
+      user.completedLabs.push(group.canonicalLabId);
+      if (!user.shards.includes(group.canonicalLabId)) user.shards.push(group.canonicalLabId);
+      const idx = LAB_ORDER.indexOf(group.canonicalLabId);
+      const next = LAB_ORDER[idx + 1];
+      if (next && !user.unlockedLabs.includes(next)) user.unlockedLabs.push(next);
+    }
+  } catch {
+    // Catalog unavailable — skip checkpoint-based progression this pass.
+  }
+
   if (user.shards.length >= LAB_ORDER.length && !user.completionDate) {
     user.completionDate = new Date().toISOString();
   }
