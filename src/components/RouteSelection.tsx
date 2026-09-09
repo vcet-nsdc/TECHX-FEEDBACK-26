@@ -49,7 +49,7 @@ export default function RouteSelection() {
   const [submittedIds, setSubmittedIds] = useState<string[]>([]);
   useEffect(() => {
     setSubmittedIds(getSubmittedFeedbackForUser(userEmail));
-  }, [userEmail]);
+  }, [userEmail, feedbackVersion]);
 
   const perLabProgress = useMemo(() => {
     const map: Record<string, { completed: number; total: number; percentage: number; isCompleted: boolean }> = {};
@@ -271,12 +271,16 @@ export default function RouteSelection() {
             );
           })}
 
-          {/* Unlockable 7-Project Milestone Treasure Card */}
+          {/* Unlockable 3-Tier Mystery Treasure Card */}
           <TreasureCard
             completedCount={completedCheckpoints}
             targetCount={7}
             userEmail={userEmail}
             currentLabId={activeLabId}
+            lab1Completed={perLabProgress['1']?.isCompleted ?? false}
+            lab2Completed={perLabProgress['2']?.isCompleted ?? false}
+            lab3Completed={perLabProgress['3']?.isCompleted ?? false}
+            completedLabIds={labList.filter((l) => perLabProgress[l.id]?.isCompleted).map((l) => l.id)}
           />
         </div>
       </div>

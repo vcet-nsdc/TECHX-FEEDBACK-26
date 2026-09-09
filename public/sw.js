@@ -1,8 +1,7 @@
 // Service Worker for TechX Expedition: Cache-first for static fonts and textures, network-first for navigation
-const CACHE_NAME = 'techx-expedition-v1';
+const CACHE_NAME = 'techx-expedition-v2';
 
 const STATIC_PRECACHE = [
-  '/',
   '/site.webmanifest',
   '/favicon.ico',
   '/assets/images/worn-parchment-bg.webp',
@@ -14,6 +13,7 @@ const STATIC_PRECACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches
       .open(CACHE_NAME)
@@ -22,7 +22,6 @@ self.addEventListener('install', (event) => {
           console.warn('[SW] Pre-cache partial fail:', err);
         });
       })
-      .then(() => self.skipWaiting())
   );
 });
 
@@ -45,8 +44,14 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // 1. Bypass non-GET and API calls completely
-  if (request.method !== 'GET' || url.pathname.startsWith('/api/')) {
+  // 1. Bypass non-GET, API calls, and Next.js internal/HMR requests
+  if (
+    request.method !== 'GET' ||
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/_next/') ||
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1'
+  ) {
     return;
   }
 
@@ -55,9 +60,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Static assets (fonts, WebP images, JS/CSS bundles): Cache-first with background revalidation
+  // 3. Static public assets (fonts, WebP images): Network-first with cache fallback
   const isStaticAsset =
-    url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/assets/') ||
     url.pathname.endsWith('.woff2') ||
     url.pathname.endsWith('.woff') ||
@@ -68,19 +72,15 @@ self.addEventListener('fetch', (event) => {
 
   if (isStaticAsset) {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) {
-          // Return cache immediately, optionally revalidate in background
-          return cached;
-        }
-        return fetch(request).then((networkResponse) => {
+      fetch(request)
+        .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const copy = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           }
           return networkResponse;
-        });
-      })
+        })
+        .catch(() => caches.match(request))
     );
     return;
   }

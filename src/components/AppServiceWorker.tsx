@@ -8,19 +8,25 @@ export default function AppServiceWorker() {
     // 1. Initialize offline feedback auto-sync on mount
     initOfflineQueueAutoSync();
 
-    // 2. Register service worker for offline asset caching in production / browser
+    // 2. Clear caches & unregister in development, or register v2 in production
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker
-          .register('/sw.js')
-          .then((registration) => {
-            console.log('[SW] ServiceWorker registered with scope:', registration.scope);
-          })
-          .catch((err) => {
-            // Non-fatal if service workers are disabled
-            console.debug('[SW] Registration notice:', err);
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // Clear all old caches on localhost
+        if ('caches' in window) {
+          caches.keys().then((names) => {
+            names.forEach((name) => caches.delete(name));
           });
-      });
+        }
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const reg of registrations) {
+            reg.unregister();
+          }
+        });
+      } else {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
     }
   }, []);
 

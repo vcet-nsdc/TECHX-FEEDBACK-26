@@ -9,6 +9,7 @@ import { loadExpeditionUser } from '@/lib/expedition-storage';
 import { cn } from '@/lib/utils';
 import BackButton from '@/components/BackButton';
 import TreasureHunt from './TreasureHunt';
+import PixelNathanDrake from './PixelNathanDrake';
 
 interface InteractiveTreasureMapProps {
   snapshot: ReturnType<typeof loadExpeditionUser>;
@@ -95,7 +96,7 @@ export default function InteractiveTreasureMap({
     : false;
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#0c0805] select-none">
+    <div data-nathan-container="true" className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#0c0805] select-none">
       {/* Warm Ambient Map Canvas Layer with Increased Legibility and Sunlight Grading */}
       <div
         className="absolute inset-0 w-full h-full transition-all"
@@ -420,6 +421,30 @@ export default function InteractiveTreasureMap({
             </div>
           );
         })}
+
+        {/* Miniature Nathan Drake Explorer on the Map */}
+        {(() => {
+          const currentCp =
+            CHECKPOINTS.find((cp) => cp.labId === activePopup) ||
+            CHECKPOINTS.slice().reverse().find((cp) => snapshot.unlockedLabs.includes(cp.labId)) ||
+            CHECKPOINTS[0];
+          return (
+            <motion.div
+              initial={{ left: `${currentCp.xPct}%`, top: `${currentCp.yPct}%` }}
+              animate={{ left: `${currentCp.xPct}%`, top: `${currentCp.yPct}%` }}
+              transition={{ duration: 1.2, ease: [0.34, 1.3, 0.64, 1] }}
+              className="absolute z-30 pointer-events-auto -translate-x-1/2 -translate-y-16 flex flex-col items-center cursor-pointer"
+            >
+              <PixelNathanDrake
+                state="idle"
+                size={44}
+                showDust={true}
+                tooltipText={`Nathan Drake at ${currentCp.title}`}
+                onClick={() => setActivePopup(currentCp.labId)}
+              />
+            </motion.div>
+          );
+        })()}
 
         {/* ======================================================== */}
         {/* SUBTLE HAND-DRAWN RED "X" (WITHOUT EXCESSIVE NEON GLOW)  */}
