@@ -17,6 +17,7 @@ import {
   getSubmittedFeedbackForUser,
   CheckpointNode,
 } from '@/lib/expeditionData';
+import { useLabs } from '@/context/LabsContext';
 import PixelNathanDrake, { NathanAnimationState } from './uncharted/PixelNathanDrake';
 
 // Cubic bezier evaluation along map dotted trail
@@ -79,13 +80,20 @@ export interface ProductWithLab extends CheckpointNode {
   labName: string;
   labTitle: string;
   themeType?: string;
+  category?: string;
   globalIndex: number;
 }
 
 export interface ProductClues {
-  clue1: string; // Unlocked when user completes Lab 1
-  clue2: string; // Unlocked when user completes Lab 2
-  clue3: string; // Unlocked when user completes Lab 3
+  clue1: string; // Unlocked when user completes Lab 1 (Mission & About)
+  clue2: string; // Unlocked when user completes Lab 2 (Logo & Visual Insignia)
+  clue3: string; // Unlocked when user completes Lab 3 (Company / Project Name Cipher)
+  aboutText?: string;
+  icon?: string;
+  iconLabel?: string;
+  cipherPattern?: string;
+  nameHint?: string;
+  labNum?: string;
 }
 
 export interface RelicReward {
@@ -100,138 +108,145 @@ export interface RelicReward {
 
 const SECRET_RELICS: RelicReward[] = [
   {
-    id: 'relic-avery-cross',
-    name: 'Saint Dismas Golden Reliquary',
-    rarity: 'Mythic',
-    origin: "Captain Henry Avery's Private Stash (1694)",
-    inscription: 'Hodie mecum eris in paradiso — Today you shall be with me in paradise.',
-    lore: "Forged from solid Andean gold and inlaid with uncut sapphires, this reliquary guarded Avery's secret navigational coordinates to Libertalia.",
+    id: 'relic-key',
+    name: 'TechX Golden Key',
+    rarity: 'Legendary',
+    origin: 'TechX 2026',
+    inscription: 'Excellence in Research & Innovation',
+    lore: 'Awarded for completing all labs and solving the mystery project.',
     type: 'key',
   },
   {
-    id: 'relic-drake-astrolabe',
-    name: "Sir Francis Drake's Mariner Astrolabe",
+    id: 'relic-compass',
+    name: 'TechX Navigator Compass',
     rarity: 'Legendary',
-    origin: 'Golden Hind Flagship (1579)',
-    inscription: 'Sic Parvis Magna — Greatness from small beginnings.',
-    lore: "An intricately calibrated brass navigational instrument used to circumnavigate uncharted archipelagoes under Queen Elizabeth's royal charter.",
+    origin: 'TechX 2026',
+    inscription: 'Guiding Future Explorers',
+    lore: 'Awarded for completing all labs and solving the mystery project.',
     type: 'astrolabe',
   },
   {
-    id: 'relic-libertalia-seal',
-    name: 'Libertalia Founders Council Seal',
-    rarity: 'Artifact',
-    origin: 'Colony of Kings Sanctuary (1701)',
-    inscription: 'Pro Deo et Libertate — For God and Liberty.',
-    lore: 'The official heavy wax-and-bronze seal authorizing sovereign passage across all three uncharted trial sectors.',
+    id: 'relic-coin',
+    name: 'TechX Gold Medal',
+    rarity: 'Legendary',
+    origin: 'TechX 2026',
+    inscription: 'TechX Feedback Challenge',
+    lore: 'Awarded for completing all labs and solving the mystery project.',
     type: 'coin',
   },
 ];
 
-// Rich bespoke 3-stage atmospheric clues (without emojis)
-export const PRODUCT_CLUES_MAP: Record<string, ProductClues> = {
-  // --- Sector 01 (Jungle) Products ---
-  'c1-p1': {
-    clue1: 'Expedition logs record a coastal staging point where ancient mossy temple pillars meet the ocean surf.',
-    clue2: 'Field records show telemetry verification beacons standing guard over initial maritime departure lanes.',
-    clue3: 'Direct Navigational Cipher: "Where every jungle expedition commences — Port of Departure (Temple Ruins)."',
-  },
-  'c1-p2': {
-    clue1: 'A hidden saltwater cove sheltered behind dense tangles of ancient coastal mangrove roots.',
-    clue2: 'Navigators used this tranquil inlet to calibrate compass needles and map mid-Atlantic coastal currents.',
-    clue3: 'Direct Navigational Cipher: "The secret coastal inlet shielded by tangled roots — Hidden Mangrove Cove."',
-  },
-  'c1-p3': {
-    clue1: 'A soaring sanctuary perched atop mist-draped emerald crags high above the tropical canopy.',
-    clue2: 'High-altitude signal relays beam telemetry across the peaks to maintain atmospheric links.',
-    clue3: 'Direct Navigational Cipher: "The mist-shrouded green peak relay station — Emerald Mountain Sanctuary."',
-  },
-  'c1-p4': {
-    clue1: 'A roaring freshwater gorge carved out by torrential river falls and rising mountain vapor.',
-    clue2: 'Hydro-telemetry equipment monitors thermal dissipation and water current dynamics in the basin.',
-    clue3: 'Direct Navigational Cipher: "The torrential waterfall monitoring point — Cascade Basin Waypoint."',
-  },
-  'c1-p5': {
-    clue1: 'A sacred stepped stone altar situated on high plateaus aligned with the first rays of dawn.',
-    clue2: 'Ancient astrolabe instruments were calibrated here for issuing final passage clearance across the sector.',
-    clue3: 'Direct Navigational Cipher: "The high stone terrace facing the sunrise — Sun Altar Highlands."',
-  },
-
-  // --- Sector 02 (Frost) Products ---
-  'c2-p1': {
-    clue1: 'A sub-zero polar outpost nestled along sheer blue glacial cliffs bordering frozen waters.',
-    clue2: 'Perimeter acoustic radar instruments sweep the shelf to detect deep submarine ice fractures.',
-    clue3: 'Direct Navigational Cipher: "The coastal staging base in the frozen sea — Glacial Fjord Staging Post."',
-  },
-  'c2-p2': {
-    clue1: 'A navigation beacon anchored amidst treacherous, ice-covered shallow reefs and frozen shoals.',
-    clue2: 'Subterranean signal relays broadcast guidance pulses directly through dense pack ice acoustics.',
-    clue3: 'Direct Navigational Cipher: "The warning beacon amidst the frozen shallows — Frozen Shoals Beacon."',
-  },
-  'c2-p3': {
-    clue1: 'A razor-sharp needle of blue glacial ice rising high into the howling blizzard.',
-    clue2: 'Automated optical telemetry lenses maintain panoramic watch over sub-zero weather anomalies.',
-    clue3: 'Direct Navigational Cipher: "The towering needle of ice observation post — Frost Spire Lookout."',
-  },
-  'c2-p4': {
-    clue1: 'A massive horizontal shelf of ancient permafrost holding deep cryogenic containment vaults.',
-    clue2: 'Biometric latency sensors maintain sub-zero benchmarks to safeguard dormant expedition relics.',
-    clue3: 'Direct Navigational Cipher: "The sub-zero horizontal frozen plateau — Sub-Zero Ice Shelf."',
-  },
-  'c2-p5': {
-    clue1: 'The highest magnetic pole terminus where shimmering aurora curtains illuminate the snow.',
-    clue2: 'Acts as the central synchronization nexus routing multi-node network matrices across the polar cap.',
-    clue3: 'Direct Navigational Cipher: "The luminous terminal matrix beneath the polar lights — Aurora Terminal Matrix."',
-  },
-
-  // --- Sector 03 (Volcano) Products ---
-  'c3-p1': {
-    clue1: 'A fortified surveillance outpost forged from glossy black volcanic glass upon the caldera rim.',
-    clue2: 'Thermal pressure sensors measure extreme barometric spikes directly above active magma vents.',
-    clue3: 'Direct Navigational Cipher: "The black glass outpost overlooking the crater — Obsidian Caldera Outpost."',
-  },
-  'c3-p2': {
-    clue1: 'A scorched wasteland of sulfur steam vents and glowing rivers of yellow and molten basalt.',
-    clue2: 'Geothermal sweeps map sub-surface convection currents flowing beneath the brittle lava crust.',
-    clue3: 'Direct Navigational Cipher: "The sulfurous glowing molten ponds — Brimstone Lava Pools."',
-  },
-  'c3-p3': {
-    clue1: 'The fiery summit of the central super-volcano where incandescent ash billows day and night.',
-    clue2: 'Equipped with heavy titanium heatsinks to monitor core tectonic dissipation at the volcano apex.',
-    clue3: 'Direct Navigational Cipher: "The crowning point of the great volcano — The Great Eruption Apex."',
-  },
-  'c3-p4': {
-    clue1: 'A massive vertical chimney formed by hexagonal basalt columns acting as a natural smelting furnace.',
-    clue2: 'High-frequency acoustic sensors record resonance from surging subterranean magma flues.',
-    clue3: 'Direct Navigational Cipher: "The hexagonal basalt column furnace — Basalt Spire Furnace."',
-  },
-  'c3-p5': {
-    clue1: 'The deepest geothermal chamber at the heart of the world where all tectonic currents converge.',
-    clue2: 'The ultimate master uplink terminus that synchronizes signals across all three expedition sectors.',
-    clue3: 'Direct Navigational Cipher: "The final global uplink core — Molten Core Terminus."',
-  },
+// Rich visual descriptions for logos / emojis
+const EMOJI_VISUAL_MAP: Record<string, { label: string; clue: string }> = {
+  '🪐': { label: 'Ringed Celestial Planet', clue: 'Look for an orbital celestial planet surrounded by orbital rings.' },
+  '☀️': { label: 'Radiant Solar Core', clue: 'Symbolized by a glowing solar star radiating clean power.' },
+  '💻': { label: 'Computing Terminal', clue: 'Marked by an enterprise laptop terminal driving software and infrastructure.' },
+  '🤖': { label: 'Cybernetic AI Unit', clue: 'Bearing the metallic emblem of an intelligent autonomous android.' },
+  '👓': { label: 'Spatial Optical Glasses', clue: 'Features augmented reality smart glasses projecting spatial computing interfaces.' },
+  '🌐': { label: 'Global Optical Web', clue: 'Shows a worldwide interconnected globe with low-latency network routes.' },
+  '🚀': { label: 'Orbital Launch Rocket', clue: 'Branded with a high-thrust space rocket ascending for launch.' },
+  '🤝': { label: 'Community Alliance', clue: 'Symbolized by collaborative joined hands empowering inclusive assistive community tech.' },
+  '🔬': { label: 'Scientific Microscope', clue: 'Features a precision research microscope synthesizing academic discovery papers.' },
+  '📝': { label: 'Scholarly Writing Memo', clue: 'Depicts a researcher notepad and stylus composing scholarly writing and citations.' },
+  '💡': { label: 'Illuminated Light Beacon', clue: 'Marked by a high-frequency filament lightbulb radiating illumination.' },
+  '🖥️': { label: 'Mainframe Workstation', clue: 'Depicts a custom high-performance computing terminal and desktop display.' },
+  '📊': { label: 'Analytics Bar Chart', clue: 'Shows an escalating dynamic chart measuring business intelligence and analytics.' },
+  '📈': { label: 'Surging Market Graph', clue: 'Bearing an upward bullish trendline graph analyzing equity markets.' },
+  '📱': { label: 'Mobile Smartphone Relay', clue: 'Marked by a modern handheld touch communicator uniting smart devices.' },
+  '🍏': { label: 'Green Apple Ecosystem', clue: 'Identified by a crisp green apple representing a modern mobile operating stack.' },
+  '🛡️': { label: 'Cybersecurity Shield', clue: 'Fortified by a defensive armor shield repelling real-time digital threats.' },
+  '🦾': { label: 'Articulated Robotic Arm', clue: 'Shows a precision multi-axis mechanical arm executing automated tasks.' },
+  '🪑': { label: 'Ergonomic Intelligent Desk', clue: 'Depicts a biometric ergonomic workstation monitoring occupancy.' },
+  '🩹': { label: 'Healing Diagnostic Bandage', clue: 'Bearing a medical healing patch delivering rapid digital first-aid.' },
+  '📦': { label: 'Field Recon Supply', clue: 'Marked by an expedition cargo crate carrying research artifacts.' },
 };
 
-// Procedural fallback generator for custom/dynamic products
-export function getProductClues(product: ProductWithLab): ProductClues {
-  if (PRODUCT_CLUES_MAP[product.id]) {
-    return PRODUCT_CLUES_MAP[product.id];
-  }
-  const theme =
-    product.themeType ||
-    (product.labId === '2' ? 'frost' : product.labId === '3' ? 'volcano' : 'jungle');
+// Generates an authentic Uncharted-style letter cipher pattern
+export function generateCipherPattern(name: string): string {
+  if (!name) return 'A _ _ Z';
+  const words = name.trim().split(/\s+/);
+  return words
+    .map((word) => {
+      const clean = word.replace(/[^a-zA-Z0-9]/g, '');
+      if (!clean) return word;
+      if (clean.length === 1) return clean.toUpperCase();
+      if (clean.length === 2) return `${clean[0].toUpperCase()} _`;
+      if (clean.length <= 4) {
+        return `${clean[0].toUpperCase()} _ ${clean[clean.length - 1].toUpperCase()}`;
+      }
+      const mid = Math.floor(clean.length / 2);
+      return clean
+        .split('')
+        .map((ch, idx) => {
+          if (idx === 0 || idx === clean.length - 1 || idx === mid) {
+            return ch.toUpperCase();
+          }
+          return '_';
+        })
+        .join(' ');
+    })
+    .join('    ');
+}
 
-  const envText =
-    theme === 'frost'
-      ? 'Located in the sub-zero glacial spires of Sector 02'
-      : theme === 'volcano'
-        ? 'Stationed in the volcanic caldera ridgelines of Sector 03'
-        : 'Situated within the ancient jungle ruins of Sector 01';
+// Clean dynamic clue generator for projects from DB
+export function getProductClues(product: ProductWithLab): ProductClues {
+  const labNum =
+    (product.labName + ' ' + (product.labTitle || '')).match(/\b(5\d{2}|\d{3})\b/)?.[1] ||
+    (product.labId === '1' ? '502' : product.labId === '2' ? '508' : '509');
+
+  const desc = product.description?.trim() || 'Software and technology project.';
+  const icon = product.icon || '📦';
+
+  const emojiNames: Record<string, string> = {
+    '🪐': 'planet with rings',
+    '☀️': 'sun',
+    '💻': 'laptop',
+    '🤖': 'robot',
+    '👓': 'glasses',
+    '🌐': 'globe',
+    '🚀': 'rocket',
+    '🤝': 'handshake',
+    '🔬': 'microscope',
+    '📝': 'notepad',
+    '💡': 'lightbulb',
+    '🖥️': 'desktop computer',
+    '📊': 'bar chart',
+    '📈': 'growth graph',
+    '📱': 'mobile phone',
+    '🍏': 'green apple',
+    '🛡️': 'shield',
+    '🦾': 'robotic arm',
+    '🪑': 'office desk',
+    '🩹': 'bandage',
+  };
+  const emojiLabel = emojiNames[icon] || 'symbol';
+
+  const words = product.name.trim().split(/\s+/);
+  const cleanLetters = product.name.replace(/[^a-zA-Z0-9]/g, '');
+  const firstChar = cleanLetters[0]?.toUpperCase() || 'A';
+  const lastChar = cleanLetters[cleanLetters.length - 1]?.toUpperCase() || 'Z';
+  const cipherPattern = generateCipherPattern(product.name);
+
+  // Clue 1: What it is & where
+  const clue1 = `Located in Lab ${labNum}. ${desc}`;
+
+  // Clue 2: The logo / emoji
+  const clue2 = `The project logo is the ${icon} (${emojiLabel}) emoji.`;
+
+  // Clue 3: The project name & fill-in-the-blank letters
+  const wordCountStr = words.length === 1 ? '1 word' : `${words.length} words`;
+  const clue3 = `The name has ${wordCountStr} (${cleanLetters.length} letters), starts with '${firstChar}' and ends with '${lastChar}':`;
 
   return {
-    clue1: `Expedition reconnaissance places this discovery within ${product.labName || 'Sector ' + product.labId}: ${envText}.`,
-    clue2: `Survey logs record distinctive telemetry operations: "${product.description}".`,
-    clue3: `Direct Navigational Cipher: "${product.name} — Sector waypoint verified."`,
+    clue1,
+    clue2,
+    clue3,
+    aboutText: desc,
+    icon,
+    iconLabel: emojiLabel,
+    cipherPattern,
+    nameHint: `Starts with '${firstChar}' • Ends with '${lastChar}'`,
+    labNum,
   };
 }
 
@@ -254,6 +269,7 @@ export default function TreasureCard({
   lab3Completed: propLab3Completed,
   completedLabIds,
 }: TreasureCardProps) {
+  const { labs: dbLabs } = useLabs();
   const [guessInput, setGuessInput] = useState('');
   const [isVerified, setIsVerified] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -305,17 +321,16 @@ export default function TreasureCard({
     return getSubmittedFeedbackForUser(normalizedEmail);
   }, [normalizedEmail, localFeedbackVersion]);
 
-  // Product pool from all 3 base labs
+  // Product pool from all 3 base labs (supports live database override from useLabs)
   const allProducts: ProductWithLab[] = useMemo(() => {
-    const labs = [
-      baseExpeditionLabs['1'],
-      baseExpeditionLabs['2'],
-      baseExpeditionLabs['3'],
-    ].filter(Boolean);
+    const l1 = dbLabs['1'] || baseExpeditionLabs['1'];
+    const l2 = dbLabs['2'] || baseExpeditionLabs['2'];
+    const l3 = dbLabs['3'] || baseExpeditionLabs['3'];
+    const labsList = [l1, l2, l3].filter(Boolean);
 
     const pool: ProductWithLab[] = [];
     let globalCounter = 0;
-    labs.forEach((l) => {
+    labsList.forEach((l) => {
       if (l.checkpoints) {
         l.checkpoints.forEach((cp) => {
           pool.push({
@@ -330,7 +345,7 @@ export default function TreasureCard({
       }
     });
     return pool;
-  }, []);
+  }, [dbLabs]);
 
   // Total products completed across all expedition sectors
   const completedProductsCount = useMemo(() => {
@@ -338,7 +353,7 @@ export default function TreasureCard({
   }, [completedCount, submittedProductIds]);
 
   const totalProductsCount = useMemo(() => {
-    return allProducts.length > 0 ? allProducts.length : (targetCount || 15);
+    return allProducts.length > 0 ? allProducts.length : targetCount || 22;
   }, [allProducts, targetCount]);
 
   // Unlocked clues state (unlocked via "Get Clue" button click)
@@ -367,7 +382,7 @@ export default function TreasureCard({
     if (isVerified || unlockedClues[3]) return 1.0;
     if (unlockedClues[2]) return 0.75;
     if (unlockedClues[1]) return 0.25;
-    return 0; // Starts right at the starting Black Circle!
+    return 0; // Starts right at Camp Trailhead
   }, [targetProgressOverride, isVerified, unlockedClues]);
 
   // Exact continuous percentage position along the map dotted line
@@ -375,56 +390,56 @@ export default function TreasureCard({
     return getTrailPoint(productProgressFraction);
   }, [productProgressFraction]);
 
-  // 3 Waypoints strictly aligned along the authentic map image trail (Waypoints I & II Black Rings, Cross III Vault X)
-  // Circles turn into stamped crosses ONLY after the character reaches the waypoint (unlockedClues)
-  const mapWaypoints = useMemo(() => [
-    {
-      id: 'sector1',
-      label: 'Waypoint I',
-      title: 'Waypoint I • Expedition Stage 01',
-      roman: 'I',
-      x: 21.2,
-      y: 58.1,
-      isDone: unlockedClues[1],
-      isCross: false,
-      clueNum: 1,
-    },
-    {
-      id: 'sector2',
-      label: 'Waypoint II',
-      title: 'Waypoint II • Expedition Stage 02',
-      roman: 'II',
-      x: 56.9,
-      y: 48.8,
-      isDone: unlockedClues[2],
-      isCross: false,
-      clueNum: 2,
-    },
-    {
-      id: 'sector3',
-      label: 'Vault X (Cross III)',
-      title: 'Final Treasure Vault • Vault X',
-      roman: 'III',
-      x: 34.2,
-      y: 32.8,
-      isDone: unlockedClues[3],
-      isCross: true,
-      isFinalX: true,
-      clueNum: 3,
-    },
-  ], [unlockedClues]);
+  // 3 Waypoints strictly aligned along the authentic map image trail
+  const mapWaypoints = useMemo(
+    () => [
+      {
+        id: 'sector1',
+        label: 'Lab 502',
+        title: 'Lab 502 • Clue 1',
+        roman: 'I',
+        x: 21.2,
+        y: 58.1,
+        isDone: unlockedClues[1],
+        isCross: false,
+        clueNum: 1,
+      },
+      {
+        id: 'sector2',
+        label: 'Lab 508',
+        title: 'Lab 508 • Clue 2',
+        roman: 'II',
+        x: 56.9,
+        y: 48.8,
+        isDone: unlockedClues[2],
+        isCross: false,
+        clueNum: 2,
+      },
+      {
+        id: 'sector3',
+        label: 'Lab 509',
+        title: 'Lab 509 • Secret Vault',
+        roman: 'III',
+        x: 34.2,
+        y: 32.8,
+        isDone: unlockedClues[3],
+        isCross: true,
+        isFinalX: true,
+        clueNum: 3,
+      },
+    ],
+    [unlockedClues]
+  );
 
-  // Keep Nathan Drake in standing / running position along the trail
   const [nathanState, setNathanState] = useState<NathanAnimationState>('idle');
   const [activeCrossClue, setActiveCrossClue] = useState<number | null>(null);
   const [journeyKeyframes, setJourneyKeyframes] = useState<{ x: string[]; y: string[] } | null>(null);
 
-  // Direction along the map S-curve: rightwards during bottom/middle loops, turns left heading to Red X
   const facing = useMemo<'right' | 'left'>(() => {
-    return productProgressFraction >= 0.70 ? 'left' : 'right';
+    return productProgressFraction >= 0.7 ? 'left' : 'right';
   }, [productProgressFraction]);
 
-  // Dispatch Nathan Drake running strictly along the curved trail upon clicking "Get Clue"
+  // Dispatch explorer running along the trail upon clicking "Reveal Clue"
   const handleGetClue = (clueNum: 1 | 2 | 3, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (isDispatching !== null) return;
@@ -435,7 +450,6 @@ export default function TreasureCard({
     const startP = productProgressFraction;
     const endP = clueNum === 1 ? 0.25 : clueNum === 2 ? 0.75 : 1.0;
 
-    // Sample 36 intermediate points along the cubic Bezier trail curves
     const steps = 36;
     const kfX: string[] = [];
     const kfY: string[] = [];
@@ -450,7 +464,6 @@ export default function TreasureCard({
     setTargetProgressOverride(endP);
     setActiveCrossClue(clueNum);
 
-    // Brisk, energetic 1.85-second expedition sprint along the trail
     setTimeout(() => {
       setUnlockedClues((prev) => ({ ...prev, [clueNum]: true }));
       if (typeof window !== 'undefined') {
@@ -523,14 +536,12 @@ export default function TreasureCard({
         localStorage.getItem(`treasure_verified_${userEmail}`);
       if (storedVerified === 'true') {
         setIsVerified(true);
-        setStatusMessage('DISCOVERY VERIFIED • ARCHIVE UNSEALED');
+        setStatusMessage('Correct! Mystery project solved.');
       } else {
         setIsVerified(false);
         setStatusMessage(null);
       }
-    } catch {
-      // ignore
-    }
+    } catch { }
   }, [normalizedEmail, userEmail, localFeedbackVersion]);
 
   // Handle User Guess / Verification
@@ -540,23 +551,31 @@ export default function TreasureCard({
 
     const cleanInput = normalizeName(guessInput);
     if (!cleanInput) {
-      setStatusMessage('Enter target discovery name to decipher.');
+      setStatusMessage('Please enter a project name.');
       return;
     }
 
     const cleanTargetName = normalizeName(targetProduct.name);
+    const noSpaceInput = cleanInput.replace(/\s+/g, '');
+    const noSpaceTarget = cleanTargetName.replace(/\s+/g, '');
 
-    // Exact match or contains main name keywords
+    // Allow flexible matching:
+    // 1. Exact match
+    // 2. Space-agnostic match (e.g. 'asset orbit' vs 'assetorbit')
+    // 3. Substring match for substantial names (>= 3 chars)
+    // 4. Parentheses stripped match (e.g. 'led light' for 'led light (frequency)')
     const isCorrect =
       cleanInput === cleanTargetName ||
+      noSpaceInput === noSpaceTarget ||
+      cleanTargetName.startsWith(cleanInput) ||
+      cleanInput.startsWith(cleanTargetName) ||
       (cleanInput.length >= 4 && cleanTargetName.includes(cleanInput)) ||
       (cleanTargetName.length >= 4 && cleanInput.includes(cleanTargetName));
 
     if (isCorrect) {
       setIsVerified(true);
-      setStatusMessage('DISCOVERY VERIFIED • ARCHIVE UNSEALED');
+      setStatusMessage('✦ Correct! Mystery project solved.');
 
-      // Persist relic reward and verified state permanently
       const charCodeSum = normalizedEmail.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
       const chosen = claimedRelic || SECRET_RELICS[charCodeSum % SECRET_RELICS.length];
       setClaimedRelic(chosen);
@@ -568,7 +587,7 @@ export default function TreasureCard({
       }
     } else {
       setIsShaking(true);
-      setStatusMessage('CIPHER MISMATCH • CONSULT UNLOCKED LEDGERS');
+      setStatusMessage('Not quite right. Check the 3 clues above and try again!');
       setTimeout(() => setIsShaking(false), 500);
     }
   };
@@ -586,43 +605,63 @@ export default function TreasureCard({
           style={{
             backgroundImage: `url('/assets/images/torn-card-bg.webp')`,
           }}
-          className="relative w-full bg-[length:100%_100%] bg-no-repeat bg-center px-8 sm:px-12 pt-7 sm:pt-9 pb-8 sm:pb-10 flex flex-col justify-between text-[#241308]"
+          className="relative w-full bg-[length:100%_100%] bg-no-repeat bg-center px-7 sm:px-11 pt-7 sm:pt-9 pb-8 sm:pb-10 flex flex-col justify-between text-[#241308]"
         >
-          {/* Top Right Corner Wax Seal Badge */}
+          {/* Top Right Wax Seal Badge */}
           <div className="absolute top-4 right-5 sm:top-5 sm:right-8 w-12 h-12 pointer-events-none opacity-90 z-20">
             {isVerified ? (
-              <div className="w-10 h-10 rounded-full border-2 border-dashed border-[#8b261d] flex items-center justify-center rotate-12 bg-[#8b261d]/15 shadow-sm">
-                <span className="text-[8px] font-mono font-black text-[#8b261d] uppercase tracking-tighter">
-                  VERIFIED
+              <div className="w-11 h-11 rounded-full border-2 border-dashed border-[#8b261d] flex items-center justify-center rotate-12 bg-[#8b261d]/20 shadow-md">
+                <span
+                  style={{ fontFamily: "var(--font-oswald), sans-serif" }}
+                  className="text-[9px] font-black text-[#8b261d] uppercase tracking-wider"
+                >
+                  SOLVED
                 </span>
               </div>
             ) : completedLabsCount === 0 ? (
-              <div className="w-10 h-10 rounded-full border-2 border-dashed border-[#8b6943]/60 flex items-center justify-center -rotate-6 bg-[#241308]/10 shadow-sm">
-                <span className="text-[8px] font-mono font-black text-[#6b4516] uppercase tracking-tighter">
-                  SEALED
+              <div className="w-11 h-11 rounded-full border-2 border-dashed border-[#8b6943]/60 flex items-center justify-center -rotate-6 bg-[#241308]/10 shadow-sm">
+                <span
+                  style={{ fontFamily: "var(--font-oswald), sans-serif" }}
+                  className="text-[9px] font-black text-[#6b4516] uppercase tracking-wider"
+                >
+                  LOCKED
                 </span>
               </div>
             ) : (
-              <div className="w-10 h-10 rounded-full border-2 border-dashed border-[#8b6943] flex items-center justify-center rotate-12 bg-[#8b6943]/15 shadow-sm">
-                <span className="text-[8px] font-mono font-black text-[#6b4516] uppercase tracking-tighter">
+              <div className="w-11 h-11 rounded-full border-2 border-dashed border-[#8b6943] flex items-center justify-center rotate-12 bg-[#8b6943]/15 shadow-sm">
+                <span
+                  style={{ fontFamily: "var(--font-oswald), sans-serif" }}
+                  className="text-[9px] font-black text-[#6b4516] uppercase tracking-wider"
+                >
                   ACTIVE
                 </span>
               </div>
             )}
           </div>
 
-          {/* Main Title: Positioned cleanly inside the card frame */}
-          <div className="mb-2 px-1">
-            <h2 className="text-xl sm:text-2xl font-bold font-['EB_Garamond',_serif] text-[#1c0f05] tracking-tight leading-snug drop-shadow-[0_1px_0_rgba(255,255,255,0.4)]">
-              Treasure Hunt
-            </h2>
+          {/* Section Header with Proper Visible Fonts */}
+          <div className="mb-3 px-1 flex flex-col items-start pr-14">
+            <div className="flex items-center gap-2">
+              <span className="text-[#b38920] text-lg sm:text-xl animate-pulse">✦</span>
+              <h2
+                style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                className="text-xl sm:text-2xl md:text-3xl font-black text-[#1c0f05] tracking-wide leading-tight drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)]"
+              >
+                EXPEDITION TREASURE MAP
+              </h2>
+            </div>
+            <p
+              style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+              className="text-xs sm:text-sm font-semibold text-[#5c3710] mt-0.5 tracking-normal leading-snug"
+            >
+              Solve the mystery project by uncovering 3 Sector Clues from the expedition labs.
+            </p>
           </div>
 
           {/* ========================================================================= */}
-          {/* AUTHENTIC VINTAGE TREASURE MAP WITH 3 CROSSES & NATHAN DRAKE TRAIL         */}
+          {/* VINTAGE TREASURE MAP CANVAS WITH NATHAN DRAKE & WAYPOINTS                 */}
           {/* ========================================================================= */}
-          <div className="my-1.5 select-none">
-            {/* Authentic Map Image Canvas Area */}
+          <div className="my-2 select-none">
             <div
               style={{
                 backgroundImage: `url('/assets/images/pirate_trail_map.png')`,
@@ -630,14 +669,13 @@ export default function TreasureCard({
               data-nathan-container="true"
               className="relative w-full aspect-[16/9.2] bg-[length:100%_100%] bg-center bg-no-repeat rounded-lg overflow-visible select-none border border-[#8b6943]/30 shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
             >
-              {/* Dynamic Dotted Trail Highlight Overlay - Strictly follows the dotted path with heavy lineweight glow */}
+              {/* Dynamic Dotted Trail Highlight Overlay */}
               <svg
                 viewBox="0 0 1000 625"
                 className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible"
                 preserveAspectRatio="none"
               >
                 <defs>
-                  {/* Heavy Gold Glow Filter */}
                   <filter id="goldBarGlow" x="-30%" y="-30%" width="160%" height="160%">
                     <feGaussianBlur stdDeviation="3.5" result="blur" />
                     <feMerge>
@@ -646,7 +684,6 @@ export default function TreasureCard({
                     </feMerge>
                   </filter>
 
-                  {/* Radiant Metallic Gold Gradient */}
                   <linearGradient id="goldBarGrad" x1="0%" y1="100%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#d97706" />
                     <stop offset="25%" stopColor="#f59e0b" />
@@ -655,20 +692,15 @@ export default function TreasureCard({
                     <stop offset="100%" stopColor="#d97706" />
                   </linearGradient>
 
-                  {/* Circular Waypoint Hole Mask to prevent golden trail from showing inside incomplete rings */}
                   <mask id="trailHoleMask">
                     <rect x="0" y="0" width="1000" height="625" fill="#ffffff" />
                     <circle cx="82" cy="590" r="14" fill="#000000" />
-                    {!unlockedClues[1] && (
-                      <circle cx="212" cy="363" r="14" fill="#000000" />
-                    )}
-                    {!unlockedClues[2] && (
-                      <circle cx="569" cy="305" r="14" fill="#000000" />
-                    )}
+                    {!unlockedClues[1] && <circle cx="212" cy="363" r="14" fill="#000000" />}
+                    {!unlockedClues[2] && <circle cx="569" cy="305" r="14" fill="#000000" />}
                   </mask>
                 </defs>
 
-                {/* Base Inked Dotted Trail rendered onto the clean parchment */}
+                {/* Base Inked Dotted Trail */}
                 <path
                   d="M 82 590 C 65 505, 115 363, 212 363 C 295 363, 345 488, 435 488 C 520 488, 570 390, 569 305 C 567 195, 440 172, 342 205"
                   fill="none"
@@ -680,7 +712,7 @@ export default function TreasureCard({
                   mask="url(#trailHoleMask)"
                 />
 
-                {/* Layer 1: Ambient High-Intensity Gold Glow Aura */}
+                {/* Layer 1: Ambient Gold Glow Aura */}
                 {productProgressFraction > 0 && (
                   <motion.path
                     d="M 82 590 C 65 505, 115 363, 212 363 C 295 363, 345 488, 435 488 C 520 488, 570 390, 569 305 C 567 195, 440 172, 342 205"
@@ -692,14 +724,12 @@ export default function TreasureCard({
                     filter="url(#goldBarGlow)"
                     mask="url(#trailHoleMask)"
                     initial={{ pathLength: 0 }}
-                    animate={{
-                      pathLength: productProgressFraction,
-                    }}
+                    animate={{ pathLength: productProgressFraction }}
                     transition={{ duration: 1.85, ease: 'linear' }}
                   />
                 )}
 
-                {/* Layer 2: Heavy-Lineweight Glowing Dotted Line strictly over the dots */}
+                {/* Layer 2: Glowing Dotted Line */}
                 {productProgressFraction > 0 && (
                   <motion.path
                     d="M 82 590 C 65 505, 115 363, 212 363 C 295 363, 345 488, 435 488 C 520 488, 570 390, 569 305 C 567 195, 440 172, 342 205"
@@ -711,14 +741,12 @@ export default function TreasureCard({
                     filter="url(#goldBarGlow)"
                     mask="url(#trailHoleMask)"
                     initial={{ pathLength: 0 }}
-                    animate={{
-                      pathLength: productProgressFraction,
-                    }}
+                    animate={{ pathLength: productProgressFraction }}
                     transition={{ duration: 1.85, ease: 'linear' }}
                   />
                 )}
 
-                {/* Layer 3: High-Luminance Brilliant White-Gold Core on each Dot */}
+                {/* Layer 3: Brilliant Core Dots */}
                 {productProgressFraction > 0 && (
                   <motion.path
                     d="M 82 590 C 65 505, 115 363, 212 363 C 295 363, 345 488, 435 488 C 520 488, 570 390, 569 305 C 567 195, 440 172, 342 205"
@@ -729,24 +757,22 @@ export default function TreasureCard({
                     strokeLinecap="round"
                     mask="url(#trailHoleMask)"
                     initial={{ pathLength: 0 }}
-                    animate={{
-                      pathLength: productProgressFraction,
-                    }}
+                    animate={{ pathLength: productProgressFraction }}
                     transition={{ duration: 1.85, ease: 'linear' }}
                   />
                 )}
               </svg>
 
-              {/* Trailhead Starting Point: Inked Black Ring throughout the expedition */}
+              {/* Trailhead Camp Point */}
               <div
                 style={{ left: '8.2%', top: '94.4%' }}
                 className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center pointer-events-auto cursor-pointer group"
-                title="Trailhead • Expedition Starting Point"
+                title="Expedition Basecamp"
               >
                 <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-transparent border-[2.5px] border-[#0a0502] shadow-[0_1px_4px_rgba(0,0,0,0.45)] flex items-center justify-center group-hover:scale-110 transition-transform" />
               </div>
 
-              {/* 3 Waypoints Positioned Along the Trail (Black Rings while incomplete, Stamped Crosses when completed) */}
+              {/* Waypoints Along the Trail */}
               {mapWaypoints.map((wp) => {
                 const isFinalX = wp.isFinalX;
                 const isSelectedClue = activeCrossClue === wp.clueNum;
@@ -764,42 +790,40 @@ export default function TreasureCard({
                     title={`${wp.title}${wp.clueNum ? ` • Click to view Clue ${wp.clueNum}` : ''}`}
                   >
                     {isFinalX ? (
-                      // Cross III / Grand Crimson Vault X directly over the printed X
                       <div
-                        className={`relative flex items-center justify-center transition-all duration-300 ${wp.isDone
-                          ? 'scale-125 drop-shadow-[0_0_12px_rgba(239,68,68,0.95)]'
-                          : isSelectedClue
+                        className={`relative flex items-center justify-center transition-all duration-300 ${
+                          wp.isDone
+                            ? 'scale-125 drop-shadow-[0_0_12px_rgba(239,68,68,0.95)]'
+                            : isSelectedClue
                             ? 'scale-120 drop-shadow-[0_0_10px_rgba(212,175,55,0.95)]'
                             : 'opacity-90 group-hover:scale-110'
-                          }`}
+                        }`}
                       >
                         <span
-                          className={`font-serif font-black text-3xl sm:text-4xl leading-none select-none ${wp.isDone
-                            ? 'text-[#ef4444] animate-pulse drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]'
-                            : isSelectedClue
+                          className={`font-serif font-black text-3xl sm:text-4xl leading-none select-none ${
+                            wp.isDone
+                              ? 'text-[#ef4444] animate-pulse drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]'
+                              : isSelectedClue
                               ? 'text-[#ffd700]'
                               : 'text-[#851c1c]/90'
-                            }`}
+                          }`}
                         >
                           ✕
                         </span>
                       </div>
                     ) : wp.isDone ? (
-                      // Completed Sector Waypoint: Turns into a Stamped Inked Cross
-                      <div
-                        className="relative flex items-center justify-center transition-all duration-300 scale-120 drop-shadow-[0_0_8px_rgba(212,175,55,0.95)]"
-                      >
+                      <div className="relative flex items-center justify-center transition-all duration-300 scale-120 drop-shadow-[0_0_8px_rgba(212,175,55,0.95)]">
                         <span className="font-mono font-black text-xl sm:text-2xl leading-none select-none text-[#8b261d]">
                           ✕
                         </span>
                       </div>
                     ) : (
-                      // Incomplete Sector Waypoint: Inked Black Ring with Natural Map Background
                       <div
-                        className={`relative flex items-center justify-center transition-all duration-300 ${isSelectedClue
-                          ? 'scale-115 drop-shadow-[0_1px_4px_rgba(0,0,0,0.45)]'
-                          : 'opacity-90 group-hover:scale-110 group-hover:opacity-100'
-                          }`}
+                        className={`relative flex items-center justify-center transition-all duration-300 ${
+                          isSelectedClue
+                            ? 'scale-115 drop-shadow-[0_1px_4px_rgba(0,0,0,0.45)]'
+                            : 'opacity-90 group-hover:scale-110 group-hover:opacity-100'
+                        }`}
                       >
                         <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-transparent border-[2.5px] border-[#0a0502] shadow-[0_1px_4px_rgba(0,0,0,0.45)]" />
                       </div>
@@ -808,7 +832,7 @@ export default function TreasureCard({
                 );
               })}
 
-              {/* Miniature Nathan Drake Explorer running directly along the curved map trail */}
+              {/* Miniature Explorer Sprite running directly along the curved map trail */}
               <motion.div
                 initial={{ left: `${currentPosition.x}%`, top: `${currentPosition.y}%` }}
                 animate={
@@ -830,182 +854,286 @@ export default function TreasureCard({
                   facing={facing}
                   size={44}
                   showDust={true}
-                  tooltipText={`Nathan Drake • Expedition Progress: ${completedProductsCount}/${totalProductsCount} Products Cleared`}
+                  tooltipText={`Progress: ${completedProductsCount}/${totalProductsCount} Checkpoints Completed`}
                 />
-                {/* Luminous Gold Trail Contact Badge */}
                 <div className="relative flex items-center justify-center -mt-0.5">
                   <div className="w-3.5 h-1 rounded-full bg-[#1b0e06]/70 blur-[0.5px]" />
                   <div className="absolute w-2.5 h-2.5 rounded-full bg-[#fbbf24]/35 blur-[1.5px] animate-pulse" />
                 </div>
               </motion.div>
             </div>
+
+            {/* Map Status Strip */}
+            <div className="mt-2 w-full flex items-center justify-between px-3 py-1.5 rounded-md bg-[#1f1006]/95 border border-[#8b6943]/60 text-[#f5ebd7] font-mono text-[10px] sm:text-xs shadow-inner">
+              <span className="flex items-center gap-1.5 text-[#ffd700] font-bold">
+                <span>🧭</span>
+                <span>
+                  Position:{' '}
+                  <strong className="text-white">
+                    {unlockedClues[3]
+                      ? 'Secret Vault Reached (Lab 509)'
+                      : unlockedClues[2]
+                      ? 'En Route to Vault (Lab 509)'
+                      : unlockedClues[1]
+                      ? 'En Route to Lab 508'
+                      : 'Expedition Camp (Lab 502)'}
+                  </strong>
+                </span>
+              </span>
+              <span className="text-[#e5c386] font-bold">
+                Clues Unlocked:{' '}
+                <strong className="text-[#ffd700]">
+                  {(unlockedClues[1] ? 1 : 0) + (unlockedClues[2] ? 1 : 0) + (unlockedClues[3] ? 1 : 0)} / 3
+                </strong>
+              </span>
+            </div>
           </div>
 
           {/* ========================================================================= */}
-          {/* 3 SEQUENTIAL CIPHER LEDGERS (ASSIGNED TO WAYPOINT I, II, & VAULT X)        */}
+          {/* THREE CLUES SECTION                                                       */}
           {/* ========================================================================= */}
-          <div className="flex flex-col gap-1.5 my-1.5">
-            {/* Clue I (Assigned to Waypoint I / Stage 01) */}
+          <div className="flex flex-col gap-2.5 my-2">
+            {/* Clues Header Bar with Count on Top */}
+            <div className="flex items-center justify-between px-1 mb-0.5">
+              <span
+                style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#3d1f05] flex items-center gap-1.5"
+              >
+                <span>📜</span>
+                <span>Clues</span>
+              </span>
+              <span
+                style={{ fontFamily: "var(--font-oswald), sans-serif" }}
+                className="text-xs sm:text-sm font-bold text-[#854d0e] bg-[#fef3c7] border border-[#d4af37]/60 px-3 py-0.5 rounded-full shadow-xs"
+              >
+                {(unlockedClues[1] ? 1 : 0) + (unlockedClues[2] ? 1 : 0) + (unlockedClues[3] ? 1 : 0)} / 3 Unlocked
+              </span>
+            </div>
+
+            {/* Card 1: Clue 1 */}
             <div
               onClick={() => setActiveCrossClue(activeCrossClue === 1 ? null : 1)}
-              className={`p-2.5 rounded border transition-all cursor-pointer ${activeCrossClue === 1 ? 'ring-2 ring-[#d4af37] shadow-[0_0_12px_rgba(212,175,55,0.3)]' : ''
-                } ${unlockedClues[1]
-                  ? 'bg-[#241308]/[0.06] border-[#8b6943]/50 text-[#241308]'
+              className={`p-3 sm:p-3.5 rounded-lg border-2 transition-all cursor-pointer ${
+                activeCrossClue === 1
+                  ? 'ring-2 ring-[#d4af37] shadow-[0_0_14px_rgba(212,175,55,0.4)]'
+                  : ''
+              } ${
+                unlockedClues[1]
+                  ? 'bg-[#fcf7ee]/90 border-[#8b6943]/60 text-[#1c0f05] shadow-sm'
                   : completedLabsCount >= 1
-                    ? 'bg-[#d4af37]/10 border-[#d4af37]/60 text-[#241308]'
-                    : 'bg-[#241308]/[0.02] border-[#8b6943]/20 text-[#664b32] opacity-70'
-                }`}
+                  ? 'bg-[#d4af37]/15 border-[#d4af37]/80 text-[#1c0f05] shadow-sm'
+                  : 'bg-[#241308]/[0.04] border-[#8b6943]/30 text-[#664b32] opacity-80'
+              }`}
             >
-              <div className="flex items-center justify-between mb-1 pb-0.5 border-b border-[#8b6943]/20">
-                <div className="flex items-center gap-1.5">
-                  <NauticalShipIcon size={11} color="#7a5214" />
-                  <span className="text-[8px] font-mono font-bold uppercase tracking-wider text-[#7a5214]">
-                    CLUE I • UNSEALED AT WAYPOINT I (STAGE 01)
-                  </span>
-                </div>
+              <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-[#8b6943]/20">
                 <span
-                  className={`text-[7.5px] font-mono font-bold px-1.5 py-0.2 rounded border ${unlockedClues[1]
-                    ? 'bg-[#8b6943]/15 text-[#6b4516] border-[#8b6943]/40'
-                    : completedLabsCount >= 1
-                      ? 'bg-[#d4af37]/20 text-[#854d0e] border-[#d4af37]/50'
-                      : 'bg-[#241308]/10 text-[#7a5a3a] border-[#8b6943]/20'
-                    }`}
+                  style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                  className="text-sm sm:text-base font-black text-[#2c1405]"
                 >
-                  {unlockedClues[1] ? 'DECIPHERED ✦' : completedLabsCount >= 1 ? 'UNSEAL READY' : 'WAYPOINT I LOCKED'}
+                  Clue 1
+                </span>
+                <span
+                  style={{ fontFamily: "var(--font-oswald), sans-serif" }}
+                  className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                    unlockedClues[1]
+                      ? 'bg-emerald-800/15 text-emerald-900 border-emerald-700/50'
+                      : completedLabsCount >= 1
+                      ? 'bg-amber-500/20 text-amber-900 border-amber-600/50 animate-pulse'
+                      : 'bg-[#241308]/10 text-[#7a5a3a] border-[#8b6943]/30'
+                  }`}
+                >
+                  {unlockedClues[1] ? 'Unlocked' : completedLabsCount >= 1 ? 'Ready' : 'Locked (Complete Lab 502)'}
                 </span>
               </div>
 
               {unlockedClues[1] ? (
-                <p className="text-xs sm:text-[13px] text-[#2b1704] font-[family-name:var(--font-handwriting)] font-bold italic leading-snug pt-0.5">
-                  &quot;{targetClues?.clue1}&quot;
+                <p
+                  style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                  className="text-sm sm:text-[15px] font-semibold text-[#1c0f05] leading-relaxed pt-0.5"
+                >
+                  {targetClues?.clue1}
                 </p>
               ) : completedLabsCount >= 1 ? (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 pt-0.5">
-                  <p className="text-[9.5px] sm:text-[10px] text-[#7a5214] font-serif italic">
-                    Expedition Stage 01 cleared! Dispatch Nathan along the trail to Waypoint I to claim this clue.
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1">
+                  <p
+                    style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                    className="text-xs sm:text-sm font-semibold text-[#683f18]"
+                  >
+                    Lab 502 complete! Ready to view Clue 1.
                   </p>
                   <button
                     type="button"
                     onClick={(e) => handleGetClue(1, e)}
                     disabled={isDispatching !== null}
-                    className="w-full sm:w-auto px-3.5 py-1 rounded bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#b45309] text-[#1a0c04] font-mono font-black text-[9.5px] uppercase tracking-wider shadow-[0_0_12px_rgba(245,158,11,0.45)] border border-[#fff3cc]/80 hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-1 cursor-pointer shrink-0 animate-pulse"
+                    style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                    className="w-full sm:w-auto px-4 py-1.5 rounded-md bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#b45309] text-[#1a0c04] font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_14px_rgba(245,158,11,0.5)] border border-[#fff3cc] hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 animate-pulse"
                   >
-                    <span>{isDispatching === 1 ? '🏃 RUNNING TO WAYPOINT I...' : '✦ GET CLUE I'}</span>
+                    <span>{isDispatching === 1 ? 'Unlocking...' : '✦ View Clue 1'}</span>
                   </button>
                 </div>
               ) : (
-                <p className="text-[9.5px] sm:text-[10px] text-[#7a5a3a] font-serif italic">
-                  Complete any 1 expedition lab to unlock the &quot;Get Clue&quot; dispatch.
+                <p
+                  style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                  className="text-xs sm:text-sm text-[#7a5a3a] font-medium pt-0.5"
+                >
+                  Complete Lab 502 to unlock this clue.
                 </p>
               )}
             </div>
 
-            {/* Clue II (Assigned to Waypoint II / Stage 02) */}
+            {/* Card 2: Clue 2 */}
             <div
               onClick={() => setActiveCrossClue(activeCrossClue === 2 ? null : 2)}
-              className={`p-2.5 rounded border transition-all cursor-pointer ${activeCrossClue === 2 ? 'ring-2 ring-[#d4af37] shadow-[0_0_12px_rgba(212,175,55,0.3)]' : ''
-                } ${unlockedClues[2]
-                  ? 'bg-[#241308]/[0.06] border-[#8b6943]/50 text-[#241308]'
+              className={`p-3 sm:p-3.5 rounded-lg border-2 transition-all cursor-pointer ${
+                activeCrossClue === 2
+                  ? 'ring-2 ring-[#d4af37] shadow-[0_0_14px_rgba(212,175,55,0.4)]'
+                  : ''
+              } ${
+                unlockedClues[2]
+                  ? 'bg-[#fcf7ee]/90 border-[#8b6943]/60 text-[#1c0f05] shadow-sm'
                   : completedLabsCount >= 2
-                    ? 'bg-[#d4af37]/10 border-[#d4af37]/60 text-[#241308]'
-                    : 'bg-[#241308]/[0.02] border-[#8b6943]/20 text-[#664b32] opacity-70'
-                }`}
+                  ? 'bg-[#d4af37]/15 border-[#d4af37]/80 text-[#1c0f05] shadow-sm'
+                  : 'bg-[#241308]/[0.04] border-[#8b6943]/30 text-[#664b32] opacity-80'
+              }`}
             >
-              <div className="flex items-center justify-between mb-1 pb-0.5 border-b border-[#8b6943]/20">
-                <div className="flex items-center gap-1.5">
-                  <IslandMountainIcon size={11} color="#7a5214" />
-                  <span className="text-[8px] font-mono font-bold uppercase tracking-wider text-[#7a5214]">
-                    CLUE II • UNSEALED AT WAYPOINT II (STAGE 02)
-                  </span>
-                </div>
+              <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-[#8b6943]/20">
                 <span
-                  className={`text-[7.5px] font-mono font-bold px-1.5 py-0.2 rounded border ${unlockedClues[2]
-                    ? 'bg-[#8b6943]/15 text-[#6b4516] border-[#8b6943]/40'
-                    : completedLabsCount >= 2
-                      ? 'bg-[#d4af37]/20 text-[#854d0e] border-[#d4af37]/50'
-                      : 'bg-[#241308]/10 text-[#7a5a3a] border-[#8b6943]/20'
-                    }`}
+                  style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                  className="text-sm sm:text-base font-black text-[#2c1405]"
                 >
-                  {unlockedClues[2] ? 'DECIPHERED ✦' : completedLabsCount >= 2 ? 'UNSEAL READY' : 'WAYPOINT II LOCKED'}
+                  Clue 2
+                </span>
+                <span
+                  style={{ fontFamily: "var(--font-oswald), sans-serif" }}
+                  className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                    unlockedClues[2]
+                      ? 'bg-emerald-800/15 text-emerald-900 border-emerald-700/50'
+                      : completedLabsCount >= 2
+                      ? 'bg-amber-500/20 text-amber-900 border-amber-600/50 animate-pulse'
+                      : 'bg-[#241308]/10 text-[#7a5a3a] border-[#8b6943]/30'
+                  }`}
+                >
+                  {unlockedClues[2] ? 'Unlocked' : completedLabsCount >= 2 ? 'Ready' : 'Locked (Complete Lab 508)'}
                 </span>
               </div>
 
               {unlockedClues[2] ? (
-                <p className="text-xs sm:text-[13px] text-[#2b1704] font-[family-name:var(--font-handwriting)] font-bold italic leading-snug pt-0.5">
-                  &quot;{targetClues?.clue2}&quot;
-                </p>
+                <div className="flex items-center gap-3 pt-0.5">
+                  <div className="w-10 h-10 rounded-full bg-[#fef3c7] border border-[#d4af37] flex items-center justify-center text-2xl shrink-0 shadow-xs">
+                    {targetClues?.icon || targetProduct?.icon || '📦'}
+                  </div>
+                  <p
+                    style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                    className="text-sm sm:text-[15px] font-semibold text-[#1c0f05] leading-relaxed"
+                  >
+                    {targetClues?.clue2}
+                  </p>
+                </div>
               ) : completedLabsCount >= 2 ? (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 pt-0.5">
-                  <p className="text-[9.5px] sm:text-[10px] text-[#7a5214] font-serif italic">
-                    Expedition Stage 02 cleared! Dispatch Nathan along the trail to Waypoint II to claim this clue.
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1">
+                  <p
+                    style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                    className="text-xs sm:text-sm font-semibold text-[#683f18]"
+                  >
+                    Lab 508 complete! Ready to view Clue 2.
                   </p>
                   <button
                     type="button"
                     onClick={(e) => handleGetClue(2, e)}
                     disabled={isDispatching !== null}
-                    className="w-full sm:w-auto px-3.5 py-1 rounded bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#b45309] text-[#1a0c04] font-mono font-black text-[9.5px] uppercase tracking-wider shadow-[0_0_12px_rgba(245,158,11,0.45)] border border-[#fff3cc]/80 hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-1 cursor-pointer shrink-0 animate-pulse"
+                    style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                    className="w-full sm:w-auto px-4 py-1.5 rounded-md bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#b45309] text-[#1a0c04] font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_14px_rgba(245,158,11,0.5)] border border-[#fff3cc] hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 animate-pulse"
                   >
-                    <span>{isDispatching === 2 ? '🏃 RUNNING TO WAYPOINT II...' : '✦ GET CLUE II'}</span>
+                    <span>{isDispatching === 2 ? 'Unlocking...' : '✦ View Clue 2'}</span>
                   </button>
                 </div>
               ) : (
-                <p className="text-[9.5px] sm:text-[10px] text-[#7a5a3a] font-serif italic">
-                  Complete any 2 expedition labs to unlock the &quot;Get Clue&quot; dispatch.
+                <p
+                  style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                  className="text-xs sm:text-sm text-[#7a5a3a] font-medium pt-0.5"
+                >
+                  Complete Lab 508 to unlock this clue.
                 </p>
               )}
             </div>
 
-            {/* Clue III (Assigned to Vault X / Stage 03) */}
+            {/* Card 3: Clue 3 */}
             <div
               onClick={() => setActiveCrossClue(activeCrossClue === 3 ? null : 3)}
-              className={`p-2.5 rounded border transition-all cursor-pointer ${activeCrossClue === 3 ? 'ring-2 ring-[#d4af37] shadow-[0_0_12px_rgba(212,175,55,0.3)]' : ''
-                } ${unlockedClues[3]
-                  ? 'bg-[#241308]/[0.06] border-[#8b6943]/50 text-[#241308]'
+              className={`p-3 sm:p-3.5 rounded-lg border-2 transition-all cursor-pointer ${
+                activeCrossClue === 3
+                  ? 'ring-2 ring-[#d4af37] shadow-[0_0_14px_rgba(212,175,55,0.4)]'
+                  : ''
+              } ${
+                unlockedClues[3]
+                  ? 'bg-[#fcf7ee]/90 border-[#8b6943]/60 text-[#1c0f05] shadow-sm'
                   : completedLabsCount >= 3
-                    ? 'bg-[#d4af37]/10 border-[#d4af37]/60 text-[#241308]'
-                    : 'bg-[#241308]/[0.02] border-[#8b6943]/20 text-[#664b32] opacity-70'
-                }`}
+                  ? 'bg-[#d4af37]/15 border-[#d4af37]/80 text-[#1c0f05] shadow-sm'
+                  : 'bg-[#241308]/[0.04] border-[#8b6943]/30 text-[#664b32] opacity-80'
+              }`}
             >
-              <div className="flex items-center justify-between mb-1 pb-0.5 border-b border-[#8b6943]/20">
-                <div className="flex items-center gap-1.5">
-                  <MapScrollIcon size={11} color="#7a5214" />
-                  <span className="text-[8px] font-mono font-bold uppercase tracking-wider text-[#7a5214]">
-                    CLUE III • UNSEALED AT VAULT X (STAGE 03)
-                  </span>
-                </div>
+              <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-[#8b6943]/20">
                 <span
-                  className={`text-[7.5px] font-mono font-bold px-1.5 py-0.2 rounded border ${unlockedClues[3]
-                    ? 'bg-[#8b6943]/15 text-[#6b4516] border-[#8b6943]/40'
-                    : completedLabsCount >= 3
-                      ? 'bg-[#d4af37]/20 text-[#854d0e] border-[#d4af37]/50'
-                      : 'bg-[#241308]/10 text-[#7a5a3a] border-[#8b6943]/20'
-                    }`}
+                  style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                  className="text-sm sm:text-base font-black text-[#2c1405]"
                 >
-                  {unlockedClues[3] ? 'DECIPHERED ✦' : completedLabsCount >= 3 ? 'UNSEAL READY' : 'VAULT X LOCKED'}
+                  Clue 3
+                </span>
+                <span
+                  style={{ fontFamily: "var(--font-oswald), sans-serif" }}
+                  className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                    unlockedClues[3]
+                      ? 'bg-emerald-800/15 text-emerald-900 border-emerald-700/50'
+                      : completedLabsCount >= 3
+                      ? 'bg-amber-500/20 text-amber-900 border-amber-600/50 animate-pulse'
+                      : 'bg-[#241308]/10 text-[#7a5a3a] border-[#8b6943]/30'
+                  }`}
+                >
+                  {unlockedClues[3] ? 'Unlocked' : completedLabsCount >= 3 ? 'Ready' : 'Locked (Complete Lab 509)'}
                 </span>
               </div>
 
               {unlockedClues[3] ? (
-                <p className="text-xs sm:text-[13px] text-[#2b1704] font-[family-name:var(--font-handwriting)] font-bold italic leading-snug pt-0.5">
-                  &quot;{targetClues?.clue3}&quot;
-                </p>
+                <div className="flex flex-col gap-2 pt-0.5">
+                  <p
+                    style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                    className="text-sm sm:text-[15px] font-semibold text-[#1c0f05] leading-relaxed"
+                  >
+                    {targetClues?.clue3}
+                  </p>
+
+                  {targetClues?.cipherPattern && (
+                    <div className="flex flex-col items-center gap-1 my-1 p-2.5 rounded-lg bg-[#140a03] border-2 border-[#d4af37]/80 shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
+                      <span className="font-mono text-base sm:text-lg md:text-xl font-black text-[#ffd700] tracking-[0.22em] text-center select-text">
+                        {targetClues.cipherPattern}
+                      </span>
+                    </div>
+                  )}
+                </div>
               ) : completedLabsCount >= 3 ? (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 pt-0.5">
-                  <p className="text-[9.5px] sm:text-[10px] text-[#7a5214] font-serif italic">
-                    All 3 Expedition Stages cleared! Dispatch Nathan along the trail to Vault X to claim the final clue.
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1">
+                  <p
+                    style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                    className="text-xs sm:text-sm font-semibold text-[#683f18]"
+                  >
+                    All 3 labs complete! Ready to view Clue 3.
                   </p>
                   <button
                     type="button"
                     onClick={(e) => handleGetClue(3, e)}
                     disabled={isDispatching !== null}
-                    className="w-full sm:w-auto px-3.5 py-1 rounded bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#b45309] text-[#1a0c04] font-mono font-black text-[9.5px] uppercase tracking-wider shadow-[0_0_12px_rgba(245,158,11,0.45)] border border-[#fff3cc]/80 hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-1 cursor-pointer shrink-0 animate-pulse"
+                    style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                    className="w-full sm:w-auto px-4 py-1.5 rounded-md bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#b45309] text-[#1a0c04] font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_14px_rgba(245,158,11,0.5)] border border-[#fff3cc] hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 animate-pulse"
                   >
-                    <span>{isDispatching === 3 ? '🏃 RUNNING TO VAULT X...' : '✦ GET CLUE III'}</span>
+                    <span>{isDispatching === 3 ? 'Unlocking...' : '✦ View Clue 3'}</span>
                   </button>
                 </div>
               ) : (
-                <p className="text-[9.5px] sm:text-[10px] text-[#7a5a3a] font-serif italic">
-                  Complete all 3 expedition labs to unlock the final &quot;Get Clue&quot; dispatch.
+                <p
+                  style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                  className="text-xs sm:text-sm text-[#7a5a3a] font-medium pt-0.5"
+                >
+                  Complete all 3 labs to unlock this clue.
                 </p>
               )}
             </div>
@@ -1014,29 +1142,39 @@ export default function TreasureCard({
           {/* ========================================================================= */}
           {/* USER ANSWER ENTRY INPUT BOX & VERIFICATION                                */}
           {/* ========================================================================= */}
-          <div className="mt-1 pt-1.5 border-t border-[#8b6943]/35">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[8.5px] font-mono font-bold uppercase tracking-wider text-[#6b4516]">
-                INSCRIBE DISCOVERY DESIGNATION:
+          <div className="mt-2 pt-2.5 border-t-2 border-[#8b6943]/35">
+            <div className="flex items-center justify-between mb-2">
+              <span
+                style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#3d1f05] flex items-center gap-1.5"
+              >
+                <span>🗝️</span>
+                <span>Guess the Secret Project</span>
               </span>
               {isVerified && (
-                <span className="px-2 py-0.5 rounded bg-[#8b261d]/15 text-[#8b261d] border border-[#8b261d]/40 font-mono text-[7.5px] font-bold uppercase tracking-wider">
-                  VERIFIED
+                <span className="px-2.5 py-0.5 rounded bg-emerald-800/15 text-emerald-900 border border-emerald-800/40 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
+                  ✦ Solved
                 </span>
               )}
             </div>
 
             {isVerified ? (
-              <div className="p-2.5 rounded border border-[#8b6943]/60 bg-[#241308]/[0.07] flex items-center justify-between gap-2 shadow-sm">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-full bg-[#24140a] border border-[#d4af37] flex items-center justify-center text-[#d4af37] shrink-0 shadow-sm">
-                    <TreasureKeyIcon size={14} color="#d4af37" />
+              <div className="p-3.5 rounded-xl border-2 border-[#b38920] bg-gradient-to-r from-[#fef3c7]/80 to-[#fde68a]/60 flex items-center justify-between gap-3 shadow-md">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-b from-[#1c0f05] to-[#3a1e08] border-2 border-[#ffd700] flex items-center justify-center text-2xl shrink-0 shadow-md">
+                    {targetProduct?.icon || '🪐'}
                   </div>
                   <div className="min-w-0">
-                    <span className="block text-[8px] font-mono font-bold text-[#7a481c] uppercase tracking-wider">
-                      CONFIRMED DISCOVERY
-                    </span>
-                    <span className="text-xs sm:text-sm font-bold font-['EB_Garamond',_serif] text-[#1c0f05] truncate block">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono font-bold text-[#7a481c] uppercase tracking-wider">
+                        SOLVED EXPEDITION TREASURE
+                      </span>
+                      <span className="text-emerald-700 text-xs font-bold">✓</span>
+                    </div>
+                    <span
+                      style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                      className="text-base sm:text-lg font-black text-[#1c0f05] truncate block"
+                    >
                       {targetProduct?.name}
                     </span>
                   </div>
@@ -1047,52 +1185,59 @@ export default function TreasureCard({
                     type="button"
                     onClick={() => setModalOpen(true)}
                     style={{
+                      fontFamily: "var(--font-cinzel), 'Cinzel', serif",
                       clipPath:
                         'polygon(4px 0%, calc(100% - 4px) 0%, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0% calc(100% - 4px), 0% 4px)',
                     }}
-                    className="py-1 px-2.5 bg-gradient-to-r from-[#d4af37] to-[#b38920] text-[#1a0f05] font-black text-[9px] uppercase tracking-wider shadow font-['Cinzel',_serif] hover:brightness-110 cursor-pointer shrink-0"
+                    className="py-2 px-3.5 bg-gradient-to-r from-[#d4af37] to-[#b38920] text-[#1a0f05] font-black text-xs uppercase tracking-wider shadow font-bold hover:brightness-110 cursor-pointer shrink-0 animate-pulse"
                   >
-                    Inspect Relic
+                    View Reward ➔
                   </button>
                 )}
               </div>
             ) : (
-              <form onSubmit={handleVerifyGuess} className={`flex gap-1.5 ${isShaking ? 'animate-shake' : ''}`}>
+              <form
+                onSubmit={handleVerifyGuess}
+                className={`flex flex-col sm:flex-row gap-2 ${isShaking ? 'animate-shake' : ''}`}
+              >
                 <input
                   type="text"
                   value={guessInput}
                   onChange={(e) => setGuessInput(e.target.value)}
-                  placeholder="Inscribe the secret discovery title..."
-                  className="flex-1 px-3 py-1.5 rounded border border-[#8b6943]/50 bg-[#fff9ea]/85 text-[#241308] text-xs sm:text-sm font-['EB_Garamond',_serif] font-bold focus:outline-none focus:ring-1 focus:ring-[#8b6943] shadow-inner placeholder:font-serif placeholder:italic placeholder:text-xs placeholder:text-[#8b6943]/60"
+                  placeholder="Type project or company name..."
+                  style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                  className="flex-1 px-3.5 py-2.5 rounded-lg border-2 border-[#8b6943]/60 bg-[#fffbf2] text-[#1c0f05] text-sm sm:text-base font-bold focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:border-[#b38920] shadow-inner placeholder:font-normal placeholder:italic placeholder:text-[#8b6943]/60 transition"
                 />
                 <button
                   type="submit"
                   style={{
+                    fontFamily: "var(--font-cinzel), 'Cinzel', serif",
                     clipPath:
-                      'polygon(4px 0%, calc(100% - 4px) 0%, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0% calc(100% - 4px), 0% 4px)',
+                      'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
                   }}
-                  className="py-1.5 px-3.5 bg-gradient-to-b from-[#d4af37] via-[#b38920] to-[#7a5214] text-[#140802] font-black text-[10px] uppercase tracking-widest shadow-md transition hover:brightness-110 active:scale-[0.98] border-t border-[#fff3cc]/60 font-['Cinzel',_serif] cursor-pointer shrink-0"
+                  className="py-2.5 px-6 bg-gradient-to-b from-[#ffd700] via-[#d4af37] to-[#996515] text-[#140802] font-black text-xs sm:text-sm uppercase tracking-widest shadow-md transition hover:brightness-110 active:scale-[0.98] border-t border-[#fff9d6] cursor-pointer shrink-0"
                 >
-                  Verify
+                  Verify Solution
                 </button>
               </form>
             )}
 
-            {/* Status Feedback */}
+            {/* Status Feedback Banner */}
             {statusMessage && !isVerified && (
-              <div className="mt-1 py-0.5 px-2 rounded text-[7.5px] sm:text-[8px] font-mono font-bold uppercase tracking-wider text-center bg-[#8b261d]/15 text-[#8b261d] border border-[#8b261d]/30">
-                {statusMessage}
+              <div className="mt-2 py-1.5 px-3 rounded-lg text-xs sm:text-sm font-semibold text-center bg-rose-100 border border-rose-400 text-rose-900 shadow-sm flex items-center justify-center gap-1.5">
+                <span>⚠️</span>
+                <span>{statusMessage}</span>
               </div>
             )}
           </div>
         </div>
       </motion.div>
 
-      {/* Ancient Relic Inspection Modal */}
+      {/* Relic Reward Inspection Modal */}
       <AnimatePresence>
         {modalOpen && claimedRelic && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 sm:backdrop-blur-sm backdrop-blur-none p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
             role="dialog"
             aria-modal="true"
             onClick={() => setModalOpen(false)}
@@ -1114,8 +1259,8 @@ export default function TreasureCard({
               </button>
 
               <div className="text-center pb-2">
-                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full border border-[#d4af37]/60 bg-[#d4af37]/15 text-[#fef08a] font-mono text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest shadow-sm">
-                  <span>DISCOVERY CIPHER VERIFIED</span>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#d4af37]/60 bg-[#d4af37]/15 text-[#fef08a] font-mono text-[10px] sm:text-xs font-extrabold uppercase tracking-widest shadow-sm">
+                  <span>✦ EXPEDITION CHALLENGE COMPLETED ✦</span>
                 </div>
               </div>
 
@@ -1131,46 +1276,50 @@ export default function TreasureCard({
                 </div>
 
                 <div className="mt-2 text-center">
-                  <span className="px-2.5 py-0.5 rounded border border-[#f59e0b]/40 bg-[#f59e0b]/20 text-[#fbbf24] font-mono text-[9px] font-bold uppercase tracking-wider">
-                    {claimedRelic.rarity} Relic
+                  <span className="px-3 py-0.5 rounded border border-[#f59e0b]/40 bg-[#f59e0b]/20 text-[#fbbf24] font-mono text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+                    {claimedRelic.name}
                   </span>
                 </div>
               </div>
 
               <div className="text-center space-y-2">
-                <h3 className="text-xl sm:text-2xl font-bold font-['EB_Garamond',_serif] text-[#ffd700] tracking-tight leading-snug">
+                <h3
+                  style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                  className="text-xl sm:text-2xl font-bold text-[#ffd700] tracking-tight leading-snug"
+                >
                   {claimedRelic.name}
                 </h3>
-                <p className="text-[10.5px] sm:text-xs font-mono uppercase tracking-wider text-[#a07246]">
+                <p className="text-xs font-mono uppercase tracking-wider text-[#a07246]">
                   {claimedRelic.origin}
                 </p>
 
-                <div className="my-3 p-3 rounded-lg border border-[#8c6d23]/40 bg-[#140a02]/60 text-left">
-                  <p className="text-xs sm:text-sm text-[#e2d3be] font-[family-name:var(--font-handwriting)] font-bold italic leading-relaxed">
-                    &quot;{claimedRelic.lore}&quot;
+                <div className="my-3 p-3.5 rounded-lg border border-[#8c6d23]/40 bg-[#140a02]/60 text-left">
+                  <p className="text-xs sm:text-sm text-[#e2d3be] font-mono leading-relaxed">
+                    {claimedRelic.lore}
                   </p>
                 </div>
 
                 <div className="pt-1">
-                  <p className="text-[10px] sm:text-[11px] font-mono italic text-[#d4af37]/90 bg-[#2b1708]/70 py-1.5 px-3 rounded border border-[#8c6d23]/30">
-                    Inscription: {claimedRelic.inscription}
+                  <p className="text-xs font-mono italic text-[#d4af37]/90 bg-[#2b1708]/70 py-2 px-3 rounded border border-[#8c6d23]/30">
+                    &ldquo;{claimedRelic.inscription}&rdquo;
                   </p>
                 </div>
               </div>
 
               <div className="mt-5 pt-3 border-t border-[#8c6d23]/40 flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-[9px] font-mono text-[#a07246]">
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-mono text-[#a07246]">
                   <RelicCoinIcon size={14} color="#d4af37" />
-                  <span>Added to Explorer Dossier</span>
+                  <span>Relic Secured</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
                   style={{
+                    fontFamily: "var(--font-cinzel), 'Cinzel', serif",
                     clipPath:
                       'polygon(4px 0%, calc(100% - 4px) 0%, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0% calc(100% - 4px), 0% 4px)',
                   }}
-                  className="py-1.5 px-4 bg-gradient-to-r from-[#d4af37] to-[#b38920] text-[#1a0f05] font-black text-[11px] uppercase tracking-wider shadow font-['Cinzel',_serif] hover:brightness-110 cursor-pointer"
+                  className="py-1.5 px-4 bg-gradient-to-r from-[#d4af37] to-[#b38920] text-[#1a0f05] font-black text-xs uppercase tracking-wider shadow hover:brightness-110 cursor-pointer"
                 >
                   Close
                 </button>

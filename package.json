@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "db:clean": "node scripts/db-clean.mjs"
+    "db:clean": "node scripts/db-clean.mjs",
+    "clean:reviews": "node scripts/clean-reviews.mjs",
+    "seed:reviews": "node scripts/seed-reviews.mjs",
+    "seed:products": "node scripts/seed-products.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

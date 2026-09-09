@@ -31,7 +31,7 @@ export default function ExpeditionStatusHeader({
               style={{ fontFamily: "var(--font-geist-sans), system-ui, -apple-system, sans-serif" }}
               className="font-black text-lg sm:text-xl tracking-[0.16em] text-[#1c0f05] drop-shadow-[0_1px_0_rgba(255,255,255,0.6)] uppercase leading-none"
             >
-              EXPEDITION STATUS
+              LAB STATUS
             </h1>
             <p
               style={{ fontFamily: "var(--font-geist-sans), system-ui, -apple-system, sans-serif" }}

@@ -4,8 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export type NathanAnimationState = 'idle' | 'run' | 'survey' | 'cheer' | 'jump';
+export type CharacterType = 'nathan' | 'victor' | 'elena' | 'chloe';
 
 interface PixelNathanDrakeProps {
+  character?: CharacterType | string;
   state?: NathanAnimationState;
   facing?: 'right' | 'left';
   size?: number; // Height in px (e.g. 48, 56, 64)
@@ -17,26 +19,64 @@ interface PixelNathanDrakeProps {
   tooltipText?: string;
 }
 
-const QUIPS = [
-  "Sic Parvis Magna!",
-  "Greatness from small beginnings.",
-  "Just a typical day in the field.",
-  "Marco!... Polo.",
-  "Hold on to your compass!",
-  "One step closer to the treasure.",
-  "I've got a good feeling about this!",
-  "Always keep moving forward.",
-];
+const CHARACTER_QUIPS: Record<CharacterType, string[]> = {
+  nathan: [
+    "Sic Parvis Magna!",
+    "Greatness from small beginnings.",
+    "Just a typical day in the field.",
+    "Marco!... Polo.",
+    "Hold on to your compass!",
+    "One step closer to the treasure.",
+  ],
+  victor: [
+    "I'm gettin' too old for this!",
+    "Follow the money, kid.",
+    "Trust me on this one.",
+    "Never lost a treasure yet.",
+    "Keep your eyes sharp!",
+  ],
+  elena: [
+    "Documenting history in real time!",
+    "Hold still, let me get this shot.",
+    "Watch your step!",
+    "This belongs in the story.",
+    "Found another relic!",
+  ],
+  chloe: [
+    "Admit it, you missed me.",
+    "Leave the tough relics to me.",
+    "Eyes on the prize, darling.",
+    "I always play to win.",
+    "Right behind you!",
+  ],
+};
+
+const CHARACTER_NAMES: Record<CharacterType, string> = {
+  nathan: 'Nathan Drake',
+  victor: 'Victor Sullivan',
+  elena: 'Elena Fisher',
+  chloe: 'Chloe Frazer',
+};
+
+function resolveCharacter(raw?: string | null): CharacterType {
+  if (!raw) return 'nathan';
+  const lower = raw.toLowerCase();
+  if (lower.includes('elena')) return 'elena';
+  if (lower.includes('chloe')) return 'chloe';
+  if (lower.includes('victor') || lower.includes('sully')) return 'victor';
+  return 'nathan';
+}
 
 /**
- * Pixel-art Nathan Drake Miniature Character
- * Handcrafted 24x34 pixel matrix depicting Nathan Drake with:
- * - Signature slate-blue henley shirt & v-neck
- * - Dual leather shoulder holster & side harness
- * - Khaki/tan cargo pants & rugged explorer boots
- * - Messy brown hair & weathered adventurer features
+ * Pixel-art Multi-Character Miniature Explorer
+ * Dynamically switches appearance based on the chosen explorer:
+ * - Nathan Drake (Black adventurer hat, slate-blue henley, dual holster, cargo pants)
+ * - Victor Sullivan (Silver-grey hair & mustache, tropical safari shirt, slacks)
+ * - Elena Fisher (Blonde ponytail, explorer utility top, camera strap, cargo pants)
+ * - Chloe Frazer (Dark braided ponytail, ruby red henley, tactical harness, combat boots)
  */
 export default function PixelNathanDrake({
+  character,
   state = 'idle',
   facing = 'right',
   size = 52,
@@ -45,11 +85,45 @@ export default function PixelNathanDrake({
   showDust = true,
   className = '',
   onClick,
-  tooltipText = 'Nathan Drake • Field Recon',
+  tooltipText,
 }: PixelNathanDrakeProps) {
   const [frame, setFrame] = useState(0);
   const [internalQuip, setInternalQuip] = useState<string | null>(null);
   const [quipTimer, setQuipTimer] = useState<NodeJS.Timeout | null>(null);
+  const [activeChar, setActiveChar] = useState<CharacterType>('nathan');
+
+  useEffect(() => {
+    if (character) {
+      setActiveChar(resolveCharacter(character));
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      const checkStored = () => {
+        const stored = localStorage.getItem('user_avatar');
+        if (stored) {
+          setActiveChar(resolveCharacter(stored));
+          return;
+        }
+        try {
+          const session = localStorage.getItem('user_session');
+          if (session) {
+            const parsed = JSON.parse(session);
+            if (parsed?.avatar) {
+              setActiveChar(resolveCharacter(parsed.avatar));
+              return;
+            }
+          }
+        } catch {
+          // ignore
+        }
+        setActiveChar('nathan');
+      };
+      checkStored();
+      window.addEventListener('storage', checkStored);
+      return () => window.removeEventListener('storage', checkStored);
+    }
+  }, [character]);
 
   // Run cycle frame ticker
   useEffect(() => {
@@ -70,8 +144,9 @@ export default function PixelNathanDrake({
     if (onClick) {
       onClick();
     }
-    // Trigger fun random quip bubble
-    const randomQuip = QUIPS[Math.floor(Math.random() * QUIPS.length)];
+    // Trigger fun random quip bubble for the active character
+    const quipPool = CHARACTER_QUIPS[activeChar] || CHARACTER_QUIPS.nathan;
+    const randomQuip = quipPool[Math.floor(Math.random() * quipPool.length)];
     setInternalQuip(randomQuip);
 
     if (quipTimer) clearTimeout(quipTimer);
@@ -100,7 +175,6 @@ export default function PixelNathanDrake({
       const drakeRect = container.getBoundingClientRect();
       const bubbleRect = bubble.getBoundingClientRect();
 
-      // Find bounding boundary
       const boundaryEl =
         (container.closest('[data-nathan-container="true"]') as HTMLElement | null) ||
         (container.closest('.relative') as HTMLElement | null) ||
@@ -127,9 +201,7 @@ export default function PixelNathanDrake({
         shift = boundaryRect.right - padding - idealBubbleRight;
       }
 
-      // Check vertical clearance (if character is too close to top of container)
       const isBelow = drakeRect.top - bubbleRect.height - 14 < boundaryRect.top;
-
       setBubbleOffset({ shiftX: shift, isBelow });
     };
 
@@ -142,9 +214,10 @@ export default function PixelNathanDrake({
     };
   }, [activeSpeech, showSpeechBubble]);
 
-  // Calculate run bounce offset based on frame
   const runYOffset = state === 'run' ? (frame % 2 === 0 ? -2 : 0) : 0;
   const idleYOffset = state === 'idle' ? (frame % 2 === 0 ? -0.5 : 0.5) : 0;
+  const charLabel = CHARACTER_NAMES[activeChar] || 'Explorer';
+  const resolvedTooltip = tooltipText || `${charLabel} • Field Recon`;
 
   return (
     <div
@@ -155,7 +228,7 @@ export default function PixelNathanDrake({
         width: size * 0.75,
         height: size,
       }}
-      title={tooltipText}
+      title={resolvedTooltip}
     >
       {/* Dynamic Quip Speech Bubble - Boundary Clamped */}
       <AnimatePresence>
@@ -176,7 +249,6 @@ export default function PixelNathanDrake({
             <div className="relative px-2.5 py-1 rounded-md bg-[#180d06]/95 border border-[#d4af37] text-[#ffd700] text-[8.5px] sm:text-[9.5px] font-mono font-bold shadow-[0_4px_16px_rgba(0,0,0,0.9)] flex items-center gap-1.5 backdrop-blur-sm">
               <span className="text-[8px] opacity-85">💬</span>
               <span>{activeSpeech || "Let's find the lost sector!"}</span>
-              {/* Bubble Pointer Arrow dynamically anchored to Drake */}
               {bubbleOffset.isBelow ? (
                 <div
                   className="absolute -top-1 w-0 h-0 border-l-[3.5px] border-r-[3.5px] border-l-transparent border-r-transparent border-b-[4px] border-b-[#d4af37]"
@@ -238,351 +310,367 @@ export default function PixelNathanDrake({
         }}
         className="w-full h-full relative flex items-center justify-center filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"
       >
-        <NathanPixelSvg state={state} frame={frame} />
+        <ExplorerPixelSvg state={state} frame={frame} character={activeChar} />
       </div>
     </div>
   );
 }
 
 /**
- * Procedural Pixel-Art SVG Matrix for Nathan Drake
- * Coordinates mapped to a 24 x 32 pixel grid.
+ * Procedural Pixel-Art SVG Matrix supporting all 4 Uncharted Explorers
  */
-function NathanPixelSvg({ state, frame }: { state: NathanAnimationState; frame: number }) {
-  // Palettes tailored to Nathan Drake's outfit
-  const C = {
-    // Solid All-Black Explorer Hat
-    hatBlackDeep: '#08080a',
-    hatBlackMain: '#141419',
-    hatBlackShade: '#22222a',
-    hatBlackHighlight: '#3c3c47',
-    // Hair & Beard
-    hairDark: '#2a160b',
-    hairMid: '#4e2d17',
-    hairLight: '#734423',
-    stubble: '#3f2210',
-    // Skin & Battle Scars
-    skinBase: '#e8b88a',
-    skinShadow: '#c89264',
-    skinHighlight: '#f7d3b0',
-    scratchRed: '#dc2626',
-    // Expedition Scarf / Bandana Accent
-    scarfRed: '#991b1b',
-    scarfLight: '#b91c1c',
-    // Slate-Khaki Field Explorer Henley
-    shirtBase: '#43586f',
-    shirtShadow: '#2c3b4a',
-    shirtHighlight: '#5a7594',
-    buttons: '#f1f5f9',
-    // Leather Expedition Harness & Gear
-    holsterDark: '#221209',
-    holsterMid: '#432613',
-    holsterLight: '#683d1e',
-    buckleGold: '#ffd700',
-    canteenGreen: '#3f4c38',
-    canteenCap: '#d4af37',
-    gunMetal: '#333b47',
-    // Rugged Khaki Cargo Field Pants & Knee Reinforcements
-    pantsBase: '#9c7352',
-    pantsShadow: '#765236',
-    pantsHighlight: '#b88f6c',
-    pantsKnee: '#5e3f28',
-    pantsPocket: '#6b482f',
-    // Heavy Explorer Trekking Boots
-    bootBase: '#2a160b',
-    bootSole: '#100602',
-    bootLaces: '#d4af37',
-    // Relic / Journal / Compass (for cheer or survey)
-    gold: '#ffd700',
-    parchment: '#dfc086',
-  };
-
-  // State-specific leg & arm frame animations
-  // Run cycle has 6 frames
-  const runLegFrame = frame % 6;
+function ExplorerPixelSvg({
+  state,
+  frame,
+  character,
+}: {
+  state: NathanAnimationState;
+  frame: number;
+  character: CharacterType;
+}) {
   const isRun = state === 'run';
   const isCheer = state === 'cheer';
   const isSurvey = state === 'survey';
+  const runLegFrame = frame % 6;
+
+  // Custom palettes per character
+  const isElena = character === 'elena';
+  const isChloe = character === 'chloe';
+  const isVictor = character === 'victor';
+  const isNathan = character === 'nathan';
+
+  const shirtColor = isChloe
+    ? '#dc2626' // Chloe: Ruby red henley
+    : isElena
+      ? '#65a30d' // Elena: Olive explorer tank
+      : isVictor
+        ? '#ca8a04' // Sully: Safari gold/tan shirt
+        : '#43586f'; // Nathan: Slate-blue henley
+
+  const shirtShadow = isChloe
+    ? '#991b1b'
+    : isElena
+      ? '#4d7c0f'
+      : isVictor
+        ? '#854d0e'
+        : '#2c3b4a';
+
+  const pantsColor = isChloe
+    ? '#1e293b' // Chloe: Tactical charcoal pants
+    : isElena
+      ? '#78716c' // Elena: Field khaki/grey pants
+      : isVictor
+        ? '#57534e' // Sully: Classic brown trousers
+        : '#9c7352'; // Nathan: Rugged khaki cargo
+
+  const pantsHighlight = isChloe ? '#334155' : isElena ? '#a8a29e' : isVictor ? '#78716c' : '#b88f6c';
+  const pantsShadow = isChloe ? '#0f172a' : isElena ? '#57534e' : isVictor ? '#44403c' : '#765236';
+
+  const skinBase = isElena ? '#fce7d2' : isChloe ? '#f1cbb0' : '#e8b88a';
+  const skinShadow = isElena ? '#e2bc9d' : isChloe ? '#d49f7b' : '#c89264';
+  const skinHighlight = '#fef3c7';
 
   return (
-    <svg
-      viewBox="0 0 24 32"
-      className="w-full h-full"
-      style={{ shapeRendering: 'crispEdges' }}
-    >
+    <svg viewBox="0 0 24 32" className="w-full h-full" style={{ shapeRendering: 'crispEdges' }}>
       {/* ======================================================== */}
-      {/* 1. SOLID ALL-BLACK ADVENTURER HAT & HEAD                 */}
+      {/* 1. HEAD / HAIR / HAT PER EXPLORER                        */}
       {/* ======================================================== */}
-      {/* Hat Crown Top & Indent/Pinch */}
-      <rect x="9" y="0" width="6" height="1" fill={C.hatBlackHighlight} />
-      <rect x="8" y="1" width="8" height="1" fill={C.hatBlackShade} />
-      <rect x="11" y="0" width="2" height="1" fill={C.hatBlackDeep} />
+      {isNathan && (
+        // Nathan Drake: Classic Explorer Fedora Hat & Messy Hair
+        <>
+          <rect x="9" y="0" width="6" height="1" fill="#3c3c47" />
+          <rect x="8" y="1" width="8" height="1" fill="#22222a" />
+          <rect x="11" y="0" width="2" height="1" fill="#08080a" />
+          <rect x="7" y="2" width="10" height="2" fill="#141419" />
+          <rect x="7" y="3" width="10" height="1" fill="#08080a" />
+          <rect x="3" y="4" width="18" height="1" fill="#141419" />
+          <rect x="5" y="5" width="2" height="2" fill="#2a160b" />
+          <rect x="17" y="5" width="2" height="2" fill="#2a160b" />
+        </>
+      )}
 
-      {/* Hat Crown Body */}
-      <rect x="7" y="2" width="10" height="2" fill={C.hatBlackMain} />
-      <rect x="8" y="2" width="2" height="2" fill={C.hatBlackShade} />
-      
-      {/* Hat Band (Deep Black) */}
-      <rect x="7" y="3" width="10" height="1" fill={C.hatBlackDeep} />
+      {isVictor && (
+        // Victor Sullivan (Sully): Distinguished Silver/Grey Hair
+        <>
+          <rect x="8" y="1" width="8" height="2" fill="#cbd5e1" />
+          <rect x="7" y="2" width="10" height="3" fill="#e2e8f0" />
+          <rect x="6" y="3" width="2" height="3" fill="#94a3b8" />
+          <rect x="16" y="3" width="2" height="3" fill="#94a3b8" />
+          <rect x="9" y="1" width="6" height="1" fill="#f8fafc" />
+        </>
+      )}
 
-      {/* Wide Black Hat Brim */}
-      <rect x="3" y="4" width="18" height="1" fill={C.hatBlackMain} />
-      <rect x="2" y="4" width="2" height="1" fill={C.hatBlackHighlight} />
-      <rect x="20" y="4" width="2" height="1" fill={C.hatBlackHighlight} />
-      <rect x="4" y="4" width="16" height="1" fill={C.hatBlackDeep} />
-      <rect x="5" y="4" width="14" height="1" fill={C.hatBlackMain} />
+      {isElena && (
+        // Elena Fisher: Blonde Ponytail Hair flowing behind
+        <>
+          {/* Flowing Blonde Ponytail on left/back */}
+          <rect x="3" y="4" width="3" height="4" fill="#fde047" />
+          <rect x="2" y="7" width="3" height="4" fill="#eab308" />
+          <rect x="3" y="10" width="2" height="2" fill="#ca8a04" />
+          {/* Hairtie */}
+          <rect x="5" y="5" width="1" height="2" fill="#0284c7" />
+          {/* Blonde Crown */}
+          <rect x="7" y="1" width="10" height="4" fill="#fde047" />
+          <rect x="8" y="0" width="8" height="1" fill="#fef08a" />
+          <rect x="6" y="3" width="2" height="3" fill="#eab308" />
+          <rect x="16" y="3" width="2" height="3" fill="#eab308" />
+          <rect x="7" y="4" width="10" height="1" fill="#fde047" />
+        </>
+      )}
 
-      {/* Hair peeking beneath brim on sides */}
-      <rect x="5" y="5" width="2" height="2" fill={C.hairDark} />
-      <rect x="17" y="5" width="2" height="2" fill={C.hairDark} />
+      {isChloe && (
+        // Chloe Frazer: Dark Braided Ponytail flowing behind
+        <>
+          {/* Dark Ponytail on left/back */}
+          <rect x="3" y="4" width="3" height="5" fill="#171717" />
+          <rect x="2" y="8" width="3" height="5" fill="#262626" />
+          <rect x="3" y="12" width="2" height="2" fill="#0a0a0a" />
+          {/* Hairtie */}
+          <rect x="5" y="5" width="1" height="2" fill="#dc2626" />
+          {/* Jet Black Crown */}
+          <rect x="7" y="1" width="10" height="4" fill="#171717" />
+          <rect x="8" y="0" width="8" height="1" fill="#262626" />
+          <rect x="6" y="3" width="2" height="3" fill="#171717" />
+          <rect x="16" y="3" width="2" height="3" fill="#171717" />
+          <rect x="7" y="4" width="10" height="1" fill="#171717" />
+        </>
+      )}
 
       {/* Forehead & Face */}
-      <rect x="7" y="5" width="10" height="5" fill={C.skinBase} />
-      <rect x="8" y="5" width="8" height="1" fill={C.skinHighlight} />
+      <rect x="7" y="5" width="10" height="5" fill={skinBase} />
+      <rect x="8" y="5" width="8" height="1" fill={skinHighlight} />
 
-      {/* Eyebrows & Eyes */}
-      <rect x="8" y="6" width="3" height="1" fill={C.hairDark} />
-      <rect x="13" y="6" width="3" height="1" fill={C.hairDark} />
-      <rect x="9" y="7" width="1" height="1" fill="#1b120c" />
-      <rect x="14" y="7" width="1" height="1" fill="#1b120c" />
-
-      {/* Nose & Explorer Ears */}
-      <rect x="11" y="7" width="2" height="2" fill={C.skinShadow} />
-      <rect x="6" y="6" width="1" height="3" fill={C.skinShadow} />
-      <rect x="17" y="6" width="1" height="3" fill={C.skinShadow} />
-
-      {/* Stubble Jawline & Determined Mouth */}
-      <rect x="9" y="9" width="6" height="1" fill={C.skinShadow} />
-      <rect x="8" y="10" width="8" height="1" fill={C.stubble} />
-      <rect x="10" y="9" width="3" height="1" fill="#693c28" />
-
-      {/* Neck & Expedition Scarf Bandana Accent */}
-      <rect x="10" y="10" width="4" height="2" fill={C.skinBase} />
-      <rect x="9" y="11" width="6" height="1" fill={C.scarfRed} />
-      <rect x="11" y="11" width="2" height="1" fill={C.scarfLight} />
-
-      {/* ======================================================== */}
-      {/* 2. TORSO & FIELD EXPEDITION HENLEY SHIRT                 */}
-      {/* ======================================================== */}
-      {/* Main Shirt Body */}
-      <rect x="8" y="11" width="8" height="6" fill={C.shirtBase} />
-      <rect x="7" y="12" width="1" height="4" fill={C.shirtShadow} />
-      <rect x="16" y="12" width="1" height="4" fill={C.shirtShadow} />
-      <rect x="8" y="16" width="8" height="1" fill={C.shirtShadow} />
-
-      {/* Henley V-Neck opening & Buttons */}
-      <rect x="11" y="11" width="2" height="3" fill={C.skinBase} />
-      <rect x="11" y="12" width="1" height="1" fill={C.buttons} />
-      <rect x="11" y="14" width="1" height="1" fill={C.buttons} />
-      <rect x="12" y="11" width="1" height="3" fill={C.shirtHighlight} />
-
-      {/* ======================================================== */}
-      {/* 3. SHOULDER HARNESS, FIELD COMPASS & GEAR               */}
-      {/* ======================================================== */}
-      {/* Dual shoulder leather straps */}
-      <rect x="8" y="11" width="2" height="5" fill={C.holsterMid} />
-      <rect x="14" y="11" width="2" height="5" fill={C.holsterMid} />
-      <rect x="9" y="11" width="1" height="5" fill={C.holsterLight} />
-      <rect x="14" y="11" width="1" height="5" fill={C.holsterDark} />
-
-      {/* Cross-chest strap & Brass Buckle */}
-      <rect x="10" y="13" width="4" height="1" fill={C.holsterMid} />
-      <rect x="11" y="13" width="1" height="1" fill={C.buckleGold} />
-
-      {/* Field Compass / Telemetry Dial on Left Chest Strap */}
-      <rect x="8" y="14" width="2" height="2" fill={C.holsterDark} />
-      <rect x="8" y="14" width="1" height="1" fill={C.gold} />
-
-      {/* Underarm Holster Pouch */}
-      <rect x="6" y="14" width="2" height="3" fill={C.holsterDark} />
-      <rect x="6" y="14" width="1" height="1" fill={C.gunMetal} />
-
-      {/* ======================================================== */}
-      {/* 4. EXPEDITION UTILITY BELT, CANTEEN & FLASK              */}
-      {/* ======================================================== */}
-      <rect x="8" y="17" width="8" height="2" fill={C.bootBase} />
-      {/* Heavy Explorer Brass Buckle */}
-      <rect x="11" y="17" width="2" height="2" fill={C.buckleGold} />
-      <rect x="11" y="17" width="1" height="1" fill="#fff" />
-      {/* Field Canteen / Relic Pouch on Hip */}
-      <rect x="6" y="16" width="2" height="3" fill={C.canteenGreen} />
-      <rect x="6" y="15" width="1" height="1" fill={C.canteenCap} />
-      <rect x="15" y="17" width="2" height="2" fill={C.holsterLight} />
-
-      {/* ======================================================== */}
-      {/* 5. ARMS & HANDS (ANIMATED)                               */}
-      {/* ======================================================== */}
-      {isCheer ? (
-        // VICTORY POSE: Drake holding golden relic high in air
+      {/* Eyes & Brows */}
+      {isElena ? (
+        // Elena Blue Eyes
         <>
-          {/* Left Arm raised holding Golden Relic */}
-          <rect x="6" y="8" width="2" height="4" fill={C.shirtBase} />
-          <rect x="5" y="6" width="2" height="3" fill={C.skinBase} />
-          <rect x="4" y="4" width="3" height="3" fill={C.gold} />
-          <rect x="5" y="3" width="1" height="1" fill="#ffffff" />
-
-          {/* Right Arm fist pump */}
-          <rect x="16" y="8" width="2" height="4" fill={C.shirtBase} />
-          <rect x="17" y="6" width="2" height="3" fill={C.skinBase} />
+          <rect x="8" y="6" width="3" height="1" fill="#a16207" />
+          <rect x="13" y="6" width="3" height="1" fill="#a16207" />
+          <rect x="9" y="7" width="1" height="1" fill="#0284c7" />
+          <rect x="14" y="7" width="1" height="1" fill="#0284c7" />
         </>
-      ) : isSurvey ? (
-        // SURVEYING POSE: Drake holding ancient parchment journal & compass
+      ) : isChloe ? (
+        // Chloe Dark Eyes
         <>
-          <rect x="6" y="12" width="2" height="3" fill={C.shirtBase} />
-          <rect x="6" y="14" width="2" height="3" fill={C.skinBase} />
-          {/* Open Journal */}
-          <rect x="4" y="14" width="4" height="4" fill={C.parchment} />
-          <rect x="5" y="15" width="2" height="2" fill="#8c6d23" />
-
-          <rect x="16" y="12" width="2" height="4" fill={C.shirtBase} />
-          <rect x="16" y="15" width="2" height="2" fill={C.skinBase} />
+          <rect x="8" y="6" width="3" height="1" fill="#171717" />
+          <rect x="13" y="6" width="3" height="1" fill="#171717" />
+          <rect x="9" y="7" width="1" height="1" fill="#0a0a0a" />
+          <rect x="14" y="7" width="1" height="1" fill="#0a0a0a" />
         </>
-      ) : isRun ? (
-        // RUNNING CYCLE ARMS: Dynamic swinging arms
-        runLegFrame === 0 || runLegFrame === 1 ? (
-          // Right arm back, left arm forward
-          <>
-            <rect x="5" y="12" width="2" height="3" fill={C.shirtBase} />
-            <rect x="4" y="14" width="2" height="3" fill={C.skinBase} />
-            <rect x="16" y="11" width="2" height="3" fill={C.shirtBase} />
-            <rect x="17" y="13" width="2" height="3" fill={C.skinBase} />
-          </>
-        ) : runLegFrame === 2 || runLegFrame === 3 ? (
-          // Neutral transition
-          <>
-            <rect x="6" y="12" width="2" height="3" fill={C.shirtBase} />
-            <rect x="6" y="15" width="2" height="2" fill={C.skinBase} />
-            <rect x="16" y="12" width="2" height="3" fill={C.shirtBase} />
-            <rect x="16" y="15" width="2" height="2" fill={C.skinBase} />
-          </>
-        ) : (
-          // Right arm forward, left arm back
-          <>
-            <rect x="6" y="11" width="2" height="3" fill={C.shirtBase} />
-            <rect x="6" y="13" width="2" height="3" fill={C.skinBase} />
-            <rect x="16" y="13" width="2" height="3" fill={C.shirtBase} />
-            <rect x="18" y="15" width="2" height="3" fill={C.skinBase} />
-          </>
-        )
+      ) : isVictor ? (
+        // Sully Brows & Eyes
+        <>
+          <rect x="8" y="6" width="3" height="1" fill="#94a3b8" />
+          <rect x="13" y="6" width="3" height="1" fill="#94a3b8" />
+          <rect x="9" y="7" width="1" height="1" fill="#1b120c" />
+          <rect x="14" y="7" width="1" height="1" fill="#1b120c" />
+        </>
       ) : (
-        // IDLE ARMS: Drake relaxed with thumbs hooked near belt/holster
+        // Nathan Brows & Eyes
         <>
-          <rect x="6" y="12" width="2" height="4" fill={C.shirtBase} />
-          <rect x="6" y="15" width="2" height="3" fill={C.skinBase} />
-          <rect x="16" y="12" width="2" height="4" fill={C.shirtBase} />
-          <rect x="16" y="15" width="2" height="3" fill={C.skinBase} />
+          <rect x="8" y="6" width="3" height="1" fill="#2a160b" />
+          <rect x="13" y="6" width="3" height="1" fill="#2a160b" />
+          <rect x="9" y="7" width="1" height="1" fill="#1b120c" />
+          <rect x="14" y="7" width="1" height="1" fill="#1b120c" />
+        </>
+      )}
+
+      {/* Nose & Ears */}
+      <rect x="11" y="7" width="2" height="2" fill={skinShadow} />
+      <rect x="6" y="6" width="1" height="3" fill={skinShadow} />
+      <rect x="17" y="6" width="1" height="3" fill={skinShadow} />
+
+      {/* Mouth / Facial Hair */}
+      {isVictor ? (
+        // Sully's Signature Silver Mustache
+        <>
+          <rect x="8" y="9" width="8" height="1" fill="#e2e8f0" />
+          <rect x="9" y="10" width="6" height="1" fill="#cbd5e1" />
+        </>
+      ) : isElena ? (
+        // Elena Soft Rose Smile
+        <rect x="10" y="9" width="4" height="1" fill="#f43f5e" />
+      ) : isChloe ? (
+        // Chloe Ruby Lips
+        <rect x="10" y="9" width="4" height="1" fill="#e11d48" />
+      ) : (
+        // Nathan Stubble Jawline
+        <>
+          <rect x="9" y="9" width="6" height="1" fill={skinShadow} />
+          <rect x="8" y="10" width="8" height="1" fill="#3f2210" />
+          <rect x="10" y="9" width="3" height="1" fill="#693c28" />
+        </>
+      )}
+
+      {/* Neck Accent */}
+      <rect x="10" y="10" width="4" height="2" fill={skinBase} />
+      {isNathan && (
+        <>
+          <rect x="9" y="11" width="6" height="1" fill="#991b1b" />
+          <rect x="11" y="11" width="2" height="1" fill="#b91c1c" />
         </>
       )}
 
       {/* ======================================================== */}
-      {/* 6. CARGO PANTS & LEGS (ANIMATED)                         */}
+      {/* 2. TORSO & SHIRT                                         */}
       {/* ======================================================== */}
-      {isRun ? (
-        // RUNNING STRIDE FRAMES
-        runLegFrame === 0 ? (
-          // Frame 0: Left leg kicking forward, Right leg pushing back
-          <>
-            {/* Left Leg Forward */}
-            <rect x="8" y="19" width="3" height="4" fill={C.pantsBase} />
-            <rect x="7" y="23" width="3" height="4" fill={C.pantsHighlight} />
-            <rect x="6" y="27" width="4" height="2" fill={C.bootBase} />
-            <rect x="5" y="29" width="4" height="1" fill={C.bootSole} />
+      <rect x="8" y="11" width="8" height="6" fill={shirtColor} />
+      <rect x="7" y="12" width="1" height="4" fill={shirtShadow} />
+      <rect x="16" y="12" width="1" height="4" fill={shirtShadow} />
+      <rect x="8" y="16" width="8" height="1" fill={shirtShadow} />
 
-            {/* Right Leg Trailing */}
-            <rect x="13" y="19" width="3" height="4" fill={C.pantsShadow} />
-            <rect x="15" y="22" width="3" height="4" fill={C.pantsBase} />
-            <rect x="17" y="25" width="3" height="3" fill={C.bootBase} />
-            <rect x="18" y="28" width="3" height="1" fill={C.bootSole} />
+      {/* V-Neck / Undershirt */}
+      <rect x="11" y="11" width="2" height="3" fill={isVictor ? '#f8fafc' : skinBase} />
+      {!isElena && <rect x="11" y="12" width="1" height="1" fill="#f1f5f9" />}
+
+      {/* Harness / Holster straps */}
+      <rect x="8" y="11" width="2" height="5" fill="#432613" />
+      <rect x="14" y="11" width="2" height="5" fill="#432613" />
+      <rect x="10" y="13" width="4" height="1" fill="#432613" />
+      <rect x="11" y="13" width="1" height="1" fill="#ffd700" />
+
+      {/* Utility Belt & Buckle */}
+      <rect x="8" y="17" width="8" height="2" fill="#2a160b" />
+      <rect x="11" y="17" width="2" height="2" fill="#ffd700" />
+      <rect x="11" y="17" width="1" height="1" fill="#ffffff" />
+
+      {/* ======================================================== */}
+      {/* 3. ARMS & HANDS (ANIMATED)                               */}
+      {/* ======================================================== */}
+      {isCheer ? (
+        <>
+          <rect x="6" y="8" width="2" height="4" fill={shirtColor} />
+          <rect x="5" y="6" width="2" height="3" fill={skinBase} />
+          <rect x="4" y="4" width="3" height="3" fill="#ffd700" />
+          <rect x="5" y="3" width="1" height="1" fill="#ffffff" />
+          <rect x="16" y="8" width="2" height="4" fill={shirtColor} />
+          <rect x="17" y="6" width="2" height="3" fill={skinBase} />
+        </>
+      ) : isSurvey ? (
+        <>
+          <rect x="6" y="12" width="2" height="3" fill={shirtColor} />
+          <rect x="6" y="14" width="2" height="3" fill={skinBase} />
+          <rect x="4" y="14" width="4" height="4" fill="#dfc086" />
+          <rect x="5" y="15" width="2" height="2" fill="#8c6d23" />
+          <rect x="16" y="12" width="2" height="4" fill={shirtColor} />
+          <rect x="16" y="15" width="2" height="2" fill={skinBase} />
+        </>
+      ) : isRun ? (
+        runLegFrame === 0 || runLegFrame === 1 ? (
+          <>
+            <rect x="5" y="12" width="2" height="3" fill={shirtColor} />
+            <rect x="4" y="14" width="2" height="3" fill={skinBase} />
+            <rect x="16" y="11" width="2" height="3" fill={shirtColor} />
+            <rect x="17" y="13" width="2" height="3" fill={skinBase} />
           </>
-        ) : runLegFrame === 1 ? (
-          // Frame 1: Full sprint stride
+        ) : runLegFrame === 2 || runLegFrame === 3 ? (
           <>
-            {/* Front Leg Extended */}
-            <rect x="7" y="19" width="4" height="4" fill={C.pantsBase} />
-            <rect x="6" y="23" width="3" height="4" fill={C.pantsBase} />
-            <rect x="5" y="27" width="4" height="2" fill={C.bootBase} />
-            <rect x="4" y="29" width="4" height="1" fill={C.bootSole} />
-
-            {/* Back Leg Extended */}
-            <rect x="13" y="19" width="3" height="4" fill={C.pantsShadow} />
-            <rect x="16" y="22" width="3" height="3" fill={C.pantsShadow} />
-            <rect x="18" y="24" width="3" height="3" fill={C.bootBase} />
-            <rect x="19" y="27" width="3" height="1" fill={C.bootSole} />
-          </>
-        ) : runLegFrame === 2 ? (
-          // Frame 2: Passing stride (legs crossover)
-          <>
-            <rect x="9" y="19" width="3" height="5" fill={C.pantsBase} />
-            <rect x="8" y="24" width="3" height="4" fill={C.pantsHighlight} />
-            <rect x="8" y="28" width="4" height="2" fill={C.bootBase} />
-            <rect x="8" y="30" width="4" height="1" fill={C.bootSole} />
-
-            <rect x="12" y="19" width="3" height="5" fill={C.pantsShadow} />
-            <rect x="13" y="23" width="3" height="4" fill={C.pantsBase} />
-            <rect x="14" y="26" width="3" height="3" fill={C.bootBase} />
-            <rect x="15" y="29" width="3" height="1" fill={C.bootSole} />
-          </>
-        ) : runLegFrame === 3 ? (
-          // Frame 3: Right leg kicking forward, Left leg pushing back
-          <>
-            {/* Right Leg Forward */}
-            <rect x="12" y="19" width="3" height="4" fill={C.pantsBase} />
-            <rect x="13" y="23" width="3" height="4" fill={C.pantsHighlight} />
-            <rect x="14" y="27" width="4" height="2" fill={C.bootBase} />
-            <rect x="14" y="29" width="4" height="1" fill={C.bootSole} />
-
-            {/* Left Leg Trailing */}
-            <rect x="8" y="19" width="3" height="4" fill={C.pantsShadow} />
-            <rect x="6" y="22" width="3" height="4" fill={C.pantsBase} />
-            <rect x="4" y="25" width="3" height="3" fill={C.bootBase} />
-            <rect x="3" y="28" width="3" height="1" fill={C.bootSole} />
-          </>
-        ) : runLegFrame === 4 ? (
-          // Frame 4: Right leg extended full stride
-          <>
-            <rect x="12" y="19" width="4" height="4" fill={C.pantsBase} />
-            <rect x="14" y="23" width="3" height="4" fill={C.pantsBase} />
-            <rect x="15" y="27" width="4" height="2" fill={C.bootBase} />
-            <rect x="15" y="29" width="4" height="1" fill={C.bootSole} />
-
-            <rect x="7" y="19" width="3" height="4" fill={C.pantsShadow} />
-            <rect x="5" y="22" width="3" height="3" fill={C.pantsShadow} />
-            <rect x="3" y="24" width="3" height="3" fill={C.bootBase} />
-            <rect x="2" y="27" width="3" height="1" fill={C.bootSole} />
+            <rect x="6" y="12" width="2" height="3" fill={shirtColor} />
+            <rect x="6" y="15" width="2" height="2" fill={skinBase} />
+            <rect x="16" y="12" width="2" height="3" fill={shirtColor} />
+            <rect x="16" y="15" width="2" height="2" fill={skinBase} />
           </>
         ) : (
-          // Frame 5: Second passing stride
           <>
-            <rect x="11" y="19" width="3" height="5" fill={C.pantsBase} />
-            <rect x="12" y="24" width="3" height="4" fill={C.pantsHighlight} />
-            <rect x="12" y="28" width="4" height="2" fill={C.bootBase} />
-            <rect x="12" y="30" width="4" height="1" fill={C.bootSole} />
-
-            <rect x="8" y="19" width="3" height="5" fill={C.pantsShadow} />
-            <rect x="7" y="23" width="3" height="4" fill={C.pantsBase} />
-            <rect x="6" y="26" width="3" height="3" fill={C.bootBase} />
-            <rect x="5" y="29" width="3" height="1" fill={C.bootSole} />
+            <rect x="6" y="11" width="2" height="3" fill={shirtColor} />
+            <rect x="6" y="13" width="2" height="3" fill={skinBase} />
+            <rect x="16" y="13" width="2" height="3" fill={shirtColor} />
+            <rect x="18" y="15" width="2" height="3" fill={skinBase} />
           </>
         )
       ) : (
-        // IDLE / STANDING LEGS
         <>
-          {/* Left Leg */}
-          <rect x="8" y="19" width="3" height="6" fill={C.pantsBase} />
-          <rect x="8" y="20" width="1" height="3" fill={C.pantsPocket} />
-          <rect x="8" y="25" width="3" height="3" fill={C.pantsHighlight} />
-          <rect x="7" y="28" width="4" height="2" fill={C.bootBase} />
-          <rect x="7" y="30" width="4" height="1" fill={C.bootSole} />
+          <rect x="6" y="12" width="2" height="4" fill={shirtColor} />
+          <rect x="6" y="15" width="2" height="3" fill={skinBase} />
+          <rect x="16" y="12" width="2" height="4" fill={shirtColor} />
+          <rect x="16" y="15" width="2" height="3" fill={skinBase} />
+        </>
+      )}
 
-          {/* Right Leg */}
-          <rect x="13" y="19" width="3" height="6" fill={C.pantsBase} />
-          <rect x="15" y="20" width="1" height="3" fill={C.pantsPocket} />
-          <rect x="13" y="25" width="3" height="3" fill={C.pantsShadow} />
-          <rect x="13" y="28" width="4" height="2" fill={C.bootBase} />
-          <rect x="13" y="30" width="4" height="1" fill={C.bootSole} />
+      {/* ======================================================== */}
+      {/* 4. LEGS & BOOTS (ANIMATED 6-FRAME RUN CYCLE)             */}
+      {/* ======================================================== */}
+      {isRun ? (
+        runLegFrame === 0 ? (
+          <>
+            <rect x="8" y="19" width="3" height="4" fill={pantsColor} />
+            <rect x="7" y="23" width="3" height="4" fill={pantsHighlight} />
+            <rect x="6" y="27" width="4" height="2" fill="#2a160b" />
+            <rect x="5" y="29" width="4" height="1" fill="#100602" />
+            <rect x="13" y="19" width="3" height="4" fill={pantsShadow} />
+            <rect x="15" y="22" width="3" height="4" fill={pantsColor} />
+            <rect x="17" y="25" width="3" height="3" fill="#2a160b" />
+            <rect x="18" y="28" width="3" height="1" fill="#100602" />
+          </>
+        ) : runLegFrame === 1 ? (
+          <>
+            <rect x="7" y="19" width="4" height="4" fill={pantsColor} />
+            <rect x="6" y="23" width="3" height="4" fill={pantsColor} />
+            <rect x="5" y="27" width="4" height="2" fill="#2a160b" />
+            <rect x="4" y="29" width="4" height="1" fill="#100602" />
+            <rect x="13" y="19" width="3" height="4" fill={pantsShadow} />
+            <rect x="16" y="22" width="3" height="3" fill={pantsShadow} />
+            <rect x="18" y="24" width="3" height="3" fill="#2a160b" />
+            <rect x="19" y="27" width="3" height="1" fill="#100602" />
+          </>
+        ) : runLegFrame === 2 ? (
+          <>
+            <rect x="9" y="19" width="3" height="5" fill={pantsColor} />
+            <rect x="8" y="24" width="3" height="4" fill={pantsHighlight} />
+            <rect x="8" y="28" width="4" height="2" fill="#2a160b" />
+            <rect x="8" y="30" width="4" height="1" fill="#100602" />
+            <rect x="12" y="19" width="3" height="5" fill={pantsShadow} />
+            <rect x="13" y="23" width="3" height="4" fill={pantsColor} />
+            <rect x="14" y="26" width="3" height="3" fill="#2a160b" />
+            <rect x="15" y="29" width="3" height="1" fill="#100602" />
+          </>
+        ) : runLegFrame === 3 ? (
+          <>
+            <rect x="12" y="19" width="3" height="4" fill={pantsColor} />
+            <rect x="13" y="23" width="3" height="4" fill={pantsHighlight} />
+            <rect x="14" y="27" width="4" height="2" fill="#2a160b" />
+            <rect x="14" y="29" width="4" height="1" fill="#100602" />
+            <rect x="8" y="19" width="3" height="4" fill={pantsShadow} />
+            <rect x="6" y="22" width="3" height="4" fill={pantsColor} />
+            <rect x="4" y="25" width="3" height="3" fill="#2a160b" />
+            <rect x="3" y="28" width="3" height="1" fill="#100602" />
+          </>
+        ) : runLegFrame === 4 ? (
+          <>
+            <rect x="12" y="19" width="4" height="4" fill={pantsColor} />
+            <rect x="14" y="23" width="3" height="4" fill={pantsColor} />
+            <rect x="15" y="27" width="4" height="2" fill="#2a160b" />
+            <rect x="15" y="29" width="4" height="1" fill="#100602" />
+            <rect x="7" y="19" width="3" height="4" fill={pantsShadow} />
+            <rect x="5" y="22" width="3" height="3" fill={pantsShadow} />
+            <rect x="3" y="24" width="3" height="3" fill="#2a160b" />
+            <rect x="2" y="27" width="3" height="1" fill="#100602" />
+          </>
+        ) : (
+          <>
+            <rect x="11" y="19" width="3" height="5" fill={pantsColor} />
+            <rect x="12" y="24" width="3" height="4" fill={pantsHighlight} />
+            <rect x="12" y="28" width="4" height="2" fill="#2a160b" />
+            <rect x="12" y="30" width="4" height="1" fill="#100602" />
+            <rect x="8" y="19" width="3" height="5" fill={pantsShadow} />
+            <rect x="7" y="23" width="3" height="4" fill={pantsColor} />
+            <rect x="6" y="26" width="3" height="3" fill="#2a160b" />
+            <rect x="5" y="29" width="3" height="1" fill="#100602" />
+          </>
+        )
+      ) : (
+        <>
+          <rect x="8" y="19" width="3" height="6" fill={pantsColor} />
+          <rect x="8" y="25" width="3" height="3" fill={pantsHighlight} />
+          <rect x="7" y="28" width="4" height="2" fill="#2a160b" />
+          <rect x="7" y="30" width="4" height="1" fill="#100602" />
 
-          {/* Crotch/Pants seam */}
-          <rect x="11" y="19" width="2" height="2" fill={C.pantsShadow} />
+          <rect x="13" y="19" width="3" height="6" fill={pantsColor} />
+          <rect x="13" y="25" width="3" height="3" fill={pantsShadow} />
+          <rect x="13" y="28" width="4" height="2" fill="#2a160b" />
+          <rect x="13" y="30" width="4" height="1" fill="#100602" />
+
+          <rect x="11" y="19" width="2" height="2" fill={pantsShadow} />
         </>
       )}
     </svg>

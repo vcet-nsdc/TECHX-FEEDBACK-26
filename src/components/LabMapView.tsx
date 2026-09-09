@@ -735,7 +735,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
 
                         {/* Main Cartographic Compass Medallion */}
                         <div
-                          className={`relative w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-200 group-hover:scale-115 ${
+                          className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-200 group-hover:scale-115 ${
                             isSubmitted
                               ? submittedPinStyle
                               : isCurrent
@@ -749,10 +749,17 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                           <div className="absolute -left-0.5 w-0.5 h-1 bg-[#8c6d23] rounded-full pointer-events-none" />
                           <div className="absolute -right-0.5 w-0.5 h-1 bg-[#8c6d23] rounded-full pointer-events-none" />
 
-                          {/* Stamped Roman Numeral or Cleared Star */}
-                          <span className="font-serif font-black text-[11px] sm:text-xs leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
-                            {isSubmitted ? '✦' : ROMAN_NUMERALS[idx] || idx + 1}
+                          {/* Product Emoji Icon (Future Logo spot) */}
+                          <span className="text-xs sm:text-sm leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] select-none">
+                            {product.icon || '📦'}
                           </span>
+
+                          {/* Completed checkmark badge */}
+                          {isSubmitted && (
+                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 text-black font-black text-[8px] flex items-center justify-center shadow">
+                              ✓
+                            </span>
+                          )}
                         </div>
 
                         {/* Needle Tip Pointing to Exact Coordinates */}
@@ -772,9 +779,9 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                           }`}
                         />
 
-                        {/* Small Waypoint Tag */}
-                        <span className="mt-0.5 px-1.5 py-0.2 rounded bg-[#120a06]/95 border border-[#8c6d23]/40 text-[7.5px] sm:text-[8.5px] font-mono font-bold text-[#e8d5b5] shadow-xs whitespace-nowrap pointer-events-none">
-                          {labelTag}
+                        {/* Small Waypoint Tag showing product name */}
+                        <span className="mt-0.5 px-1.5 py-0.2 rounded bg-[#120a06]/95 border border-[#8c6d23]/40 text-[7.5px] sm:text-[8.5px] font-mono font-bold text-[#e8d5b5] shadow-xs whitespace-nowrap pointer-events-none max-w-[85px] truncate">
+                          {product.name}
                         </span>
                       </button>
                     </div>
@@ -806,7 +813,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                       facing={nathanFacing}
                       size={42}
                       showDust={true}
-                      tooltipText={`Nathan Drake at ${activeNathanNode.name} • Click to open Recon`}
+                      tooltipText={`Explorer at ${activeNathanNode.name} • Click to open Recon`}
                       onClick={() => {
                         navigateToProduct(activeNathanNode);
                         setActiveModalProduct(activeNathanNode);
@@ -990,16 +997,19 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-serif font-bold text-xs shrink-0 ${
+                      className={`w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 ${
                         isDone
                           ? 'bg-gradient-to-b from-[#f3e5ab] via-[#d4af37] to-[#7a5214] text-[#1a0e05] border border-[#f3e5ab]'
                           : 'bg-[#2B1B11] text-[#D4AF37] border border-[#8A6839]'
                       }`}
                     >
-                      {isDone ? '✦' : ROMAN_NUMERALS[idx] || idx + 1}
+                      {product.icon || '📦'}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-bold text-[#F5E6CC] truncate font-['Cinzel',_serif]">{product.name}</div>
+                      <div className="text-sm font-bold text-[#F5E6CC] truncate font-['Cinzel',_serif] flex items-center gap-1.5">
+                        <span>{product.name}</span>
+                        {isDone && <span className="text-emerald-400 font-bold text-xs">✓</span>}
+                      </div>
                       <div className="text-[11px] text-[#8C6F4B] italic truncate font-[family-name:var(--font-handwriting)]">
                         {product.description}
                       </div>

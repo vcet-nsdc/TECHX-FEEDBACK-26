@@ -24,6 +24,42 @@ function frameSrc(i: number, suffix: string = FRAME_SUFFIX) {
   return `${FRAME_PREFIX}${String(i).padStart(3, '0')}${suffix}`;
 }
 
+export interface AvatarOption {
+  id: string;
+  name: string;
+  displayName: string;
+  subName?: string;
+  image: string;
+}
+
+export const AVATAR_OPTIONS: AvatarOption[] = [
+  {
+    id: 'nathan',
+    name: 'Nathan Drake',
+    displayName: 'Nathan Drake',
+    image: '/avatar/nathan.png',
+  },
+  {
+    id: 'victor',
+    name: 'Victor Sullivan (Sully)',
+    displayName: 'Victor Sullivan',
+    subName: '(Sully)',
+    image: '/avatar/victor.png',
+  },
+  {
+    id: 'elena',
+    name: 'Elena Fisher',
+    displayName: 'Elena Fisher',
+    image: '/avatar/elena.png',
+  },
+  {
+    id: 'chloe',
+    name: 'Chloe Frazer',
+    displayName: 'Chloe Frazer',
+    image: '/avatar/chloe.png',
+  },
+];
+
 function checkIsLowEnd(): boolean {
   if (typeof window === 'undefined') return false;
 
@@ -71,6 +107,31 @@ export default function LandingReveal() {
   const [nameError, setNameError] = useState(false);
   const [departmentError, setDepartmentError] = useState(false);
   const [emailError, setEmailError] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState<AvatarOption>(AVATAR_OPTIONS[0]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('user_avatar');
+      if (stored) {
+        const found = AVATAR_OPTIONS.find((a) => a.name === stored || a.id === stored);
+        if (found) setSelectedAvatar(found);
+      }
+    }
+  }, []);
+
+  const handleSelectAvatar = useCallback(
+    (avatar: AvatarOption) => {
+      setSelectedAvatar(avatar);
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('user_avatar', avatar.name);
+          localStorage.setItem('user_avatar_image', avatar.image);
+        } catch {}
+      }
+      setShowFormOverlay(true);
+    },
+    []
+  );
 
   useEffect(() => {
     if (user) {
@@ -345,7 +406,7 @@ export default function LandingReveal() {
     if (!hasName || !hasDepartment || !email || !emailValid) return;
 
     setSubmitting(true);
-    login({ name, department, email });
+    login({ name: name.trim(), department, email: email.trim(), avatar: selectedAvatar.image });
     const submitted = getSubmittedFeedbackForUser(email);
     const complete = submitted.length >= 25 || (typeof window !== 'undefined' && localStorage.getItem(`completion_${email}`) === 'true');
     setTimeout(() => {
@@ -418,15 +479,15 @@ export default function LandingReveal() {
           className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 text-center px-4"
           style={{ opacity: midOpacity, y: midY, pointerEvents: showMid ? 'auto' : 'none', willChange: 'transform, opacity', transform: 'translateZ(0)' }}
         >
-          {/* Hidden treasure hint — clean, minimal */}
+          {/* Hidden treasure hint — clean, crisp, visible Cinzel font */}
           <p
-            style={{ fontFamily: "var(--font-base02), 'Base02', serif" }}
-            className="text-xs sm:text-sm tracking-[0.3em] uppercase text-amber-300/80 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]"
+            style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif", letterSpacing: '0.24em' }}
+            className="text-xs sm:text-sm uppercase font-bold text-[#ffd700] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]"
           >
-            A Hidden Treasure Awaits
+            ✦ A Hidden Treasure Awaits ✦
           </p>
 
-          {/* Product Showcase — clean heading in Base02 */}
+          {/* Product Showcase — Title font kept intact as requested */}
           <h2
             style={{ fontFamily: "var(--font-base02), 'Base02', serif" }}
             className="text-5xl sm:text-7xl md:text-8xl font-extrabold text-white tracking-wider leading-none drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]"
@@ -434,59 +495,121 @@ export default function LandingReveal() {
             Product Showcase
           </h2>
 
-          {/* Lab 1, 2, 3 indicator */}
-          <div className="flex items-center gap-4 sm:gap-6">
+          {/* Lab 1, 2, 3 indicator — Clear, bold, high-contrast badges */}
+          <div className="flex items-center gap-2 sm:gap-4 my-1">
             <span
-              style={{ fontFamily: "var(--font-base02), 'Base02', serif" }}
-              className="text-sm sm:text-base tracking-[0.2em] text-emerald-400/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
+              style={{ fontFamily: "var(--font-oswald), var(--font-geist-sans), sans-serif", letterSpacing: '0.12em' }}
+              className="text-xs sm:text-sm font-bold uppercase px-3 py-1 rounded-full bg-emerald-950/70 border border-emerald-400/60 text-emerald-300 drop-shadow-[0_2px_8px_rgba(16,185,129,0.6)] shadow-md"
             >
               Lab 502
             </span>
-            <span className="text-amber-500/50">•</span>
+            <span className="text-amber-400/80 font-bold">•</span>
             <span
-              style={{ fontFamily: "var(--font-base02), 'Base02', serif" }}
-              className="text-sm sm:text-base tracking-[0.2em] text-blue-400/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
+              style={{ fontFamily: "var(--font-oswald), var(--font-geist-sans), sans-serif", letterSpacing: '0.12em' }}
+              className="text-xs sm:text-sm font-bold uppercase px-3 py-1 rounded-full bg-sky-950/70 border border-sky-400/60 text-sky-300 drop-shadow-[0_2px_8px_rgba(56,189,248,0.6)] shadow-md"
             >
               Lab 508
             </span>
-            <span className="text-amber-500/50">•</span>
+            <span className="text-amber-400/80 font-bold">•</span>
             <span
-              style={{ fontFamily: "var(--font-base02), 'Base02', serif" }}
-              className="text-sm sm:text-base tracking-[0.2em] text-red-400/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
+              style={{ fontFamily: "var(--font-oswald), var(--font-geist-sans), sans-serif", letterSpacing: '0.12em' }}
+              className="text-xs sm:text-sm font-bold uppercase px-3 py-1 rounded-full bg-orange-950/70 border border-orange-400/60 text-orange-300 drop-shadow-[0_2px_8px_rgba(249,115,22,0.6)] shadow-md"
             >
               Lab 509
             </span>
           </div>
 
-          {/* Uncharted Stone & Bronze Plaque Button */}
-          <div className="flex flex-col items-center">
-            <motion.button
-              onClick={() => setShowFormOverlay(true)}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              whileTap={{ scale: 0.96 }}
-              className="uncharted-btn mt-3"
-              aria-label="Start Adventure"
-            >
-              <div className="btn-inner">
-                <span className="btn-title">UNCHARTED</span>
-                <span className="btn-subtitle flex items-center justify-center gap-1.5 text-[#fde047] font-bold">
-                  <span>✦ TAP TO START ADVENTURE</span>
-                  <span className="text-base font-bold">➔</span>
-                </span>
-              </div>
-            </motion.button>
+          {/* Circular Avatar Choosing Menu instead of Enter button */}
+          <div className="flex flex-col items-center mt-1 sm:mt-2">
+            <div className="flex items-start justify-center gap-3 sm:gap-6 md:gap-8">
+              {AVATAR_OPTIONS.map((avatar, idx) => {
+                const isSelected = selectedAvatar.id === avatar.id;
+                return (
+                  <motion.button
+                    key={avatar.id}
+                    type="button"
+                    onClick={() => handleSelectAvatar(avatar)}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + idx * 0.08, duration: 0.4 }}
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.94 }}
+                    className="flex flex-col items-center group cursor-pointer focus:outline-none touch-manipulation"
+                    aria-label={`Select ${avatar.name}`}
+                  >
+                    {/* Circular Avatar Medallion */}
+                    <div
+                      className={`relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full transition-all duration-200 ${
+                        isSelected
+                          ? 'border-[3px] border-[#ffd700] ring-4 ring-[#d4af37]/60 shadow-[0_0_24px_rgba(255,215,0,0.85)] scale-105'
+                          : 'border-2 sm:border-[3px] border-[#8c6d23] group-hover:border-[#ffd700] shadow-[0_6px_18px_rgba(0,0,0,0.9)] group-hover:shadow-[0_0_18px_rgba(212,175,55,0.7)]'
+                      }`}
+                    >
+                      {/* Rotating Celestial Dashed Ring on Selected */}
+                      {isSelected && (
+                        <span className="absolute -inset-1.5 rounded-full border border-dashed border-[#ffd700] animate-[spin_12s_linear_infinite] pointer-events-none" />
+                      )}
 
-            {/* Click/Tap Hint Indicator */}
+                      {/* Avatar Image */}
+                      <div className="relative w-full h-full rounded-full overflow-hidden bg-[#1c0f05]">
+                        <Image
+                          src={avatar.image}
+                          alt={avatar.name}
+                          fill
+                          sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
+                          className="object-cover object-center transition-transform duration-300 group-hover:scale-110"
+                          priority
+                        />
+                      </div>
+                    </div>
+
+                    {/* Character Name Tag — Crisp, sharp, legible Cinzel font */}
+                    <div className="mt-2 flex flex-col items-center max-w-[76px] sm:max-w-[100px] md:max-w-[120px]">
+                      <span
+                        style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                        className={`text-[11px] sm:text-xs md:text-sm font-black tracking-wide leading-tight text-center transition-colors ${
+                          isSelected
+                            ? 'text-[#ffd700] drop-shadow-[0_2px_6px_rgba(212,175,55,1)]'
+                            : 'text-[#f5e6cc] group-hover:text-[#ffd700] drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]'
+                        }`}
+                      >
+                        {avatar.displayName}
+                      </span>
+                      {avatar.subName && (
+                        <span
+                          style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                          className="text-[9.5px] sm:text-[11px] text-[#e5c386] font-bold leading-none mt-0.5 tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
+                        >
+                          {avatar.subName}
+                        </span>
+                      )}
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            {/* Instruction Text below avatars — Crisp, high-contrast, ultra-visible */}
             <motion.div
-              animate={{ y: [0, 4, 0], opacity: [0.8, 1, 0.8] }}
-              transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
-              className="mt-3 flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-black/75 border border-[#8c6d23]/70 text-[#fde047] text-[10px] sm:text-xs font-mono font-bold tracking-wider uppercase select-none pointer-events-none shadow-[0_4px_14px_rgba(0,0,0,0.9)] backdrop-blur-xs"
+              animate={{ opacity: [0.9, 1, 0.9], y: [0, -2, 0] }}
+              transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
+              className="mt-4 sm:mt-5 flex flex-col items-center gap-1.5 cursor-pointer select-none"
+              onClick={() => handleSelectAvatar(selectedAvatar)}
             >
-              <span className="text-xs">👆</span>
-              <span>Tap button to begin expedition</span>
-              <span className="text-xs font-bold">➔</span>
+              <p
+                style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif", letterSpacing: '0.14em' }}
+                className="text-xs sm:text-sm md:text-base uppercase text-[#ffd700] drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)] font-black flex items-center justify-center gap-2"
+              >
+                <span className="text-amber-400 text-sm">✦</span>
+                <span>Choose your avatar to start exploration</span>
+                <span className="text-amber-400 text-sm">✦</span>
+              </p>
+              <span
+                style={{ fontFamily: "var(--font-geist-sans), sans-serif", letterSpacing: '0.18em' }}
+                className="text-[10px] sm:text-xs font-bold text-[#f5e6cc]/90 uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
+              >
+                Tap an explorer to begin expedition ➔
+              </span>
             </motion.div>
           </div>
         </motion.div>
@@ -571,6 +694,16 @@ export default function LandingReveal() {
                     <p className="tablet-subtitle -mt-2 text-center text-base sm:mt-0 sm:text-xl">
                       Please enter your details to continue
                     </p>
+
+                    {/* Selected Explorer Indicator */}
+                    {selectedAvatar && (
+                      <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#1c0f05]/80 border border-[#d4af37]/60 text-[#fde047] text-xs font-mono my-1.5 shadow-inner">
+                        <div className="relative w-5 h-5 rounded-full overflow-hidden border border-[#ffd700] shrink-0">
+                          <Image src={selectedAvatar.image} alt={selectedAvatar.name} fill className="object-cover" />
+                        </div>
+                        <span className="truncate">Explorer: <strong>{selectedAvatar.name}</strong></span>
+                      </div>
+                    )}
 
                     <form
                       onSubmit={handleSubmit}

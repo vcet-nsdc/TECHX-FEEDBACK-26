@@ -41,6 +41,7 @@ async function withMongo<T>(op: () => Promise<T>): Promise<T | null> {
     if (err instanceof DuplicateFeedbackError) {
       throw err;
     }
+    console.error('[store-error] withMongo caught error:', err);
     warnOnce('memory', err);
     return null;
   }
@@ -360,7 +361,14 @@ export async function getProductStats(): Promise<Array<{
     }
   }
 
-  return Array.from(productStats.values());
+  const list = Array.from(productStats.values());
+  list.sort((a, b) => {
+    if (b.averageRating !== a.averageRating) {
+      return b.averageRating - a.averageRating;
+    }
+    return b.totalRatings - a.totalRatings;
+  });
+  return list;
 }
 
 export async function getAdminDashboardData(): Promise<DashboardData> {

@@ -13,18 +13,17 @@ import {
 } from '@/lib/expeditionData';
 import ExpeditionStatusHeader from './ExpeditionStatusHeader';
 import TreasureCard from './TreasureCard';
-import BackButton from './BackButton';
 import { motion } from 'framer-motion';
 
 interface LabSectorConfig {
   number: string;
-  envTag: string;
+  bgImage: string;
 }
 
 const LAB_CONFIGS: Record<string, LabSectorConfig> = {
-  '1': { number: '502', envTag: '🌿 JUNGLE // SECTOR 502' },
-  '2': { number: '508', envTag: '❄️ GLACIAL // SECTOR 508' },
-  '3': { number: '509', envTag: '🌋 VOLCANIC // SECTOR 509' },
+  '1': { number: '502', bgImage: '/earthy-cards.png' },
+  '2': { number: '508', bgImage: '/icey-cards.png' },
+  '3': { number: '509', bgImage: '/lava-cards.png' },
 };
 
 function getLabSectorConfig(lab: ExpeditionLab, index: number): LabSectorConfig {
@@ -37,10 +36,10 @@ function getLabSectorConfig(lab: ExpeditionLab, index: number): LabSectorConfig 
     return byId;
   }
   const fallbackNumbers = ['502', '508', '509'];
-  const fallbackTags = ['🌿 JUNGLE // SECTOR 502', '❄️ GLACIAL // SECTOR 508', '🌋 VOLCANIC // SECTOR 509'];
+  const fallbackImages = ['/earthy-cards.png', '/icey-cards.png', '/lava-cards.png'];
   return {
     number: fallbackNumbers[index % 3],
-    envTag: fallbackTags[index % 3],
+    bgImage: fallbackImages[index % 3],
   };
 }
 
@@ -48,7 +47,7 @@ export default function RouteSelection() {
   const router = useRouter();
   const { user } = useUser();
   const { isAdmin } = useAdmin();
-  const userEmail = user?.email || 'explorer@field.recon';
+  const userEmail = user?.email || 'user@techx.in';
   const { labs } = useLabs();
   const [feedbackVersion, setFeedbackVersion] = useState(0);
 
@@ -124,7 +123,7 @@ export default function RouteSelection() {
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('last_active_expedition_lab', labId);
-      } catch {}
+      } catch { }
     }
     router.push(`/labs/${labId}`);
   };
@@ -139,23 +138,6 @@ export default function RouteSelection() {
 
       {/* Content Wrapper */}
       <div className="relative z-10 w-full max-w-[480px] mx-auto flex flex-col items-center gap-5">
-        <div className="w-full flex items-center justify-between">
-          <BackButton to="/" label="Home" />
-          {isAdmin && (
-            <button
-              type="button"
-              onClick={() => router.push('/leaderboard')}
-              className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded border border-[#6b4728] bg-[#22150e]/95 px-2.5 font-mono text-[#c99f58] shadow-sm active:scale-95 transition"
-              title="View Expedition Leaderboard"
-            >
-              <span className="text-[9px] uppercase tracking-[0.22em] leading-none">
-                Leaderboard
-              </span>
-              <span className="text-xs font-bold leading-none">🏆</span>
-            </button>
-          )}
-        </div>
-
         {/* Expedition Status Header Plaque */}
         <ExpeditionStatusHeader
           completedCount={completedSectorsCount}
@@ -189,15 +171,26 @@ export default function RouteSelection() {
                   style={{
                     backgroundImage: `url('/assets/images/torn-card-bg.webp')`,
                   }}
-                  className="relative w-full bg-[length:100%_100%] bg-no-repeat bg-center px-10 sm:px-12 py-6 sm:py-7 flex flex-col justify-between min-h-[205px] text-[#241308]"
+                  className="relative w-full bg-[length:100%_100%] bg-no-repeat bg-center px-10 sm:px-12 py-6 sm:py-7 flex flex-col justify-between min-h-[205px] text-[#241308] overflow-hidden"
                 >
+                  {/* Themed Environmental Background Artwork with Very Low Opacity */}
+                  <div
+                    style={{
+                      backgroundImage: `url('${config.bgImage}')`,
+                      WebkitMaskImage: `url('/assets/images/torn-card-bg.webp')`,
+                      WebkitMaskSize: '100% 100%',
+                      maskImage: `url('/assets/images/torn-card-bg.webp')`,
+                      maskSize: '100% 100%',
+                    }}
+                    className="absolute inset-0 bg-cover bg-center opacity-[0.28] mix-blend-multiply pointer-events-none"
+                  />
                   {/* Centered Large Ink Stamp with Paper Grain Bleed */}
                   {isCompleted && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20 select-none overflow-visible">
                       <div className="w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] md:w-[390px] md:h-[390px] -rotate-[12deg] opacity-[0.78] mix-blend-multiply transition-transform transform-gpu">
                         <Image
                           src="/assets/images/stamp.webp"
-                          alt="Survey Cleared Stamp"
+                          alt="Completed Stamp"
                           width={500}
                           height={500}
                           priority
@@ -207,32 +200,8 @@ export default function RouteSelection() {
                     </div>
                   )}
 
-                  {/* Header Sub-Row: Sector Tag & Recon Counter */}
-                  <div className="flex items-center justify-between border-b border-[#8b6943]/35 pb-1.5 mb-1.5">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <div className="w-3 h-3 rounded-full bg-[#24140a] border border-[#8c6d23] flex items-center justify-center shrink-0">
-                        <div className="w-1 h-1 rounded-full bg-[#d4af37]" />
-                      </div>
-                      <span className="text-[9.5px] sm:text-[10.5px] font-mono font-extrabold uppercase tracking-wider text-[#6b4516] truncate">
-                        {config.envTag}
-                      </span>
-                    </div>
-
-                    {!isCompleted ? (
-                      <div className="px-2 py-0.5 rounded border border-[#7a481c]/40 bg-[#7a481c]/10 text-[#7a481c] shrink-0">
-                        <span className="text-[8.5px] font-mono font-bold uppercase tracking-wider">
-                          Recon: {progress.completed}/{progress.total}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-[8.5px] font-mono font-bold uppercase tracking-wider text-emerald-800">
-                        ✦ Completed
-                      </span>
-                    )}
-                  </div>
-
                   {/* Big LAB 502 / 508 / 509 Title in Crisp, Solid Typography */}
-                  <div className="my-auto py-1">
+                  <div className="my-auto py-2 flex items-center justify-between">
                     <h2
                       style={{
                         fontFamily: "var(--font-oswald), var(--font-geist-sans), system-ui, -apple-system, sans-serif",
@@ -242,12 +211,17 @@ export default function RouteSelection() {
                     >
                       LAB {config.number}
                     </h2>
+                    {isCompleted && (
+                      <span className="text-[9.5px] font-mono font-bold uppercase tracking-wider text-emerald-800 bg-emerald-800/10 border border-emerald-800/30 px-2 py-0.5 rounded">
+                        ✦ Completed
+                      </span>
+                    )}
                   </div>
 
-                  {/* Mini Sector Progress Track */}
+                  {/* Mini Progress Track */}
                   <div className="my-1.5 w-full flex flex-col gap-1">
                     <div className="flex items-center justify-between text-[8.5px] sm:text-[9.5px] font-mono font-bold uppercase text-[#7a481c]">
-                      <span>Checkpoints Rated: {progress.completed}/{progress.total}</span>
+                      <span>Checkpoints: {progress.completed}/{progress.total}</span>
                       <span>{sectorPercent}%</span>
                     </div>
                     <div className="w-full h-1.5 rounded-full bg-[#241308]/15 border border-[#7a481c]/25 overflow-hidden">
@@ -258,8 +232,39 @@ export default function RouteSelection() {
                     </div>
                   </div>
 
+                  {/* Products in Lab with Emojis */}
+                  <div className="my-2 w-full">
+                    <div className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider text-[#683f18] mb-1.5 flex items-center justify-between">
+                      <span>Products ({lab.checkpoints?.length || 0}):</span>
+                      <span>{progress.completed}/{progress.total} Completed</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {(lab.checkpoints || []).map((cp) => {
+                        const isDone = submittedIds.includes(cp.id);
+                        return (
+                          <div
+                            key={cp.id}
+                            className={`flex items-center gap-1.5 px-2 py-1 rounded text-[10.5px] sm:text-[11px] font-mono border backdrop-blur-[1px] transition-colors ${
+                              isDone
+                                ? 'bg-emerald-950/20 border-emerald-700/50 text-emerald-950 font-semibold'
+                                : 'bg-[#241308]/10 border-[#7a481c]/35 text-[#241308]'
+                            }`}
+                          >
+                            <span className="text-xs sm:text-sm shrink-0 drop-shadow-xs">{cp.icon || '📦'}</span>
+                            <span className="truncate flex-1 font-sans font-bold text-[11px] leading-tight">
+                              {cp.name}
+                            </span>
+                            {isDone && (
+                              <span className="text-emerald-700 font-bold text-[10px] shrink-0">✓</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   {/* Navigation Action Button - Authentic Uncharted Stone & Bronze Plaque */}
-                  <div className="mt-1 w-full">
+                  <div className="mt-2 w-full">
                     {isCompleted ? (
                       <button
                         type="button"
@@ -273,7 +278,7 @@ export default function RouteSelection() {
                         <div className="btn-inner">
                           <span className="btn-title">REVIEW LAB {config.number}</span>
                           <span className="px-2 py-0.5 text-[9px] bg-black/70 text-emerald-300 rounded-full border border-emerald-500/40 font-mono font-bold uppercase tracking-wider shrink-0">
-                            ✦ Sealed
+                            ✦ Completed
                           </span>
                         </div>
                       </button>

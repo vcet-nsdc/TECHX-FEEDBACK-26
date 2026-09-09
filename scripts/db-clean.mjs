@@ -1,5 +1,11 @@
 import { MongoClient } from 'mongodb';
 import fs from 'node:fs';
+import dns from 'node:dns';
+
+// Fix for Node.js SRV resolution issue on Windows
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+} catch {}
 
 // 1. Load environment variables (.env.local, .env)
 if (typeof process.loadEnvFile === 'function') {

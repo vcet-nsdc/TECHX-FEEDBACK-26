@@ -21,7 +21,10 @@ let dbInstance: Promise<Db> | null = null;
 
 function getDb(): Promise<Db> {
   if (!dbInstance) {
-    dbInstance = getDatabase();
+    dbInstance = getDatabase().catch((err) => {
+      dbInstance = null;
+      throw err;
+    });
   }
   return dbInstance;
 }
@@ -395,6 +398,12 @@ export async function getProductStatsAggregated(): Promise<
           },
         },
         lastRated: { $max: '$timestamp' },
+      },
+    },
+    {
+      $sort: {
+        avgRating: -1,
+        totalRatings: -1,
       },
     },
   ];

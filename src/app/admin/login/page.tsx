@@ -50,37 +50,31 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#090d16] px-4 py-8 text-slate-100">
-      {/* Background ambient glow */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-96 w-96 rounded-full bg-blue-600/10 blur-[120px]" />
-        <div className="absolute -bottom-40 right-1/4 h-80 w-80 rounded-full bg-indigo-600/10 blur-[120px]" />
-      </div>
-
-      <div className="relative w-full max-w-md rounded-2xl border border-slate-800/80 bg-slate-900/90 p-8 shadow-2xl backdrop-blur-xl">
+    <main className="flex min-h-screen items-center justify-center bg-[#0e0905] px-4 py-8 text-[#f5efe6]">
+      <div className="relative w-full max-w-md rounded-2xl border border-[#382314] bg-[#18110a] p-8 shadow-2xl">
         <div className="text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-xl text-white shadow-lg shadow-blue-500/20">
-            ⚡
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[#24170d] border border-[#3d2614] text-2xl text-[#c99f58] shadow-2xs">
+            ⚙️
           </div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-blue-400">
-            TechX Portal
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#a89078]">
+            TechX 2026
           </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-white">
-            Admin Management
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#fdfbf7]">
+            Admin Sign In
           </h1>
-          <p className="mt-1 text-xs text-slate-400">
-            Sign in to configure sectors, products, and view feedback
+          <p className="mt-1 text-xs text-[#a89078]">
+            Sign in to manage products and inspect feedback ledger
           </p>
         </div>
 
         {error && (
-          <div className="mt-5 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-center text-xs font-medium text-rose-300">
+          <div className="mt-5 rounded-xl border border-[#662222] bg-[#2b1111] p-3 text-center text-xs font-bold text-[#fca5a5]">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-          <label className="flex flex-col gap-1.5 text-xs font-medium text-slate-300">
+          <label className="flex flex-col gap-1.5 text-xs font-bold text-[#c99f58]">
             <span>Username</span>
             <input
               type="text"
@@ -88,12 +82,12 @@ export default function AdminLoginPage() {
               onChange={(e) => setUsername(e.target.value)}
               required
               disabled={isLoading}
-              className="rounded-xl border border-slate-700 bg-slate-950/60 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+              className="rounded-xl border border-[#382314] bg-[#0e0905] px-3.5 py-2.5 text-sm font-semibold text-[#fdfbf7] placeholder-[#7d6550] outline-none transition focus:border-[#c99f58] disabled:opacity-50"
               placeholder="Enter admin username"
             />
           </label>
 
-          <label className="flex flex-col gap-1.5 text-xs font-medium text-slate-300">
+          <label className="flex flex-col gap-1.5 text-xs font-bold text-[#c99f58]">
             <span>Password</span>
             <input
               type="password"
@@ -101,7 +95,7 @@ export default function AdminLoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading}
-              className="rounded-xl border border-slate-700 bg-slate-950/60 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+              className="rounded-xl border border-[#382314] bg-[#0e0905] px-3.5 py-2.5 text-sm font-semibold text-[#fdfbf7] placeholder-[#7d6550] outline-none transition focus:border-[#c99f58] disabled:opacity-50"
               placeholder="••••••••••••"
             />
           </label>
@@ -109,11 +103,11 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-[#c99f58] hover:bg-[#dfb46e] border border-[#a88242] py-3 text-sm font-bold text-[#140c06] shadow-sm transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           >
             {isLoading ? (
               <>
-                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 animate-spin text-[#140c06]" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
