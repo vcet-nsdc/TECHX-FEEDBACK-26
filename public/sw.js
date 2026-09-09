@@ -1,5 +1,5 @@
 // Service Worker for TechX Expedition: Cache-first for static fonts and textures, network-first for navigation
-const CACHE_NAME = 'techx-expedition-v1';
+const CACHE_NAME = 'techx-expedition-v2';
 
 const STATIC_PRECACHE = [
   '/',

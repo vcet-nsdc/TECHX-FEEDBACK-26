@@ -467,7 +467,7 @@ export default function TreasureCard({
                           ? 'bg-[#15803d]/20 border-[#15803d] text-[#14532d] font-bold shadow-[0_0_8px_rgba(21,128,61,0.3)]'
                           : isWrong
                             ? 'bg-[#8b261d]/15 border-[#8b261d]/60 text-[#8b261d] line-through opacity-70 cursor-not-allowed'
-                            : 'bg-gradient-to-b from-[#241308]/5 via-[#241308]/10 to-[#241308]/15 hover:from-[#7a481c]/15 hover:to-[#7a481c]/25 border-[#7a481c]/40 text-[#241308] active:scale-[0.98] cursor-pointer'
+                            : 'bg-gradient-to-b from-[#241308]/5 via-[#241308]/10 to-[#241308]/15 border-[#7a481c]/40 text-[#241308] active:scale-[0.98] active:bg-[#7a481c]/20 cursor-pointer touch-manipulation'
                           }`}
                       >
                         <div className="min-w-0 flex items-center gap-2">
@@ -506,7 +506,7 @@ export default function TreasureCard({
                         clipPath:
                           'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
                       }}
-                      className="w-full py-2.5 px-4 bg-gradient-to-b from-[#d4af37] via-[#b38920] to-[#7a5214] text-[#140802] font-black text-[11px] sm:text-xs uppercase tracking-widest shadow-md transition hover:brightness-110 active:scale-[0.99] flex items-center justify-between border-t border-[#fff3cc]/60 font-['Cinzel',_serif] cursor-pointer"
+                      className="w-full py-2.5 px-4 bg-gradient-to-b from-[#d4af37] via-[#b38920] to-[#7a5214] text-[#140802] font-black text-[11px] sm:text-xs uppercase tracking-widest shadow-md transition active:scale-[0.98] active:brightness-95 flex items-center justify-between border-t border-[#fff3cc]/60 font-['Cinzel',_serif] cursor-pointer touch-manipulation"
                     >
                       <span>✦ Inspect {claimedRelic.name}</span>
                       <span className="text-xs">➔</span>
@@ -607,7 +607,7 @@ export default function TreasureCard({
             >
               <button
                 onClick={() => setModalOpen(false)}
-                className="absolute top-3.5 right-3.5 text-[#d4af37]/70 hover:text-[#fffbeb] transition text-sm font-mono w-7 h-7 rounded-full border border-[#8c6d23]/40 flex items-center justify-center hover:bg-[#8c6d23]/20"
+                className="absolute top-3.5 right-3.5 text-[#d4af37]/80 active:text-[#fffbeb] transition text-sm font-mono w-7 h-7 rounded-full border border-[#8c6d23]/40 flex items-center justify-center active:bg-[#8c6d23]/30 active:scale-95 touch-manipulation cursor-pointer"
                 aria-label="Close"
               >
                 ✕
@@ -670,7 +670,7 @@ export default function TreasureCard({
                     clipPath:
                       'polygon(4px 0%, calc(100% - 4px) 0%, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0% calc(100% - 4px), 0% 4px)',
                   }}
-                  className="py-1.5 px-4 bg-gradient-to-r from-[#d4af37] to-[#b38920] text-[#1a0f05] font-black text-[11px] uppercase tracking-wider shadow font-['Cinzel',_serif] hover:brightness-110 cursor-pointer"
+                  className="py-1.5 px-4 bg-gradient-to-r from-[#d4af37] to-[#b38920] text-[#1a0f05] font-black text-[11px] uppercase tracking-wider shadow font-['Cinzel',_serif] active:scale-95 active:brightness-95 cursor-pointer touch-manipulation"
                 >
                   Close
                 </button>

@@ -15,11 +15,14 @@ type AudioContextType = {
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
-  // Default muted if user has Save-Data enabled or is on a slow connection
-  const [isMuted, setIsMuted] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    return isSaveDataEnabled() || getNetworkTier() === 'slow';
-  });
+  // Default muted to prevent autoplay blocks and ensure SSR/client hydration match
+  const [isMuted, setIsMuted] = useState(true);
+
+  useEffect(() => {
+    if (isSaveDataEnabled() || getNetworkTier() === 'slow') {
+      setIsMuted(true);
+    }
+  }, []);
   const [volume, setVolume] = useState(0.6);
   const bgmRef = useRef<HTMLAudioElement | null>(null);
   const buttonSoundRef = useRef<HTMLAudioElement | null>(null);

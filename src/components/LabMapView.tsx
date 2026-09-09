@@ -385,17 +385,20 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
           <button
             onClick={() => router.push('/labs')}
             aria-label="Return to Expeditions"
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded border border-[#6b4728] bg-[#22150e] flex items-center justify-center text-[#c99f58] hover:text-[#f3dfa2] active:scale-95 transition cursor-pointer shrink-0 shadow-sm"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded border border-[#6b4728] bg-[#22150e] flex items-center justify-center text-[#c99f58] active:text-[#f3dfa2] active:scale-95 transition cursor-pointer shrink-0 shadow-sm touch-manipulation"
           >
             <span className="text-xs font-mono font-bold">◀</span>
           </button>
 
           <div className="min-w-0">
             <span className="block text-[8px] sm:text-[9.5px] font-bold uppercase tracking-[0.25em] text-[#9c7846] font-mono truncate">
-              JOURNAL // {labConfig?.name || 'FIELD RECON'}
+              JOURNAL // {['502', '508', '509'][Number(labKey) - 1] ? `LAB ${['502', '508', '509'][Number(labKey) - 1]}` : (labConfig?.name || 'FIELD RECON')}
             </span>
-            <h1 className="text-xs sm:text-base font-bold text-[#f2dfbe] truncate font-['Cinzel',_serif] tracking-wider">
-              {labConfig?.title || 'Expedition Sector'}
+            <h1
+              style={{ fontFamily: "var(--font-geist-sans), system-ui, -apple-system, sans-serif" }}
+              className="text-sm sm:text-lg font-black text-[#f2dfbe] truncate tracking-wider leading-tight"
+            >
+              {['502', '508', '509'][Number(labKey) - 1] ? `LAB ${['502', '508', '509'][Number(labKey) - 1]}` : (labConfig?.title || 'Expedition Sector')}
             </h1>
           </div>
         </div>
@@ -405,20 +408,20 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
           <div className="flex p-0.5 rounded bg-[#0d0704] border border-[#52351e]">
             <button
               onClick={() => setViewMode('map')}
-              className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9.5px] sm:text-xs font-bold uppercase tracking-wider rounded font-mono transition cursor-pointer ${
+              className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9.5px] sm:text-xs font-bold uppercase tracking-wider rounded font-mono transition cursor-pointer touch-manipulation active:scale-95 ${
                 viewMode === 'map'
                   ? 'bg-gradient-to-b from-[#d4af37] to-[#8c6d23] text-[#120b06] shadow'
-                  : 'text-[#8c6f4b] hover:text-[#c49b4d]'
+                  : 'text-[#8c6f4b] active:text-[#c49b4d]'
               }`}
             >
               Journal
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9.5px] sm:text-xs font-bold uppercase tracking-wider rounded font-mono transition cursor-pointer ${
+              className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9.5px] sm:text-xs font-bold uppercase tracking-wider rounded font-mono transition cursor-pointer touch-manipulation active:scale-95 ${
                 viewMode === 'list'
                   ? 'bg-gradient-to-b from-[#d4af37] to-[#8c6d23] text-[#120b06] shadow'
-                  : 'text-[#8c6f4b] hover:text-[#c49b4d]'
+                  : 'text-[#8c6f4b] active:text-[#c49b4d]'
               }`}
             >
               List

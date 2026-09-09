@@ -320,17 +320,6 @@
   box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3);
 }
 
-/* Loading Screen */
-.loading-screen {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #1a1a1a;
-  z-index: 99999;
-}
-
 /* Compass Spin Animation */
 .compass-spin {
   animation: spin 60s linear infinite;
@@ -602,10 +591,9 @@ select.tablet-input option {
   --border-color: #A88448;
   --text-muted: #6B553B;
 
-  --font-uncharted-title: var(--font-uncharted-title), "Antonio", "Impact", sans-serif;
-  --font-title: var(--font-uncharted-title);
-  --font-display: var(--font-uncharted-title);
-  --font-serif: var(--font-uncharted-serif), "IM Fell English", Georgia, serif;
+  --font-title: var(--font-uncharted-title, "Antonio", sans-serif);
+  --font-display: var(--font-uncharted-title, "Antonio", sans-serif);
+  --font-serif: var(--font-uncharted-serif, "IM Fell English", Georgia, serif);
 }
 
 /* Authentic Vintage Parchment & Expedition Card Styles */
@@ -835,5 +823,179 @@ button, a, input, select, textarea, [role="button"] {
   }
 }
 
+/* ========================================================================= */
+/* Authentic Uncharted Stone & Bronze Plaque Button                         */
+/* ========================================================================= */
 
+.uncharted-btn {
+  background: linear-gradient(180deg, #42493b 0%, #2b3226 50%, #1e241b 100%);
+  border: 2px solid #8c6d23;
+  padding: 8px;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 
+    0 16px 32px rgba(0, 0, 0, 0.95), /* Deep drop shadow */
+    0 0 0 1px rgba(212, 175, 55, 0.35), /* Subtle gold rim */
+    inset 0 2px 3px rgba(255, 255, 255, 0.25), /* Stone highlight */
+    inset 0 -4px 8px rgba(0, 0, 0, 0.8); /* Stone depth shadow */
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  display: inline-block;
+}
 
+@media (min-width: 640px) {
+  .uncharted-btn {
+    padding: 10px;
+  }
+}
+
+.btn-inner {
+  background: linear-gradient(135deg, #8a6237 0%, #543717 50%, #2e1a08 100%); /* Aged bronze/gold */
+  border-radius: 8px;
+  padding: 14px 28px;
+  border: 2px solid #1a0f04;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    inset 0 0 18px rgba(0, 0, 0, 0.95), /* Dark edges on the metal */
+    inset 0 2px 4px rgba(255, 255, 255, 0.3), /* Top edge highlight */
+    0 1px 0 rgba(255, 215, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-oswald), var(--font-geist-sans), system-ui, sans-serif;
+}
+
+@media (min-width: 640px) {
+  .btn-inner {
+    padding: 16px 36px;
+  }
+}
+
+/* Subtle scratch/texture overlay using CSS gradients */
+.btn-inner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: 
+    repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px),
+    repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(255,255,255,0.03) 5px, rgba(255,255,255,0.03) 6px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.btn-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #e5c386; /* Gold/Brass text */
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  line-height: 1.1;
+  text-shadow: 
+    2px 2px 0px #1a1005,
+    -1px -1px 0px #9b784a,
+    0px 5px 5px rgba(0, 0, 0, 0.8); /* Embossed 3D text effect */
+  margin-bottom: 4px;
+  position: relative;
+  z-index: 2;
+}
+
+@media (min-width: 640px) {
+  .btn-title {
+    font-size: 38px;
+  }
+}
+
+.btn-subtitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: #b08d55;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  border-top: 1px solid rgba(176, 141, 85, 0.35);
+  padding-top: 6px;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .btn-subtitle {
+    font-size: 15px;
+  }
+}
+
+@media (hover: hover) {
+  .uncharted-btn:hover .btn-inner {
+    background: linear-gradient(135deg, #8a643c 0%, #543717 50%, #301f0a 100%);
+  }
+
+  .uncharted-btn:hover .btn-title {
+    color: #f7d598;
+  }
+}
+
+.uncharted-btn:active {
+  transform: translateY(3px) scale(0.985);
+  box-shadow: 
+    0 5px 10px rgba(0, 0, 0, 0.8), 
+    inset 0 4px 6px rgba(255, 255, 255, 0.1), 
+    inset 0 -4px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* Compact Card Variant of Uncharted Button for Sector Expedition Cards */
+.uncharted-btn-card {
+  background: #282d23;
+  border: none;
+  padding: 5px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 
+    0 8px 16px rgba(0, 0, 0, 0.75), 
+    inset 0 2px 4px rgba(255, 255, 255, 0.1), 
+    inset 0 -2px 4px rgba(0, 0, 0, 0.5);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  touch-action: manipulation;
+  width: 100%;
+  display: block;
+}
+
+.uncharted-btn-card .btn-inner {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1.5px solid #221508;
+  box-shadow: 
+    inset 0 0 14px rgba(0, 0, 0, 0.9), 
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.uncharted-btn-card .btn-title {
+  font-size: 15px;
+  letter-spacing: 2px;
+  margin-bottom: 0;
+  text-align: left;
+}
+
+@media (min-width: 640px) {
+  .uncharted-btn-card .btn-title {
+    font-size: 17px;
+  }
+}
+
+.uncharted-btn-card:active {
+  transform: translateY(2px) scale(0.985);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.75), 
+    inset 0 2px 4px rgba(255, 255, 255, 0.1), 
+    inset 0 -2px 4px rgba(0, 0, 0, 0.5);
+}

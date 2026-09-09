@@ -7,6 +7,13 @@ import { Volume2, VolumeX } from 'lucide-react';
 export default function VolumeControl() {
   const { isMuted, volume, toggleMute, setVolume } = useAudio();
   const [isHovered, setIsHovered] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <div
@@ -37,7 +44,7 @@ export default function VolumeControl() {
       
       <button
         onClick={toggleMute}
-        className="text-[#d4af37] hover:text-[#fde047] transition-colors focus:outline-none flex-shrink-0"
+        className="text-[#d4af37] active:text-[#fde047] active:scale-95 transition focus:outline-none flex-shrink-0 touch-manipulation cursor-pointer"
         aria-label={isMuted ? "Unmute sound" : "Mute sound"}
       >
         {isMuted || volume === 0 ? (
