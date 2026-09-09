@@ -38,6 +38,9 @@ async function withMongo<T>(op: () => Promise<T>): Promise<T | null> {
   try {
     return await op();
   } catch (err) {
+    if (err instanceof DuplicateFeedbackError) {
+      throw err;
+    }
     warnOnce('memory', err);
     return null;
   }
