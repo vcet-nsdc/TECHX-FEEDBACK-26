@@ -162,3 +162,77 @@ export function TechXLogoText({
     </motion.div>
   );
 }
+
+interface ProductShowcaseTextProps {
+  animated?: boolean;
+  className?: string;
+}
+
+export function ProductShowcaseText({
+  animated = true,
+  className = '',
+}: ProductShowcaseTextProps) {
+  const content = (
+    <div className={`relative flex flex-col items-center justify-center select-none text-center px-4 ${className}`}>
+      {/* Background ambient glow */}
+      <div className="pointer-events-none absolute -inset-12 rounded-full bg-gradient-to-r from-amber-700/15 via-yellow-700/10 to-amber-800/15 blur-3xl opacity-40" />
+
+      {/* Top filigree indicator */}
+      <motion.div
+        initial={animated ? { opacity: 0, y: -8 } : false}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+        className="relative z-10 mb-2 flex items-center gap-3 text-[#dfcfb3]/75 font-cinzel text-[11px] sm:text-xs uppercase tracking-[0.4em]"
+      >
+        <span className="h-px w-8 sm:w-16 bg-gradient-to-r from-transparent to-amber-500/40" />
+        <span>❖ CHECKPOINTS A • B • C ❖</span>
+        <span className="h-px w-8 sm:w-16 bg-gradient-to-l from-transparent to-amber-500/40" />
+      </motion.div>
+
+      {/* Main "Product Showcase" embossed text */}
+      <div className="relative z-10 shimmer-text">
+        <h2
+          style={{ fontFamily: "var(--font-base02), var(--font-uncharted), 'Base02', 'Base 02', serif" }}
+          className="font-uncharted font-extrabold text-4xl sm:text-6xl md:text-7xl lg:text-8xl text-uncharted-emboss tracking-wider leading-tight"
+        >
+          Product Showcase
+        </h2>
+      </div>
+
+      {/* Gemstone shard icons preview */}
+      <motion.div
+        initial={animated ? { opacity: 0, y: 8 } : false}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.15 }}
+        className="relative z-10 mt-3 sm:mt-5 flex items-center justify-center gap-4 text-xs font-cinzel text-[#dfcfb3]/70 uppercase tracking-[0.3em]"
+      >
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#059669]" />
+          <span>Lab A</span>
+        </div>
+        <span className="text-amber-500/40">•</span>
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_6px_#2563eb]" />
+          <span>Lab B</span>
+        </div>
+        <span className="text-amber-500/40">•</span>
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-2 w-2 rounded-full bg-red-500 shadow-[0_0_6px_#dc2626]" />
+          <span>Lab C</span>
+        </div>
+      </motion.div>
+    </div>
+  );
+
+  if (!animated) return content;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.94 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {content}
+    </motion.div>
+  );
+}

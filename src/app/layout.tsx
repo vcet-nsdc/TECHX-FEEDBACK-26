@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from 'next/font/local';
-import { Antonio, IM_Fell_English, Cinzel, Cinzel_Decorative, Caveat, Marcellus, Geist, Geist_Mono, Oswald } from 'next/font/google';
+import { Antonio, IM_Fell_English, Cinzel, Cinzel_Decorative, Caveat, Marcellus, Geist, Geist_Mono } from 'next/font/google';
 import { UserProvider } from '@/context/UserContext';
 import { CompletionProvider } from '@/context/CompletionContext';
 import { AdminProvider } from '@/context/AdminContext';
@@ -74,13 +74,6 @@ const marcellus = Marcellus({
   display: 'swap',
 });
 
-const oswald = Oswald({
-  variable: "--font-oswald",
-  subsets: ["latin"],
-  weight: ["500", "700"],
-  display: 'swap',
-});
-
 export const metadata: Metadata = {
   title: "TechX Expedition // Field Recon",
   description: "Feedback collection platform for TechX research labs.",
@@ -129,7 +122,6 @@ export default function RootLayout({
         ${cinzel.variable}
         ${cinzelDecorative.variable}
         ${marcellus.variable}
-        ${oswald.variable}
       `}
     >
       <body className="bg-[#050302] text-[#2c1a0e] antialiased selection:bg-[#d4af37]/30 selection:text-[#1a0e05]">

@@ -16,40 +16,12 @@ import TreasureCard from './TreasureCard';
 import BackButton from './BackButton';
 import { motion } from 'framer-motion';
 
-interface LabSectorConfig {
-  number: string;
-  envTag: string;
-}
-
-const LAB_CONFIGS: Record<string, LabSectorConfig> = {
-  '1': { number: '502', envTag: '🌿 JUNGLE // SECTOR 502' },
-  '2': { number: '508', envTag: '❄️ GLACIAL // SECTOR 508' },
-  '3': { number: '509', envTag: '🌋 VOLCANIC // SECTOR 509' },
-};
-
-function getLabSectorConfig(lab: ExpeditionLab, index: number): LabSectorConfig {
-  const byId = LAB_CONFIGS[lab.id];
-  if (byId) {
-    const customNum = (lab.name + ' ' + (lab.title || '')).match(/\b(5\d{2}|\d{3})\b/);
-    if (customNum) {
-      return { ...byId, number: customNum[1] };
-    }
-    return byId;
-  }
-  const fallbackNumbers = ['502', '508', '509'];
-  const fallbackTags = ['🌿 JUNGLE // SECTOR 502', '❄️ GLACIAL // SECTOR 508', '🌋 VOLCANIC // SECTOR 509'];
-  return {
-    number: fallbackNumbers[index % 3],
-    envTag: fallbackTags[index % 3],
-  };
-}
-
 export default function RouteSelection() {
   const router = useRouter();
   const { user } = useUser();
   const { isAdmin } = useAdmin();
   const userEmail = user?.email || 'explorer@field.recon';
-  const { labs } = useLabs();
+  useLabs(); // re-render dynamically when admin edits labs
   const [feedbackVersion, setFeedbackVersion] = useState(0);
 
   // Listen for feedback submissions across tabs or components
@@ -65,21 +37,19 @@ export default function RouteSelection() {
     };
   }, []);
 
-  // Strictly 3 primary sectors with dynamic labs context
-  const labList: ExpeditionLab[] = useMemo(() => {
-    return [
-      labs['1'] || expeditionLabs['1'],
-      labs['2'] || expeditionLabs['2'],
-      labs['3'] || expeditionLabs['3'],
-    ].filter(Boolean);
-  }, [labs]);
+  // Strictly 3 primary sectors
+  const labList: ExpeditionLab[] = [
+    expeditionLabs['1'],
+    expeditionLabs['2'],
+    expeditionLabs['3'],
+  ].filter(Boolean);
 
   // localStorage is read in an effect (not during render) so the server
   // render and first client paint agree — no hydration mismatch.
   const [submittedIds, setSubmittedIds] = useState<string[]>([]);
   useEffect(() => {
     setSubmittedIds(getSubmittedFeedbackForUser(userEmail));
-  }, [userEmail]);
+  }, [userEmail, feedbackVersion]);
 
   const perLabProgress = useMemo(() => {
     const map: Record<string, { completed: number; total: number; percentage: number; isCompleted: boolean }> = {};
@@ -101,6 +71,7 @@ export default function RouteSelection() {
   const completedCheckpoints = labList.reduce((acc, lab) => {
     return acc + (perLabProgress[lab.id]?.completed || 0);
   }, 0);
+
 
   const [activeLabId, setActiveLabId] = useState<string>('1');
 
@@ -145,7 +116,7 @@ export default function RouteSelection() {
             <button
               type="button"
               onClick={() => router.push('/leaderboard')}
-              className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded border border-[#6b4728] bg-[#22150e]/95 px-2.5 font-mono text-[#c99f58] shadow-sm active:scale-95 transition"
+              className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded border border-[#6b4728] bg-[#22150e]/95 px-2.5 font-mono text-[#c99f58] shadow-sm transition hover:border-[#8a5d33] hover:text-[#f3dfa2] active:scale-95"
               title="View Expedition Leaderboard"
             >
               <span className="text-[9px] uppercase tracking-[0.22em] leading-none">
@@ -162,8 +133,8 @@ export default function RouteSelection() {
           totalCount={labList.length}
         />
 
-        {/* 3 Authentic Torn Parchment Sector Expedition Cards */}
-        <div className="w-full flex flex-col gap-5">
+        {/* 3 Sector Expedition Cards */}
+        <div className="w-full flex flex-col gap-4">
           {labList.map((lab, index) => {
             const progress = perLabProgress[lab.id] || {
               completed: 0,
@@ -173,7 +144,13 @@ export default function RouteSelection() {
             };
             const isCompleted = progress.isCompleted;
             const sectorPercent = progress.percentage;
-            const config = getLabSectorConfig(lab, index);
+
+            const environmentTag =
+              lab.themeType === 'frost'
+                ? '❄️ GLACIAL FJORD // ICE'
+                : lab.themeType === 'volcano'
+                  ? '🌋 VOLCANIC CALDERA // MAGMA'
+                  : '🌿 JUNGLE CANOPY // RUINS';
 
             return (
               <motion.div
@@ -181,7 +158,7 @@ export default function RouteSelection() {
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: index * 0.1 }}
-                className="relative w-full drop-shadow-[0_12px_28px_rgba(0,0,0,0.88)] cursor-pointer select-none active:scale-[0.985] transition-transform duration-150 transform-gpu will-change-transform"
+                className="relative w-full drop-shadow-[0_12px_28px_rgba(0,0,0,0.88)] cursor-pointer group transform-gpu will-change-transform"
                 onClick={() => handleEnterLab(lab.id)}
               >
                 {/* Torn Parchment Dossier Plaque with Inset Safe Zone */}
@@ -189,12 +166,12 @@ export default function RouteSelection() {
                   style={{
                     backgroundImage: `url('/assets/images/torn-card-bg.webp')`,
                   }}
-                  className="relative w-full bg-[length:100%_100%] bg-no-repeat bg-center px-10 sm:px-12 py-6 sm:py-7 flex flex-col justify-between min-h-[205px] text-[#241308]"
+                  className="relative w-full bg-[length:100%_100%] bg-no-repeat bg-center px-10 sm:px-12 py-6 sm:py-7 flex flex-col justify-between min-h-[200px] text-[#241308]"
                 >
                   {/* Centered Large Ink Stamp with Paper Grain Bleed */}
                   {isCompleted && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20 select-none overflow-visible">
-                      <div className="w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] md:w-[390px] md:h-[390px] -rotate-[12deg] opacity-[0.78] mix-blend-multiply transition-transform transform-gpu">
+                      <div className="w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] md:w-[390px] md:h-[390px] -rotate-[12deg] opacity-[0.82] mix-blend-multiply transition-transform transform-gpu">
                         <Image
                           src="/assets/images/stamp.webp"
                           alt="Survey Cleared Stamp"
@@ -213,40 +190,33 @@ export default function RouteSelection() {
                       <div className="w-3 h-3 rounded-full bg-[#24140a] border border-[#8c6d23] flex items-center justify-center shrink-0">
                         <div className="w-1 h-1 rounded-full bg-[#d4af37]" />
                       </div>
-                      <span className="text-[9.5px] sm:text-[10.5px] font-mono font-extrabold uppercase tracking-wider text-[#6b4516] truncate">
-                        {config.envTag}
+                      <span className="text-[9.5px] sm:text-[10px] font-mono font-extrabold uppercase tracking-wider text-[#6b4516] truncate">
+                        {environmentTag}
                       </span>
                     </div>
 
-                    {!isCompleted ? (
+                    {!isCompleted && (
                       <div className="px-2 py-0.5 rounded border border-[#7a481c]/40 bg-[#7a481c]/10 text-[#7a481c] shrink-0">
                         <span className="text-[8.5px] font-mono font-bold uppercase tracking-wider">
                           Recon: {progress.completed}/{progress.total}
                         </span>
                       </div>
-                    ) : (
-                      <span className="text-[8.5px] font-mono font-bold uppercase tracking-wider text-emerald-800">
-                        ✦ Completed
-                      </span>
                     )}
                   </div>
 
-                  {/* Big LAB 502 / 508 / 509 Title in Crisp, Solid Typography */}
+                  {/* Title & Lore Description */}
                   <div className="my-auto py-1">
-                    <h2
-                      style={{
-                        fontFamily: "var(--font-oswald), var(--font-geist-sans), system-ui, -apple-system, sans-serif",
-                        letterSpacing: '0.04em',
-                      }}
-                      className="text-4xl sm:text-5xl font-black text-[#1c0f05] tracking-tight leading-none drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]"
-                    >
-                      LAB {config.number}
+                    <h2 className="text-xl sm:text-2xl font-bold font-['EB_Garamond',_serif] text-[#1c0f05] tracking-tight leading-snug group-hover:text-[#522b10] transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,0.4)]">
+                      {lab.name}: {lab.title}
                     </h2>
+                    <p className="text-sm sm:text-base text-[#3d200e] font-[family-name:var(--font-handwriting)] font-bold italic leading-snug mt-1 line-clamp-2">
+                      &quot;{lab.subtitle}&quot;
+                    </p>
                   </div>
 
                   {/* Mini Sector Progress Track */}
                   <div className="my-1.5 w-full flex flex-col gap-1">
-                    <div className="flex items-center justify-between text-[8.5px] sm:text-[9.5px] font-mono font-bold uppercase text-[#7a481c]">
+                    <div className="flex items-center justify-between text-[8px] sm:text-[8.5px] font-mono font-bold uppercase text-[#7a481c]">
                       <span>Checkpoints Rated: {progress.completed}/{progress.total}</span>
                       <span>{sectorPercent}%</span>
                     </div>
@@ -258,8 +228,8 @@ export default function RouteSelection() {
                     </div>
                   </div>
 
-                  {/* Navigation Action Button - Authentic Uncharted Stone & Bronze Plaque */}
-                  <div className="mt-1 w-full">
+                  {/* Navigation Action Button */}
+                  <div className="mt-1">
                     {isCompleted ? (
                       <button
                         type="button"
@@ -267,15 +237,16 @@ export default function RouteSelection() {
                           e.stopPropagation();
                           handleEnterLab(lab.id);
                         }}
-                        className="uncharted-btn-card"
-                        aria-label={`Review Lab ${config.number}`}
+                        style={{
+                          clipPath:
+                            'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
+                        }}
+                        className="w-full py-2.5 px-4 bg-gradient-to-r from-[#2b100b] via-[#4a1c15] to-[#2b100b] text-[#f2dfbe] font-bold text-[11px] sm:text-xs uppercase tracking-widest shadow-md transition hover:brightness-125 active:scale-[0.99] flex items-center justify-between border-t border-[#8b261d]/50 font-['Cinzel',_serif] cursor-pointer"
                       >
-                        <div className="btn-inner">
-                          <span className="btn-title">REVIEW LAB {config.number}</span>
-                          <span className="px-2 py-0.5 text-[9px] bg-black/70 text-emerald-300 rounded-full border border-emerald-500/40 font-mono font-bold uppercase tracking-wider shrink-0">
-                            ✦ Sealed
-                          </span>
-                        </div>
+                        <span>Review {lab.title}</span>
+                        <span className="px-2 py-0.5 text-[8.5px] bg-[#8b261d] text-[#fff0d6] rounded-full border border-[#d6655a]/40 font-mono font-bold uppercase tracking-widest">
+                          ✦ Sealed
+                        </span>
                       </button>
                     ) : (
                       <button
@@ -284,15 +255,14 @@ export default function RouteSelection() {
                           e.stopPropagation();
                           handleEnterLab(lab.id);
                         }}
-                        className="uncharted-btn-card"
-                        aria-label={`Enter Lab ${config.number}`}
+                        style={{
+                          clipPath:
+                            'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
+                        }}
+                        className="w-full py-2.5 px-4 bg-gradient-to-b from-[#d4af37] via-[#b38920] to-[#7a5214] text-[#140802] font-black text-[11px] sm:text-xs uppercase tracking-widest shadow-md transition hover:brightness-110 active:scale-[0.99] flex items-center justify-between border-t border-[#fff3cc]/60 font-['Cinzel',_serif] cursor-pointer"
                       >
-                        <div className="btn-inner">
-                          <span className="btn-title">ENTER LAB {config.number}</span>
-                          <span className="text-[#e5c386] font-bold text-sm sm:text-base drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] shrink-0">
-                            ➔
-                          </span>
-                        </div>
+                        <span>Enter {lab.title}</span>
+                        <span className="text-xs">➔</span>
                       </button>
                     )}
                   </div>
@@ -301,12 +271,16 @@ export default function RouteSelection() {
             );
           })}
 
-          {/* Unlockable 7-Project Milestone Treasure Card */}
+          {/* Unlockable 3-Tier Mystery Treasure Card */}
           <TreasureCard
             completedCount={completedCheckpoints}
             targetCount={7}
             userEmail={userEmail}
             currentLabId={activeLabId}
+            lab1Completed={perLabProgress['1']?.isCompleted ?? false}
+            lab2Completed={perLabProgress['2']?.isCompleted ?? false}
+            lab3Completed={perLabProgress['3']?.isCompleted ?? false}
+            completedLabIds={labList.filter((l) => perLabProgress[l.id]?.isCompleted).map((l) => l.id)}
           />
         </div>
       </div>

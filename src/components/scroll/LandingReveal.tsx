@@ -7,16 +7,17 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
 import { DEPARTMENT_OPTIONS } from '@/lib/mock-data';
 import { getSubmittedFeedbackForUser } from '@/lib/expeditionData';
-import { TechXLogoText } from '@/components/uncharted/TechXTypography';
+import { TechXLogoText, ProductShowcaseText } from '@/components/uncharted/TechXTypography';
 import { getNetworkTier, getDeviceTier, isSaveDataEnabled } from '@/lib/network-tier';
 
 const TOTAL_FRAMES = 120;
 const FRAME_PREFIX = '/frames/frame_';
-// WebP frames downscaled for smooth mobile & desktop scrub
+// WebP frames (downscaled by scripts/optimize-frames.mjs) are the primary
+// source; the original JPGs stay on disk as an onerror fallback.
 const FRAME_SUFFIX = '_delay-0.016s.webp';
+const FRAME_FALLBACK_SUFFIX = '_delay-0.016s.jpg';
 // Scroll distance the frame sequence plays out over, in viewport heights.
-// Reduced to 200 for a 2-scroll experience: Logo → Showcase + Begin button.
-const SCROLL_HEIGHT_VH = 200;
+const SCROLL_HEIGHT_VH = 400;
 
 function frameSrc(i: number, suffix: string = FRAME_SUFFIX) {
   // Internal frame index is 0-based (0..TOTAL_FRAMES-1); filenames on disk
@@ -32,7 +33,7 @@ function checkIsLowEnd(): boolean {
     const params = new URLSearchParams(window.location.search);
     if (params.get('lowend') === 'true' || params.get('perf') === 'low') return true;
     if (params.get('lowend') === 'false' || params.get('perf') === 'high') return false;
-  } catch { }
+  } catch {}
 
   // 2. Network constraints apply to ALL devices (desktop, laptop, mobile alike)
   const netTier = getNetworkTier();
@@ -56,10 +57,43 @@ export default function LandingReveal() {
   const currentFrameRef = useRef(0);
 
   const [ready, setReady] = useState(false);
-  const [showFormOverlay, setShowFormOverlay] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(1);
+  const [showCard, setShowCard] = useState(false);
+  const [loadingScreenGone, setLoadingScreenGone] = useState(false);
   const [isLowEnd, setIsLowEnd] = useState(false);
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
 
+  const desktopVideoRef = useRef<HTMLVideoElement>(null);
+  const mobileVideoRef = useRef<HTMLVideoElement>(null);
 
+  useEffect(() => {
+    setIsMobileScreen(window.innerWidth <= 768);
+  }, []);
+
+  // Viewport-aware video playback & complete teardown upon ready
+  useEffect(() => {
+    if (ready || isLowEnd) {
+      if (desktopVideoRef.current) {
+        desktopVideoRef.current.pause();
+      }
+      if (mobileVideoRef.current) {
+        mobileVideoRef.current.pause();
+      }
+      if (ready) {
+        const t = setTimeout(() => setLoadingScreenGone(true), 600);
+        return () => clearTimeout(t);
+      }
+      return;
+    }
+
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const targetVideo = isMobile ? mobileVideoRef.current : desktopVideoRef.current;
+    if (targetVideo) {
+      targetVideo.muted = true;
+      targetVideo.defaultMuted = true;
+      targetVideo.play().catch(() => {});
+    }
+  }, [ready, isLowEnd]);
 
   const router = useRouter();
   const { user, login } = useUser();
@@ -106,21 +140,26 @@ export default function LandingReveal() {
     return () => unsub();
   }, [smoothProgress, maxProgress]);
 
-  // ─── 2-scroll layout ───────────────────────────────────────────
-  // Scroll 1 (0–40%):  TechX Logo — visible at top, fades out
-  // Scroll 2 (40–100%): Product Showcase + treasure + Begin Exploration (stays)
-  // Registration form: overlay triggered by button click only
-  // ────────────────────────────────────────────────────────────────
+  // Logo: fully visible at the top, fades out quickly as scrolling starts
+  const logoOpacity = useTransform(maxProgress, [0, 0.08, 0.16], [1, 1, 0]);
+  const logoScale = useTransform(maxProgress, [0, 0.16], [1, 0.88]);
 
-  // Scroll 1: Logo — fully visible at top, fades out by ~40%
-  const logoOpacity = useTransform(maxProgress, [0, 0.15, 0.40], [1, 1, 0]);
-  const logoScale = useTransform(maxProgress, [0, 0.40], [1, 0.88]);
+  // Information blurbs + Product Showcase on tightened, fluid intervals
+  const blurb1Opacity = useTransform(smoothProgress, [0.18, 0.25, 0.32, 0.38], [0, 1, 1, 0]);
+  const blurb1Y = useTransform(smoothProgress, [0.18, 0.25], [20, 0]);
 
-  // Scroll 2: Product Showcase + treasure + CTA — appears at 40%, stays visible
-  const midOpacity = useTransform(smoothProgress, [0.38, 0.52], [0, 1]);
-  const midY = useTransform(smoothProgress, [0.38, 0.52], [20, 0]);
+  const midOpacity = useTransform(smoothProgress, [0.40, 0.47, 0.53, 0.58], [0, 1, 1, 0]);
+  const midY = useTransform(smoothProgress, [0.40, 0.47], [20, 0]);
 
-  const scrollHintOpacity = useTransform(smoothProgress, [0, 0.08], [1, 0]);
+  const blurb2Opacity = useTransform(smoothProgress, [0.60, 0.67, 0.73, 0.78], [0, 1, 1, 0]);
+  const blurb2Y = useTransform(smoothProgress, [0.60, 0.67], [20, 0]);
+
+  const blurb3Opacity = useTransform(smoothProgress, [0.80, 0.86, 0.90], [0, 1, 1]);
+  const blurb3Y = useTransform(smoothProgress, [0.80, 0.86], [20, 0]);
+
+  const cardOpacity = useTransform(smoothProgress, [0.90, 0.98], [0, 1]);
+  const cardY = useTransform(smoothProgress, [0.90, 0.98], [30, 0]);
+  const scrollHintOpacity = useTransform(smoothProgress, [0, 0.05], [1, 0]);
 
   // Subtle, GPU-accelerated parallax for low-end static background on scroll
   const staticScale = useTransform(smoothProgress, [0, 1], [1, 1.06]);
@@ -130,38 +169,64 @@ export default function LandingReveal() {
   // - slow / low-end: 0 frames, preloads static hero, readies immediately upon image load (no fake timers)
   // - moderate: progressive batching with concurrency 2, readies after 6 frames, loads rest in background
   // - fast: full sequence with concurrency 6, readies after 15 frames, loads rest in background
-  // Frame preloader — loads frames immediately, no loading screen delay
   useEffect(() => {
     const isLowEndDevice = checkIsLowEnd();
     setIsLowEnd(isLowEndDevice);
     const netTier = getNetworkTier();
 
     if (isLowEndDevice) {
-      // LOW-END: preload static hero only, ready immediately on load
+      // SLOW / LOW-CAPABILITY TIER:
+      // Zero frames downloaded. Preload only the single static image.
       const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
       const staticSrc = isMobile
         ? '/assets/images/scroll-static-mobile.webp'
         : '/assets/images/scroll-static-desktop.webp';
 
       const img = new window.Image();
-      let done = false;
-      const finish = () => {
-        if (done) return;
-        done = true;
-        setReady(true);
+      let isTransitioning = false;
+
+      const finishReady = () => {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        setLoadProgress(100);
+        setTimeout(() => setReady(true), 150);
       };
-      img.onload = finish;
-      img.onerror = finish;
+
+      img.onload = finishReady;
+      img.onerror = finishReady;
       img.src = staticSrc;
 
-      // Failsafe
-      const failsafe = setTimeout(finish, 1500);
-      return () => clearTimeout(failsafe);
+      // Smooth HUD progression that quickly advances to 90% while the image loads
+      const startTime = Date.now();
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(90, Math.max(1, Math.floor((elapsed / 300) * 90)));
+        setLoadProgress((prev) => Math.max(prev, progress));
+
+        if (img.complete && img.naturalWidth > 0) {
+          clearInterval(interval);
+          finishReady();
+        }
+      }, 30);
+
+      const failsafe = setTimeout(() => {
+        clearInterval(interval);
+        finishReady();
+      }, 1500);
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(failsafe);
+      };
     }
 
-    // MODERATE / FAST TIER: load frames, ready as soon as enough are decoded
+    // MODERATE / FAST TIER:
     const PRELOAD_CONCURRENCY = netTier === 'moderate' ? 2 : 6;
     const TARGET_INITIAL_FRAMES = netTier === 'moderate' ? 6 : 15;
+    // Loading video is ~4.1s (desktop) / ~4.7s (mobile). 4.0s minimum allows the full dramatic sequence to play out.
+    const MIN_VIDEO_DURATION = 4000;
+    const startTime = Date.now();
+    let timerDone = false;
 
     const images: HTMLImageElement[] = new Array(TOTAL_FRAMES);
     let loadedCount = 0;
@@ -170,11 +235,36 @@ export default function LandingReveal() {
 
     const checkReady = () => {
       if (isTransitioning) return;
-      if (loadedCount >= TARGET_INITIAL_FRAMES || loadedCount >= 1) {
+      const hasEnoughFrames = loadedCount >= TARGET_INITIAL_FRAMES;
+      if (timerDone && (hasEnoughFrames || loadedCount >= 1)) {
         isTransitioning = true;
-        setReady(true);
+        setLoadProgress(100);
+        setTimeout(() => setReady(true), 200);
       }
     };
+
+    // Smooth HUD status ticker across 4 seconds starting immediately from > 0
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(Math.max(1, Math.floor((elapsed / MIN_VIDEO_DURATION) * 100)), 99);
+      setLoadProgress((prev) => Math.max(prev, progress));
+
+      if (elapsed >= MIN_VIDEO_DURATION) {
+        clearInterval(interval);
+        timerDone = true;
+        checkReady();
+      }
+    }, 30);
+
+    // Failsafe: never leave users hanging if some frames stall
+    const failsafe = setTimeout(() => {
+      if (!isTransitioning) {
+        clearInterval(interval);
+        isTransitioning = true;
+        setLoadProgress(100);
+        setReady(true);
+      }
+    }, 5500);
 
     const resolve = () => {
       loadedCount++;
@@ -193,7 +283,13 @@ export default function LandingReveal() {
           resolve();
         }
       };
-      img.onerror = resolve;
+      img.onerror = () => {
+        if (img.src.endsWith(FRAME_SUFFIX)) {
+          img.src = frameSrc(i, FRAME_FALLBACK_SUFFIX);
+        } else {
+          resolve();
+        }
+      };
       img.src = frameSrc(i);
       images[i] = img;
     };
@@ -208,15 +304,10 @@ export default function LandingReveal() {
     pump();
     framesRef.current = images;
 
-    // Failsafe: if frames stall, force ready
-    const failsafe = setTimeout(() => {
-      if (!isTransitioning) {
-        isTransitioning = true;
-        setReady(true);
-      }
-    }, 5500);
-
-    return () => clearTimeout(failsafe);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(failsafe);
+    };
   }, []);
 
   const drawFrame = useCallback((index: number) => {
@@ -285,12 +376,9 @@ export default function LandingReveal() {
     };
   }, [ready, isLowEnd, smoothProgress, drawFrame]);
 
-  // Toggle whether the mid-section (Showcase + button) can capture pointer input
-  const [showMid, setShowMid] = useState(false);
+  // Toggle whether the signup card can capture pointer input
   useEffect(() => {
-    const unsub = smoothProgress.on('change', (v) => {
-      setShowMid(v > 0.40);
-    });
+    const unsub = smoothProgress.on('change', (v) => setShowCard(v > 0.88));
     return () => unsub();
   }, [smoothProgress]);
 
@@ -358,8 +446,9 @@ export default function LandingReveal() {
       <div className="sticky top-0 h-[100dvh] w-full overflow-hidden bg-black transform-gpu">
         {/* Upscaled Static Scroll Background (serves low-end devices & instant 0ms underlay for high-end) */}
         <motion.div
-          className={`absolute inset-0 h-full w-full pointer-events-none select-none transform-gpu transition-opacity duration-500 ${isLowEnd ? 'opacity-100' : ready ? 'opacity-0' : 'opacity-100'
-            }`}
+          className={`absolute inset-0 h-full w-full pointer-events-none select-none transform-gpu transition-opacity duration-500 ${
+            isLowEnd ? 'opacity-100' : ready ? 'opacity-0' : 'opacity-100'
+          }`}
           style={isLowEnd ? { scale: staticScale, y: staticY } : undefined}
         >
           {/* Desktop upscaled static image */}
@@ -386,12 +475,99 @@ export default function LandingReveal() {
         {!isLowEnd && (
           <canvas
             ref={canvasRef}
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 transform-gpu ${ready ? 'opacity-100' : 'opacity-0'
-              }`}
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 transform-gpu ${
+              ready ? 'opacity-100' : 'opacity-0'
+            }`}
           />
         )}
 
+        {/* Fullscreen Responsive Video/Static Loading Screen Overlay (completely unmounted after fade-out to free GPU/RAM) */}
+        {!loadingScreenGone && (
+          <div
+            className={`fixed inset-0 z-50 bg-[#0a0705] flex items-center justify-center overflow-hidden transition-opacity duration-700 ${
+              ready ? 'pointer-events-none opacity-0' : 'opacity-100'
+            }`}
+          >
+            {/* Animated Atmospheric Backdrop while video decodes */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-950/20 via-black to-black pointer-events-none" />
 
+            {/* Upscaled Static Image for Low-End Devices & Instant 0ms Underlay */}
+            <div className="absolute inset-0 w-full h-full pointer-events-none select-none">
+              <Image
+                src="/assets/images/loading-static-desktop.webp"
+                alt="Loading Expedition Field Dossier"
+                fill
+                priority
+                className="hidden md:block object-cover object-center"
+                sizes="100vw"
+              />
+              <Image
+                src="/assets/images/loading-static-mobile.webp"
+                alt="Loading Expedition Field Dossier"
+                fill
+                priority
+                className="block md:hidden object-cover object-center"
+                sizes="100vw"
+              />
+            </div>
+
+            {/* High-definition video playback (only rendered & decoded on capable devices with fast connection) */}
+            {!isLowEnd && (
+              isMobileScreen ? (
+                <video
+                  ref={mobileVideoRef}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  poster="/assets/images/loading-static-mobile.webp"
+                  disablePictureInPicture
+                  disableRemotePlayback
+                  className="block md:hidden absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+                >
+                  <source src="/assets/images/loadingmobile.mp4" type="video/mp4" />
+                </video>
+              ) : (
+                <video
+                  ref={desktopVideoRef}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  poster="/assets/images/loading-static-desktop.webp"
+                  disablePictureInPicture
+                  disableRemotePlayback
+                  className="hidden md:block absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+                >
+                  <source src="/assets/images/loadingdesktop.mp4" type="video/mp4" />
+                </video>
+              )
+            )}
+
+            {/* Ambient scanlines & vignette overlay for immediate cinematic feel */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.4)_51%)] bg-[length:100%_4px] pointer-events-none opacity-40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/80 pointer-events-none" />
+
+            {/* Tactical HUD Header / Status Loading Bar Overlay centered directly without outer box */}
+            <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none select-none p-4">
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 font-mono text-[11px] sm:text-[13px] font-bold text-white tracking-widest drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+                <span>
+                  LOADING FIELD DOSSIER // STATUS: {loadProgress}%
+                </span>
+                
+                {/* Bracketed solid segment progress bar */}
+                <div className="relative inline-flex items-center border border-white/90 px-0.5 py-[2px] w-32 sm:w-44 h-4 bg-black/50">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-400 via-amber-200 to-white transition-[width] duration-75 ease-linear shadow-[0_0_10px_rgba(245,158,11,0.8)]"
+                    style={{ width: `${loadProgress}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Centered logo, visible at the very top of the page */}
         <motion.div
@@ -414,98 +590,115 @@ export default function LandingReveal() {
           </div>
         </motion.div>
 
+        {/* Info blurb 1 — introduces TechX */}
         <motion.div
-          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 text-center px-4"
-          style={{ opacity: midOpacity, y: midY, pointerEvents: showMid ? 'auto' : 'none', willChange: 'transform, opacity', transform: 'translateZ(0)' }}
+          className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4 sm:px-6 text-center"
+          style={{ opacity: blurb1Opacity, y: blurb1Y, willChange: 'transform, opacity', transform: 'translateZ(0)' }}
         >
-          {/* Hidden treasure hint — clean, minimal */}
-          <p
-            style={{ fontFamily: "var(--font-base02), 'Base02', serif" }}
-            className="text-xs sm:text-sm tracking-[0.3em] uppercase text-amber-300/80 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]"
+          <div
+            className="relative w-full max-w-[540px] sm:max-w-[620px] bg-cover bg-center px-8 py-7 sm:px-14 sm:py-10 text-center drop-shadow-[0_20px_35px_rgba(0,0,0,0.95)] select-none"
+            style={{
+              backgroundImage: "url('/textures/parchment-banner.webp')",
+              backgroundSize: '100% 100%',
+              backgroundRepeat: 'no-repeat',
+            }}
           >
-            A Hidden Treasure Awaits
-          </p>
-
-          {/* Product Showcase — clean heading in Base02 */}
-          <h2
-            style={{ fontFamily: "var(--font-base02), 'Base02', serif" }}
-            className="text-5xl sm:text-7xl md:text-8xl font-extrabold text-white tracking-wider leading-none drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]"
-          >
-            Product Showcase
-          </h2>
-
-          {/* Lab 1, 2, 3 indicator */}
-          <div className="flex items-center gap-4 sm:gap-6">
-            <span
-              style={{ fontFamily: "var(--font-base02), 'Base02', serif" }}
-              className="text-sm sm:text-base tracking-[0.2em] text-emerald-400/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
+            <p className="text-[10px] sm:text-xs font-cinzel font-bold uppercase tracking-[0.3em] text-[#63320c] drop-shadow-[0_1px_0_rgba(255,255,255,0.4)]">
+              ✦ Welcome Explorer ✦
+            </p>
+            <h2
+              style={{ fontFamily: "var(--font-base02), var(--font-uncharted), 'Base02', 'Base 02', serif" }}
+              className="mt-1 font-uncharted text-xl sm:text-2xl md:text-3xl font-black text-[#1a0902] drop-shadow-[0_1px_0_rgba(255,255,255,0.5)] tracking-wide leading-tight"
             >
-              Lab 502
-            </span>
-            <span className="text-amber-500/50">•</span>
-            <span
-              style={{ fontFamily: "var(--font-base02), 'Base02', serif" }}
-              className="text-sm sm:text-base tracking-[0.2em] text-blue-400/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
-            >
-              Lab 508
-            </span>
-            <span className="text-amber-500/50">•</span>
-            <span
-              style={{ fontFamily: "var(--font-base02), 'Base02', serif" }}
-              className="text-sm sm:text-base tracking-[0.2em] text-red-400/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
-            >
-              Lab 509
-            </span>
-          </div>
-
-          {/* Uncharted Stone & Bronze Plaque Button */}
-          <div className="flex flex-col items-center">
-            <motion.button
-              onClick={() => setShowFormOverlay(true)}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              whileTap={{ scale: 0.96 }}
-              className="uncharted-btn mt-3"
-              aria-label="Start Adventure"
-            >
-              <div className="btn-inner">
-                <span className="btn-title">UNCHARTED</span>
-                <span className="btn-subtitle flex items-center justify-center gap-1.5 text-[#fde047] font-bold">
-                  <span>✦ TAP TO START ADVENTURE</span>
-                  <span className="text-base font-bold">➔</span>
-                </span>
-              </div>
-            </motion.button>
-
-            {/* Click/Tap Hint Indicator */}
-            <motion.div
-              animate={{ y: [0, 4, 0], opacity: [0.8, 1, 0.8] }}
-              transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
-              className="mt-3 flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-black/75 border border-[#8c6d23]/70 text-[#fde047] text-[10px] sm:text-xs font-mono font-bold tracking-wider uppercase select-none pointer-events-none shadow-[0_4px_14px_rgba(0,0,0,0.9)] backdrop-blur-xs"
-            >
-              <span className="text-xs">👆</span>
-              <span>Tap button to begin expedition</span>
-              <span className="text-xs font-bold">➔</span>
-            </motion.div>
+              Welcome to TechX
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm md:text-base leading-relaxed text-[#381c0c] font-sans font-semibold drop-shadow-[0_1px_0_rgba(255,255,255,0.25)]">
+              A hands-on showcase of student-built innovations spread across three expedition checkpoints. Explore, evaluate discoveries, and forge your expedition certificate.
+            </p>
           </div>
         </motion.div>
 
-        {/* Registration form overlay — appears ONLY when Begin Exploration is clicked */}
-        <AnimatePresence>
-          {showFormOverlay && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-6"
-              onClick={(e) => { if (e.target === e.currentTarget) setShowFormOverlay(false); }}
+        {/* Mid-scroll filler — Product Showcase typography, keeps the background
+            from looking empty during the long stretch after the logo is
+            gone and before the signup card appears. */}
+        <motion.div
+          className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 text-center px-4"
+          style={{ opacity: midOpacity, y: midY, willChange: 'transform, opacity', transform: 'translateZ(0)' }}
+        >
+          <ProductShowcaseText animated={true} />
+        </motion.div>
+
+        {/* Info blurb 2 — what to expect at the checkpoints */}
+        <motion.div
+          className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4 sm:px-6 text-center"
+          style={{ opacity: blurb2Opacity, y: blurb2Y, willChange: 'transform, opacity', transform: 'translateZ(0)' }}
+        >
+          <div
+            className="relative w-full max-w-[540px] sm:max-w-[620px] bg-cover bg-center px-8 py-7 sm:px-14 sm:py-10 text-center drop-shadow-[0_20px_35px_rgba(0,0,0,0.95)] select-none"
+            style={{
+              backgroundImage: "url('/textures/parchment-banner.webp')",
+              backgroundSize: '100% 100%',
+              backgroundRepeat: 'no-repeat',
+            }}
+          >
+            <p className="text-[10px] sm:text-xs font-cinzel font-bold uppercase tracking-[0.3em] text-[#63320c] drop-shadow-[0_1px_0_rgba(255,255,255,0.4)]">
+              ✦ Three Checkpoints ✦
+            </p>
+            <h2
+              style={{ fontFamily: "var(--font-base02), var(--font-uncharted), 'Base02', 'Base 02', serif" }}
+              className="mt-1 font-uncharted text-xl sm:text-2xl md:text-3xl font-black text-[#1a0902] drop-shadow-[0_1px_0_rgba(255,255,255,0.5)] tracking-wide leading-tight"
             >
+              Discover • Rate • Collect
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm md:text-base leading-relaxed text-[#381c0c] font-sans font-semibold drop-shadow-[0_1px_0_rgba(255,255,255,0.25)]">
+              Explore each lab checkpoint, bestow gemstone ratings, and unearth certificate shards along the path. Clues and hidden treasure caches await along the trail.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Info blurb 3 — call to action into the signup card */}
+        <motion.div
+          className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4 sm:px-6 text-center"
+          style={{ opacity: blurb3Opacity, y: blurb3Y, willChange: 'transform, opacity', transform: 'translateZ(0)' }}
+        >
+          <div
+            className="relative w-full max-w-[540px] sm:max-w-[620px] bg-cover bg-center px-8 py-7 sm:px-14 sm:py-10 text-center drop-shadow-[0_20px_35px_rgba(0,0,0,0.95)] select-none"
+            style={{
+              backgroundImage: "url('/textures/parchment-banner.webp')",
+              backgroundSize: '100% 100%',
+              backgroundRepeat: 'no-repeat',
+            }}
+          >
+            <p className="text-[10px] sm:text-xs font-cinzel font-bold uppercase tracking-[0.3em] text-[#63320c] drop-shadow-[0_1px_0_rgba(255,255,255,0.4)]">
+              ✦ Are You Prepared? ✦
+            </p>
+            <h2
+              style={{ fontFamily: "var(--font-base02), var(--font-uncharted), 'Base02', 'Base 02', serif" }}
+              className="mt-1 font-uncharted text-xl sm:text-2xl md:text-3xl font-black text-[#1a0902] drop-shadow-[0_1px_0_rgba(255,255,255,0.5)] tracking-wide leading-tight"
+            >
+              Your Expedition Awaits
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm md:text-base leading-relaxed text-[#381c0c] font-sans font-semibold drop-shadow-[0_1px_0_rgba(255,255,255,0.25)]">
+              Scroll onward to claim your explorer credentials and enter the uncharted grounds.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Signup card, revealed at the end of the scroll sequence — stone
+            tablet design, ported from the static prototype. */}
+        <motion.div
+          className="absolute inset-0 z-20 flex items-center justify-center bg-black/75 p-4 sm:p-6"
+          style={{
+            opacity: cardOpacity,
+            y: cardY,
+            pointerEvents: showCard ? 'auto' : 'none',
+          }}
+        >
+          <AnimatePresence>
+            {showCard && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.92, y: 30 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.92, y: 30 }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 style={{ willChange: 'transform, opacity', transform: 'translateZ(0)' }}
                 className="relative w-full max-w-3xl select-none"
@@ -583,8 +776,9 @@ export default function LandingReveal() {
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Name..."
                         required
-                        className={`tablet-input h-12 w-full px-5 text-base font-bold sm:h-16 sm:px-7 sm:text-2xl ${nameError ? 'error-shake' : ''
-                          }`}
+                        className={`tablet-input h-12 w-full px-5 text-base font-bold sm:h-16 sm:px-7 sm:text-2xl ${
+                          nameError ? 'error-shake' : ''
+                        }`}
                         onAnimationEnd={() => setNameError(false)}
                       />
 
@@ -593,8 +787,9 @@ export default function LandingReveal() {
                           value={department}
                           onChange={(e) => setDepartment(e.target.value)}
                           required
-                          className={`tablet-input h-12 w-full appearance-none px-5 text-base font-bold sm:h-16 sm:px-7 sm:text-xl ${departmentError ? 'error-shake' : ''
-                            }`}
+                          className={`tablet-input h-12 w-full appearance-none px-5 text-base font-bold sm:h-16 sm:px-7 sm:text-xl ${
+                            departmentError ? 'error-shake' : ''
+                          }`}
                           onAnimationEnd={() => setDepartmentError(false)}
                         >
                           <option value="" disabled hidden>
@@ -615,8 +810,9 @@ export default function LandingReveal() {
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="Email..."
                           required
-                          className={`tablet-input h-12 w-full px-5 text-base font-bold sm:h-16 sm:px-7 sm:text-2xl ${emailError ? 'error-shake' : ''
-                            }`}
+                          className={`tablet-input h-12 w-full px-5 text-base font-bold sm:h-16 sm:px-7 sm:text-2xl ${
+                            emailError ? 'error-shake' : ''
+                          }`}
                           onAnimationEnd={() => setEmailError(false)}
                         />
                         {emailError && (
@@ -630,8 +826,9 @@ export default function LandingReveal() {
                         <button
                           type="submit"
                           disabled={submitting}
-                          className={`relative h-14 w-48 bg-contain bg-center bg-no-repeat transition-transform duration-150 active:scale-95 disabled:opacity-75 sm:h-20 sm:w-64 flex items-center justify-center cursor-pointer touch-manipulation ${submitting ? 'brightness-125 animate-pulse' : ''
-                            }`}
+                          className={`relative h-14 w-48 bg-contain bg-center bg-no-repeat transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-75 sm:h-20 sm:w-64 flex items-center justify-center cursor-pointer ${
+                            submitting ? 'brightness-125 animate-pulse' : ''
+                          }`}
                           style={{ backgroundImage: "url('/tablet/portal-button.webp')" }}
                         >
                           <span className="sr-only">
@@ -643,9 +840,9 @@ export default function LandingReveal() {
                   </div>
                 </div>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
     </section>
   );
