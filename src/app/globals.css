@@ -1007,3 +1007,87 @@ body.public-display-mode [data-hide-in-public="true"] {
   display: none !important;
 }
 
+/* ==========================================================================
+   Leaderboard Top 3 Text Shimmer Effects (Direct Text Glyph Shimmer)
+   First: #FDDE6C (Gold) | Second: #C4C4C4 (Silver) | Third: #893727 (Bronze)
+   Sweeps metallic shimmer light directly across the letters with vivid definition
+   while keeping the base text color #FFFBEB intact.
+   ========================================================================== */
+@keyframes product-text-shimmer {
+  0% {
+    background-position: 180% center;
+  }
+  100% {
+    background-position: -80% center;
+  }
+}
+
+.product-shimmer-gold {
+  background-image: linear-gradient(
+    110deg,
+    #FFFBEB 0%,
+    #FFFBEB 30%,
+    #D97706 42%,
+    #FDDE6C 50%,
+    #D97706 58%,
+    #FFFBEB 70%,
+    #FFFBEB 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  display: inline-block;
+  will-change: background-position;
+  animation: product-text-shimmer 2.8s linear infinite;
+}
+
+.product-shimmer-silver {
+  background-image: linear-gradient(
+    110deg,
+    #FFFBEB 0%,
+    #FFFBEB 30%,
+    #64748B 42%,
+    #C4C4C4 50%,
+    #64748B 58%,
+    #FFFBEB 70%,
+    #FFFBEB 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  display: inline-block;
+  will-change: background-position;
+  animation: product-text-shimmer 2.8s linear infinite;
+  animation-delay: 0.5s;
+}
+
+.product-shimmer-bronze {
+  background-image: linear-gradient(
+    110deg,
+    #FFFBEB 0%,
+    #FFFBEB 30%,
+    #B4553F 42%,
+    #893727 50%,
+    #B4553F 58%,
+    #FFFBEB 70%,
+    #FFFBEB 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  display: inline-block;
+  will-change: background-position;
+  animation: product-text-shimmer 2.8s linear infinite;
+  animation-delay: 1.0s;
+}
+
+
+
+
+

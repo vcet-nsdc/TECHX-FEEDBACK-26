@@ -7,10 +7,8 @@ import { csvCell } from '@/lib/utils';
 import {
   Download,
   Maximize2,
-  Minimize2,
   Package,
   RefreshCw,
-  Search,
   Users,
   Volume2,
   VolumeX,
@@ -21,6 +19,7 @@ export interface LeaderboardEntry {
   department: string;
   totalFeedback: number;
   averageRating: number;
+  totalRating?: number;
   isCompleted: boolean;
   shards: string[];
   rank: number;
@@ -109,7 +108,7 @@ function MedalBadge({ rank }: { rank: 1 | 2 | 3 }) {
 
   return (
     <div className="inline-flex items-center justify-center select-none" title={`Expedition Rank ${rank}`}>
-      <svg width="22" height="25" viewBox="0 0 22 25" fill="none" className="overflow-visible drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]">
+      <svg width="25" height="28" viewBox="0 0 22 25" fill="none" className="overflow-visible drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]">
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={medalConfig.fillStart} />
@@ -141,14 +140,20 @@ function MedalBadge({ rank }: { rank: 1 | 2 | 3 }) {
   );
 }
 
-// Rating display on a 5-point scale (score + 5 visual gold stars)
+function getShimmerClass(index: number) {
+  if (index === 0) return 'product-shimmer-gold';
+  if (index === 1) return 'product-shimmer-silver';
+  if (index === 2) return 'product-shimmer-bronze';
+  return '';
+}
+
 function ScaleRating({ rating }: { rating: number }) {
   const safeRating = Math.max(0, Math.min(5, Number(rating) || 0));
   const rounded = safeRating > 0 ? safeRating.toFixed(2) : '5.00';
 
   return (
     <div className="inline-flex items-center gap-1.5 shrink-0 select-none">
-      <span className="font-mono font-bold text-xs sm:text-sm md:text-base text-amber-200 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+      <span className="font-mono font-medium text-sm sm:text-base md:text-lg lg:text-xl text-[#FEF08A] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
         {rounded}
       </span>
       {/* 5 visual gold stars proportionally filled on a 5-point scale */}
@@ -156,8 +161,8 @@ function ScaleRating({ rating }: { rating: number }) {
         {[1, 2, 3, 4, 5].map((starIndex) => {
           const fillRatio = Math.max(0, Math.min(1, safeRating - (starIndex - 1)));
           return (
-            <span key={starIndex} className="relative inline-block text-[10px] sm:text-xs leading-none">
-              <span className="text-[#6d4323]/50">★</span>
+            <span key={starIndex} className="relative inline-block text-xs sm:text-sm md:text-base leading-none">
+              <span className="text-[#3b200d]/80">★</span>
               {fillRatio > 0 && (
                 <span
                   className="absolute inset-0 overflow-hidden text-amber-400"
@@ -174,7 +179,8 @@ function ScaleRating({ rating }: { rating: number }) {
   );
 }
 
-const GRID_COLS = "grid grid-cols-[46px_minmax(0,2.1fr)_minmax(0,1.5fr)_78px_110px] sm:grid-cols-[56px_minmax(0,2.1fr)_minmax(0,1.5fr)_90px_128px] md:grid-cols-[66px_minmax(0,2.2fr)_minmax(0,1.6fr)_100px_140px] lg:grid-cols-[72px_minmax(0,2.3fr)_minmax(0,1.6fr)_110px_150px] items-center";
+const USER_GRID_COLS = "grid grid-cols-[50px_minmax(0,2.6fr)_minmax(0,1.8fr)_120px] sm:grid-cols-[60px_minmax(0,2.6fr)_minmax(0,1.8fr)_140px] md:grid-cols-[70px_minmax(0,2.7fr)_minmax(0,1.9fr)_160px] lg:grid-cols-[80px_minmax(0,2.8fr)_minmax(0,2.0fr)_180px] items-center";
+const PRODUCT_GRID_COLS = "grid grid-cols-[46px_minmax(0,2.1fr)_minmax(0,1.5fr)_78px_110px] sm:grid-cols-[56px_minmax(0,2.1fr)_minmax(0,1.5fr)_90px_128px] md:grid-cols-[66px_minmax(0,2.2fr)_minmax(0,1.6fr)_100px_140px] lg:grid-cols-[72px_minmax(0,2.3fr)_minmax(0,1.6fr)_110px_150px] items-center";
 
 export default function UnchartedSignboardLeaderboard({
   leaderboard,
@@ -194,8 +200,7 @@ export default function UnchartedSignboardLeaderboard({
 }) {
   const { user } = useUser();
   const [viewMode, setViewMode] = useState<'users' | 'products'>(initialViewMode);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, _setSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -302,7 +307,7 @@ export default function UnchartedSignboardLeaderboard({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } else {
-      const headers = ['Rank', 'Product Name', 'Lab', 'Total Ratings', 'Average Rating'];
+      const headers = ['Rank', 'Product Name', 'Lab', 'Total Ratings', 'Avg Rating'];
       const rows = productStats.map((p, idx) => [
         idx + 1,
         p.productName,
@@ -438,7 +443,7 @@ export default function UnchartedSignboardLeaderboard({
 
           {/* 2. INNER RECTANGLE: 5-COLUMN UNCHARTED LEADERBOARD TABLE */}
           <div 
-            className="absolute z-10 overflow-hidden flex flex-col pointer-events-auto rounded-xs border-2 border-[#5c371b]/70 shadow-[inset_0_2px_14px_rgba(0,0,0,0.95),0_6px_20px_rgba(0,0,0,0.8)] bg-[#120a05]/92"
+            className="absolute z-10 overflow-hidden flex flex-col pointer-events-auto rounded-xs bg-transparent"
             style={{
               top: '14.8%',
               left: '16.5%',
@@ -461,59 +466,45 @@ export default function UnchartedSignboardLeaderboard({
               </div>
             )}
 
-            {/* Header Row: 5 Columns with Uncharted Theme Styling */}
-            <div
-              className={`${GRID_COLS} bg-[#23140a] border-b-2 border-[#825227]/70 py-1 sm:py-1.5 px-1 sm:px-2 font-black uppercase tracking-wider shrink-0 select-none shadow-md`}
-              style={{ color: '#EFBF04' }}
-            >
-              <div className="text-center font-black text-xs sm:text-sm md:text-base border-r border-[#4e2d14]/60">
-                RANK
+            {/* Header Row */}
+            {viewMode === 'users' ? (
+              <div
+                className={`${USER_GRID_COLS} bg-transparent py-1 sm:py-1.5 px-1 sm:px-2 font-black uppercase tracking-wider shrink-0 select-none`}
+                style={{ color: '#EFBF04' }}
+              >
+                <div className="text-center font-black text-sm sm:text-base md:text-lg drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
+                  RANK
+                </div>
+                <div className="text-left pl-2 sm:pl-3 font-black text-sm sm:text-base md:text-lg truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
+                  EXPLORER
+                </div>
+                <div className="text-left pl-2 sm:pl-3 font-black text-sm sm:text-base md:text-lg truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
+                  DEPARTMENT
+                </div>
+                <div className="text-center font-black text-sm sm:text-base md:text-lg truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
+                  DISCOVERIES
+                </div>
               </div>
-              <div className="text-left pl-2 sm:pl-3 font-black text-xs sm:text-sm md:text-base border-r border-[#4e2d14]/60 truncate">
-                {viewMode === 'users' ? 'EXPLORER' : 'PRODUCT NAME'}
-              </div>
-              <div className="text-left pl-2 sm:pl-3 font-black text-xs sm:text-sm md:text-base border-r border-[#4e2d14]/60 truncate">
-                {viewMode === 'users' ? 'DEPARTMENT' : 'LAB'}
-              </div>
-              <div className="text-center font-black text-[11px] sm:text-xs md:text-sm border-r border-[#4e2d14]/60 truncate">
-                {viewMode === 'users' ? 'DISCOVERIES' : 'RATINGS'}
-              </div>
-              <div className="flex items-center justify-between pl-2 sm:pl-3 pr-1">
-                <span className="font-black text-[11px] sm:text-xs md:text-sm truncate">
+            ) : (
+              <div
+                className={`${PRODUCT_GRID_COLS} bg-transparent py-1 sm:py-1.5 px-1 sm:px-2 font-black uppercase tracking-wider shrink-0 select-none`}
+                style={{ color: '#EFBF04' }}
+              >
+                <div className="text-center font-black text-sm sm:text-base md:text-lg drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
+                  RANK
+                </div>
+                <div className="text-left pl-2 sm:pl-3 font-black text-sm sm:text-base md:text-lg truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
+                  PRODUCT NAME
+                </div>
+                <div className="text-left pl-2 sm:pl-3 font-black text-sm sm:text-base md:text-lg truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
+                  LAB
+                </div>
+                <div className="text-center font-black text-sm sm:text-base md:text-lg truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
+                  RATINGS
+                </div>
+                <div className="text-left pl-2 sm:pl-3 font-black text-sm sm:text-base md:text-lg truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
                   AVG RATING
-                </span>
-                {!isPublicView && (
-                  <button
-                    onClick={() => setShowSearch(!showSearch)}
-                    title="Search"
-                    className="opacity-80 hover:opacity-100 transition-opacity p-0.5 cursor-pointer ml-1 text-[#EFBF04]"
-                  >
-                    <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Collapsible Search Input */}
-            {showSearch && (
-              <div className="bg-black/85 px-3 py-1 border-b border-[#825227]/50 flex items-center gap-2 shrink-0">
-                <Search className="h-4 w-4 text-[#EFBF04]" />
-                <input
-                  type="text"
-                  placeholder={viewMode === 'users' ? 'Search explorer…' : 'Search product or lab…'}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent text-sm sm:text-base text-amber-100 placeholder-amber-400/50 outline-none font-bold"
-                  autoFocus
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="text-sm font-bold px-1.5 cursor-pointer text-amber-300"
-                  >
-                    ✕
-                  </button>
-                )}
+                </div>
               </div>
             )}
 
@@ -535,54 +526,45 @@ export default function UnchartedSignboardLeaderboard({
                   return (
                     <div
                       key={`user-${index}-${entry.name || 'empty'}`}
-                      className={`${GRID_COLS} px-1 sm:px-2 py-0 border-b transition-colors leading-tight h-full ${
+                      className={`${USER_GRID_COLS} px-1 sm:px-2 py-0 transition-colors leading-tight h-full bg-transparent ${
                         isTop3
-                          ? 'bg-gradient-to-r from-[#3b2512]/95 via-[#4a2e16]/95 to-[#3b2512]/95 hover:from-[#482d16] hover:to-[#482d16] border-[#734821]/45 text-[#fef3c7]'
-                          : 'bg-[#160d07]/75 hover:bg-[#25150b]/80 border-[#3b200d]/35 text-[#d6c7b2]'
+                          ? 'hover:bg-amber-500/10 text-[#FFFBEB]'
+                          : 'hover:bg-white/10 text-[#F8FAFC]'
                       } ${isYou ? 'ring-1 ring-amber-400/80' : ''}`}
                     >
                       {/* Rank */}
-                      <div className="flex items-center justify-center border-r border-black/30 h-full">
+                      <div className="flex items-center justify-center h-full">
                         {isTop3 ? (
                           <MedalBadge rank={(index + 1) as 1 | 2 | 3} />
                         ) : (
-                          <span className="font-black text-xs sm:text-sm md:text-base tracking-wider opacity-90">
+                          <span className="font-black text-sm sm:text-base md:text-lg lg:text-xl tracking-wider text-[#F8FAFC] drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
                             #{index + 1}
                           </span>
                         )}
                       </div>
 
                       {/* Explorer Name */}
-                      <div className="flex items-center pl-2 sm:pl-3 border-r border-black/30 h-full min-w-0 truncate">
-                        <span className={`truncate font-bold text-xs sm:text-sm md:text-base ${isTop3 ? 'text-[#fef3c7]' : 'text-[#e8dcc4]'}`}>
+                      <div className="flex items-center pl-2 sm:pl-3 h-full min-w-0 truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
+                        <span className={`truncate font-bold text-sm sm:text-base md:text-lg lg:text-xl ${isTop3 ? getShimmerClass(index) : 'text-[#F8FAFC]'}`}>
                           {displayName}
                         </span>
                         {isYou && (
-                          <span className="ml-1.5 text-[8px] sm:text-[9px] bg-amber-400 text-[#1a0e06] px-1 py-0.2 rounded font-black tracking-wider uppercase shrink-0">
+                          <span className="ml-1.5 text-[9px] sm:text-[10px] md:text-xs bg-amber-400 text-[#1a0e06] px-1.5 py-0.5 rounded font-black tracking-wider uppercase shrink-0 shadow-md">
                             YOU
                           </span>
                         )}
                       </div>
 
                       {/* Department */}
-                      <div className="flex items-center pl-2 sm:pl-3 border-r border-black/30 h-full min-w-0 truncate">
-                        <span className={`truncate text-[11px] sm:text-xs md:text-sm ${isTop3 ? 'text-amber-200/90' : 'text-[#c4b39b]'}`}>
+                      <div className="flex items-center pl-2 sm:pl-3 h-full min-w-0 truncate">
+                        <span className={`truncate font-semibold text-xs sm:text-sm md:text-base lg:text-lg drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)] ${isTop3 ? 'text-[#FEF08A]' : 'text-[#F1F5F9]'}`}>
                           {department}
                         </span>
                       </div>
 
                       {/* Discoveries (Number of ratings / completed) */}
-                      <div className="flex items-center justify-center border-r border-black/30 h-full font-mono font-bold text-xs sm:text-sm md:text-base">
-                        <span>{isPlaceholder ? '—' : entry.totalFeedback}</span>
-                      </div>
-
-                      {/* Avg Rating (scale of 5) */}
-                      <div className="flex items-center pl-2 sm:pl-3 h-full">
-                        {isPlaceholder ? (
-                          <span className="text-[#6d4323]">—</span>
-                        ) : (
-                          <ScaleRating rating={entry.averageRating || 5.0} />
-                        )}
+                      <div className="flex items-center justify-center h-full font-mono font-medium text-sm sm:text-base md:text-lg lg:text-xl">
+                        <span className="text-[#FFFFFF] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">{isPlaceholder ? '—' : entry.totalFeedback}</span>
                       </div>
                     </div>
                   );
@@ -595,46 +577,46 @@ export default function UnchartedSignboardLeaderboard({
                   return (
                     <div
                       key={`prod-${index}-${entry.productId || 'empty'}`}
-                      className={`${GRID_COLS} px-1 sm:px-2 py-0 border-b transition-colors leading-tight h-full ${
+                      className={`${PRODUCT_GRID_COLS} px-1 sm:px-2 py-0 transition-colors leading-tight h-full bg-transparent ${
                         isTop3
-                          ? 'bg-gradient-to-r from-[#3b2512]/95 via-[#4a2e16]/95 to-[#3b2512]/95 hover:from-[#482d16] hover:to-[#482d16] border-[#734821]/45 text-[#fef3c7]'
-                          : 'bg-[#160d07]/75 hover:bg-[#25150b]/80 border-[#3b200d]/35 text-[#d6c7b2]'
+                          ? 'hover:bg-amber-500/10 text-[#FFFBEB]'
+                          : 'hover:bg-white/10 text-[#F8FAFC]'
                       }`}
                     >
                       {/* Rank */}
-                      <div className="flex items-center justify-center border-r border-black/30 h-full">
+                      <div className="flex items-center justify-center h-full">
                         {isTop3 ? (
                           <MedalBadge rank={(index + 1) as 1 | 2 | 3} />
                         ) : (
-                          <span className="font-black text-xs sm:text-sm md:text-base tracking-wider opacity-90">
+                          <span className="font-black text-sm sm:text-base md:text-lg lg:text-xl tracking-wider text-[#F8FAFC] drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
                             #{index + 1}
                           </span>
                         )}
                       </div>
 
                       {/* Product Name */}
-                      <div className="flex items-center pl-2 sm:pl-3 border-r border-black/30 h-full min-w-0 truncate">
-                        <span className={`truncate font-bold text-xs sm:text-sm md:text-base ${isTop3 ? 'text-[#fef3c7]' : 'text-[#e8dcc4]'}`}>
+                      <div className="flex items-center pl-2 sm:pl-3 h-full min-w-0 truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
+                        <span className={`truncate font-bold text-sm sm:text-base md:text-lg lg:text-xl ${isTop3 ? getShimmerClass(index) : 'text-[#F8FAFC]'}`}>
                           {entry.productName || '—'}
                         </span>
                       </div>
 
                       {/* Lab */}
-                      <div className="flex items-center pl-2 sm:pl-3 border-r border-black/30 h-full min-w-0 truncate">
-                        <span className={`truncate text-[11px] sm:text-xs md:text-sm ${isTop3 ? 'text-amber-200/90' : 'text-[#c4b39b]'}`}>
+                      <div className="flex items-center pl-2 sm:pl-3 h-full min-w-0 truncate">
+                        <span className={`truncate font-semibold text-xs sm:text-sm md:text-base lg:text-lg drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)] ${isTop3 ? 'text-[#FEF08A]' : 'text-[#F1F5F9]'}`}>
                           {cleanLabName(entry.labName)}
                         </span>
                       </div>
 
                       {/* Total Ratings (Number) */}
-                      <div className="flex items-center justify-center border-r border-black/30 h-full font-mono font-bold text-xs sm:text-sm md:text-base">
-                        <span>{isPlaceholder ? '—' : entry.totalRatings}</span>
+                      <div className="flex items-center justify-center h-full font-mono font-medium text-sm sm:text-base md:text-lg lg:text-xl">
+                        <span className="text-[#FFFFFF] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">{isPlaceholder ? '—' : entry.totalRatings}</span>
                       </div>
 
                       {/* Avg Rating (scale of 5) */}
                       <div className="flex items-center pl-2 sm:pl-3 h-full">
                         {isPlaceholder ? (
-                          <span className="text-[#6d4323]">—</span>
+                          <span className="text-[#F1F5F9]/60">—</span>
                         ) : (
                           <ScaleRating rating={entry.averageRating || 5.0} />
                         )}

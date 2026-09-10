@@ -65,16 +65,28 @@ export default function AdminLeaderboardPage() {
       const response = await fetch('/api/admin/leaderboard');
       if (!response.ok) throw new Error('Failed to fetch leaderboard');
       const data = await response.json();
-      const formatted = data.map((entry: LeaderboardEntry & { completedProducts?: string[] }, index: number) => ({
-        name: entry.name || '—',
-        email: entry.email,
-        department: entry.department,
-        totalFeedback: entry.completedProducts?.length || entry.totalFeedback || 0,
-        averageRating: entry.averageRating || 0,
-        isCompleted: entry.isCompleted || false,
-        shards: entry.shards || [],
-        rank: index + 1,
-      }));
+      const formatted = data.map(
+        (
+          entry: LeaderboardEntry & { completedProducts?: string[]; totalRating?: number },
+          index: number
+        ) => ({
+          name: entry.name || '—',
+          email: entry.email,
+          department: entry.department,
+          totalFeedback: entry.completedProducts?.length || entry.totalFeedback || 0,
+          averageRating: entry.averageRating || 0,
+          totalRating:
+            entry.totalRating !== undefined
+              ? entry.totalRating
+              : Math.round(
+                  (entry.averageRating || 0) *
+                    (entry.completedProducts?.length || entry.totalFeedback || 0)
+                ),
+          isCompleted: entry.isCompleted || false,
+          shards: entry.shards || [],
+          rank: index + 1,
+        })
+      );
       setLeaderboard(formatted);
       setError('');
     } catch (err) {

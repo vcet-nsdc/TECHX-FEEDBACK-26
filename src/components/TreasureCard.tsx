@@ -6,9 +6,6 @@ import {
   AntiqueCompassIcon,
   TreasureKeyIcon,
   RelicCoinIcon,
-  MapScrollIcon,
-  NauticalShipIcon,
-  IslandMountainIcon,
 } from './RusticIcons';
 import { appendTreasure } from '@/lib/expedition-storage';
 import {
@@ -137,31 +134,6 @@ const SECRET_RELICS: RelicReward[] = [
   },
 ];
 
-// Rich visual descriptions for logos / emojis
-const EMOJI_VISUAL_MAP: Record<string, { label: string; clue: string }> = {
-  '🪐': { label: 'Ringed Celestial Planet', clue: 'Look for an orbital celestial planet surrounded by orbital rings.' },
-  '☀️': { label: 'Radiant Solar Core', clue: 'Symbolized by a glowing solar star radiating clean power.' },
-  '💻': { label: 'Computing Terminal', clue: 'Marked by an enterprise laptop terminal driving software and infrastructure.' },
-  '🤖': { label: 'Cybernetic AI Unit', clue: 'Bearing the metallic emblem of an intelligent autonomous android.' },
-  '👓': { label: 'Spatial Optical Glasses', clue: 'Features augmented reality smart glasses projecting spatial computing interfaces.' },
-  '🌐': { label: 'Global Optical Web', clue: 'Shows a worldwide interconnected globe with low-latency network routes.' },
-  '🚀': { label: 'Orbital Launch Rocket', clue: 'Branded with a high-thrust space rocket ascending for launch.' },
-  '🤝': { label: 'Community Alliance', clue: 'Symbolized by collaborative joined hands empowering inclusive assistive community tech.' },
-  '🔬': { label: 'Scientific Microscope', clue: 'Features a precision research microscope synthesizing academic discovery papers.' },
-  '📝': { label: 'Scholarly Writing Memo', clue: 'Depicts a researcher notepad and stylus composing scholarly writing and citations.' },
-  '💡': { label: 'Illuminated Light Beacon', clue: 'Marked by a high-frequency filament lightbulb radiating illumination.' },
-  '🖥️': { label: 'Mainframe Workstation', clue: 'Depicts a custom high-performance computing terminal and desktop display.' },
-  '📊': { label: 'Analytics Bar Chart', clue: 'Shows an escalating dynamic chart measuring business intelligence and analytics.' },
-  '📈': { label: 'Surging Market Graph', clue: 'Bearing an upward bullish trendline graph analyzing equity markets.' },
-  '📱': { label: 'Mobile Smartphone Relay', clue: 'Marked by a modern handheld touch communicator uniting smart devices.' },
-  '🍏': { label: 'Green Apple Ecosystem', clue: 'Identified by a crisp green apple representing a modern mobile operating stack.' },
-  '🛡️': { label: 'Cybersecurity Shield', clue: 'Fortified by a defensive armor shield repelling real-time digital threats.' },
-  '🦾': { label: 'Articulated Robotic Arm', clue: 'Shows a precision multi-axis mechanical arm executing automated tasks.' },
-  '🪑': { label: 'Ergonomic Intelligent Desk', clue: 'Depicts a biometric ergonomic workstation monitoring occupancy.' },
-  '🩹': { label: 'Healing Diagnostic Bandage', clue: 'Bearing a medical healing patch delivering rapid digital first-aid.' },
-  '📦': { label: 'Field Recon Supply', clue: 'Marked by an expedition cargo crate carrying research artifacts.' },
-};
-
 // Generates an authentic Uncharted-style letter cipher pattern
 export function generateCipherPattern(name: string): string {
   if (!name) return 'A _ _ Z';
@@ -264,7 +236,7 @@ export default function TreasureCard({
   completedCount = 0,
   targetCount = 7,
   userEmail = 'explorer@field.recon',
-  currentLabId = '1',
+  currentLabId: _currentLabId = '1',
   lab1Completed: propLab1Completed,
   lab2Completed: propLab2Completed,
   lab3Completed: propLab3Completed,

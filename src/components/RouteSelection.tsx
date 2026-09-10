@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
 import { useLabs } from '@/context/LabsContext';
-import { useAdmin } from '@/context/AdminContext';
 import {
   expeditionLabs,
   getSubmittedFeedbackForUser,
@@ -47,7 +46,6 @@ function getLabSectorConfig(lab: ExpeditionLab, index: number): LabSectorConfig 
 export default function RouteSelection() {
   const router = useRouter();
   const { user } = useUser();
-  const { isAdmin } = useAdmin();
   const userEmail = user?.email || 'user@techx.in';
   const { labs } = useLabs();
   const [feedbackVersion, setFeedbackVersion] = useState(0);

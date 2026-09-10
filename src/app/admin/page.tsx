@@ -441,6 +441,15 @@ function AdminDashboard() {
               <span className="text-sm leading-none">⛶</span>
               <span className="hidden sm:inline">Public View</span>
             </Link>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-900/50 bg-[#1e0e0a] hover:bg-[#2d120a] hover:border-red-600 px-3 py-1.5 text-xs font-bold text-red-300 transition shadow-xs cursor-pointer"
+              title="Logout of Admin"
+            >
+              <span>Logout</span>
+            </button>
           </div>
         </div>
       </header>

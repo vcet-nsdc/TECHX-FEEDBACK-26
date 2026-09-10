@@ -25,13 +25,17 @@ export default function PublicLeaderboardPage() {
       const data = await response.json();
       const publicData = data.map(
         (
-          entry: LeaderboardEntry & { completedProductsCount?: number },
+          entry: LeaderboardEntry & { completedProductsCount?: number; totalRating?: number },
           index: number
         ) => ({
           name: entry.name || '—',
           department: entry.department,
           totalFeedback: entry.completedProductsCount || 0,
           averageRating: entry.averageRating || 0,
+          totalRating:
+            entry.totalRating !== undefined
+              ? entry.totalRating
+              : Math.round((entry.averageRating || 0) * (entry.completedProductsCount || 0)),
           isCompleted: entry.isCompleted || false,
           shards: entry.shards || [],
           rank: index + 1,

@@ -18,8 +18,6 @@ import { enqueueSubmission, fetchWithTimeout } from '@/lib/offline-queue';
 import PixelNathanDrake, { NathanAnimationState } from './uncharted/PixelNathanDrake';
 import VolumeControl from './VolumeControl';
 
-const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
-
 const defaultLabMapImages: Record<string, string> = {
   '1': '/assets/images/journal-spread-lab1.webp',
   '2': '/assets/images/journal-spread-lab2.webp',
@@ -702,10 +700,9 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                 )}
 
                 {/* Interactive Checkpoint Pins (Precisely centered at product.x%, product.y%) */}
-                {products.map((product, idx) => {
+                {products.map((product) => {
                   const isSubmitted = submittedIds.includes(product.id);
                   const isCurrent = selectedProduct?.id === product.id;
-                  const labelTag = `WP-${String(idx + 1).padStart(2, '0')}`;
 
                   const submittedPinStyle =
                     themeType === 'jungle'
@@ -986,7 +983,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
         ) : (
           /* List Mode Overlay */
           <div className="w-full max-w-lg mx-auto flex flex-col gap-2.5 p-2 pb-24 overflow-y-auto z-40">
-            {products.map((product, idx) => {
+            {products.map((product) => {
               const isDone = submittedIds.includes(product.id);
               return (
                 <div
