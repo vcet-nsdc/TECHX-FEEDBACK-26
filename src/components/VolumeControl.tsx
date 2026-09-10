@@ -1,13 +1,17 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useAudio } from '@/context/AudioContext';
 import { Volume2, VolumeX } from 'lucide-react';
 
-export default function VolumeControl() {
-  const { isMuted, volume, toggleMute, setVolume } = useAudio();
-  const [isHovered, setIsHovered] = useState(false);
-  const [mounted, setMounted] = useState(false);
+interface VolumeControlProps {
+  embedded?: boolean;
+  className?: string;
+}
+
+export default function VolumeControl({ embedded = false, className = '' }: VolumeControlProps) {
+  const { isMuted, volume, toggleMute } = useAudio();
+  const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
@@ -15,44 +19,35 @@ export default function VolumeControl() {
 
   if (!mounted) return null;
 
-  return (
-    <div
-      className="fixed top-4 right-4 z-50 flex items-center gap-2 bg-[#1a0e05]/50 border border-[#d4af37]/30 rounded-full p-2 backdrop-blur-sm transition-all duration-300"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div 
-        className={`overflow-hidden transition-all duration-300 ease-in-out flex items-center ${
-          isHovered ? 'w-24 opacity-100 ml-2' : 'w-0 opacity-0 ml-0'
-        }`}
-      >
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={isMuted ? 0 : volume}
-          onChange={(e) => {
-            const newVolume = parseFloat(e.target.value);
-            setVolume(newVolume);
-            if (newVolume === 0 && !isMuted) toggleMute();
-            if (newVolume > 0 && isMuted) toggleMute();
-          }}
-          className="w-full accent-[#d4af37] h-1.5 bg-[#d4af37]/30 rounded-lg appearance-none cursor-pointer"
-        />
-      </div>
-      
+  if (embedded) {
+    return (
       <button
         onClick={toggleMute}
-        className="text-[#d4af37] active:text-[#fde047] active:scale-95 transition focus:outline-none flex-shrink-0 touch-manipulation cursor-pointer"
-        aria-label={isMuted ? "Unmute sound" : "Mute sound"}
+        className={`p-1 sm:p-1.5 rounded bg-[#0d0704] border border-[#52351e] text-[#8c6f4b] hover:text-[#ffd700] hover:border-[#8c6d23] active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-sm ${className}`}
+        aria-label={isMuted || volume === 0 ? "Unmute audio" : "Mute audio"}
+        title={isMuted || volume === 0 ? "Unmute audio" : "Mute audio"}
       >
         {isMuted || volume === 0 ? (
-          <VolumeX className="w-6 h-6" />
+          <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#e5a842]" />
         ) : (
-          <Volume2 className="w-6 h-6" />
+          <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#ffd700]" />
         )}
       </button>
-    </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={toggleMute}
+      className={`fixed top-4 right-4 z-50 flex items-center justify-center bg-[#1a0e05]/80 border border-[#d4af37]/40 rounded-full p-2.5 backdrop-blur-sm text-[#d4af37] hover:text-[#ffd700] hover:scale-105 active:scale-95 transition-all duration-200 shadow-[0_4px_12px_rgba(0,0,0,0.6)] cursor-pointer ${className}`}
+      aria-label={isMuted || volume === 0 ? "Unmute audio" : "Mute audio"}
+      title={isMuted || volume === 0 ? "Unmute audio" : "Mute audio"}
+    >
+      {isMuted || volume === 0 ? (
+        <VolumeX className="w-5 h-5 text-[#e5a842]" />
+      ) : (
+        <Volume2 className="w-5 h-5 text-[#ffd700]" />
+      )}
+    </button>
   );
 }

@@ -10,7 +10,7 @@ export async function GET() {
     const stats = await getProductStats();
     return NextResponse.json(stats, {
       headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=600',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       },
     });
   } catch (error) {

@@ -6,6 +6,7 @@ import UnchartedSignboardLeaderboard, {
   LeaderboardEntry,
   ProductStatsEntry,
 } from '@/components/uncharted/UnchartedSignboardLeaderboard';
+import BackButton from '@/components/BackButton';
 
 export default function AdminLeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -13,7 +14,50 @@ export default function AdminLeaderboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isMuted, setIsMuted] = useState(false);
+  const [isPublicView, setIsPublicView] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const togglePublicView = useCallback(() => {
+    setIsPublicView((prev) => {
+      const next = !prev;
+      if (typeof document !== 'undefined') {
+        if (next) {
+          document.body.classList.add('public-display-mode');
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          }
+        } else {
+          document.body.classList.remove('public-display-mode');
+          if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+          }
+        }
+      }
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && isPublicView) {
+        setIsPublicView(false);
+        document.body.classList.remove('public-display-mode');
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isPublicView) {
+        setIsPublicView(false);
+        document.body.classList.remove('public-display-mode');
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.classList.remove('public-display-mode');
+    };
+  }, [isPublicView]);
 
   // Declared before the effects below consume them (react-hooks/immutability).
   const fetchLeaderboard = useCallback(async () => {
@@ -58,7 +102,7 @@ export default function AdminLeaderboardPage() {
     const interval = setInterval(() => {
       fetchLeaderboard();
       fetchProductStats();
-    }, 30000);
+    }, 4000);
     return () => clearInterval(interval);
   }, [fetchLeaderboard, fetchProductStats]);
 
@@ -123,6 +167,24 @@ export default function AdminLeaderboardPage() {
   return (
     <AdminRouteGuard>
       <main className="relative h-screen min-h-screen w-full overflow-hidden bg-black text-foreground flex flex-col justify-center items-center">
+        {/* Top Controls: Back to Admin & Public View Toggle (hidden completely in Public View) */}
+        {!isPublicView && (
+          <div className="fixed left-3 top-3 z-50 flex items-center gap-2">
+            <BackButton to="/admin" label="Admin" />
+            <button
+              type="button"
+              onClick={togglePublicView}
+              className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded border border-[#6b4728] bg-[#22150e]/95 px-3 font-mono text-xs text-[#c99f58] shadow-md transition select-none hover:border-[#8a5d33] hover:text-[#f3dfa2] active:scale-95"
+              title="Enter Fullscreen Public Display View"
+            >
+              <span className="text-sm leading-none">⛶</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] font-bold">
+                Public View
+              </span>
+            </button>
+          </div>
+        )}
+
         {/* Looping background video */}
         <video
           ref={videoRef}
@@ -144,6 +206,9 @@ export default function AdminLeaderboardPage() {
             isLoading={isLoading}
             error={error}
             isAdmin={true}
+            isPublicView={isPublicView}
+            onTogglePublicView={togglePublicView}
+            initialViewMode="products"
             isMuted={isMuted}
             onToggleMute={toggleMute}
             onRefresh={() => {

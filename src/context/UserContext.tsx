@@ -11,6 +11,7 @@ export interface User {
   name: string;
   department: string;
   email: string;
+  avatar?: string;
 }
 
 interface UserContextType {

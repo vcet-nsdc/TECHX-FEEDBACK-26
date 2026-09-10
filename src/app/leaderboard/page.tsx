@@ -64,7 +64,7 @@ export default function PublicLeaderboardPage() {
     const interval = setInterval(() => {
       fetchLeaderboard();
       fetchProductStats();
-    }, 30000);
+    }, 4000);
     return () => clearInterval(interval);
   }, [fetchLeaderboard, fetchProductStats]);
 
@@ -102,12 +102,113 @@ export default function PublicLeaderboardPage() {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [videoError, canPlayVideo]);
 
+  const [isPublicView, setIsPublicView] = useState(false);
+
+  const togglePublicView = useCallback(() => {
+    setIsPublicView((prev) => {
+      const next = !prev;
+      if (typeof document !== 'undefined') {
+        if (next) {
+          document.body.classList.add('public-display-mode');
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          }
+        } else {
+          document.body.classList.remove('public-display-mode');
+          if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+          }
+        }
+      }
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && isPublicView) {
+        setIsPublicView(false);
+        document.body.classList.remove('public-display-mode');
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isPublicView) {
+        setIsPublicView(false);
+        document.body.classList.remove('public-display-mode');
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.classList.remove('public-display-mode');
+    };
+  }, [isPublicView]);
+
+  const [isMuted, setIsMuted] = useState(false);
+
+  // Ensure audio un-mutes upon user interaction
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.volume = 0.85;
+
+    const enableAudio = () => {
+      if (videoRef.current) {
+        videoRef.current.muted = false;
+        videoRef.current.volume = 0.85;
+        videoRef.current.play().catch(console.warn);
+        setIsMuted(false);
+      }
+      ['click', 'keydown', 'touchstart', 'pointerdown'].forEach((evt) =>
+        window.removeEventListener(evt, enableAudio)
+      );
+    };
+
+    ['click', 'keydown', 'touchstart', 'pointerdown'].forEach((evt) =>
+      window.addEventListener(evt, enableAudio, { once: true, passive: true })
+    );
+
+    return () => {
+      ['click', 'keydown', 'touchstart', 'pointerdown'].forEach((evt) =>
+        window.removeEventListener(evt, enableAudio)
+      );
+    };
+  }, []);
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      const nextMuted = !videoRef.current.muted;
+      videoRef.current.muted = nextMuted;
+      videoRef.current.volume = 0.85;
+      if (!nextMuted) {
+        videoRef.current.play().catch(console.warn);
+      }
+      setIsMuted(nextMuted);
+    }
+  };
+
   return (
     <AdminRouteGuard>
-      <main className="relative h-screen min-h-screen w-full overflow-hidden text-foreground flex flex-col justify-end items-center">
-        <div className="fixed left-3 top-3 z-50">
-          <BackButton to="/admin" label="Admin" />
-        </div>
+      <main className="relative h-screen min-h-screen w-full overflow-hidden bg-black text-foreground flex flex-col justify-center items-center">
+        {/* Top Controls: Back to Admin & Public View Toggle (hidden completely in Public View) */}
+        {!isPublicView && (
+          <div className="fixed left-3 top-3 z-50 flex items-center gap-2">
+            <BackButton to="/admin" label="Admin" />
+            <button
+              type="button"
+              onClick={togglePublicView}
+              className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded border border-[#6b4728] bg-[#22150e]/95 px-3 font-mono text-xs text-[#c99f58] shadow-md transition select-none hover:border-[#8a5d33] hover:text-[#f3dfa2] active:scale-95"
+              title="Toggle Fullscreen Public Display View"
+            >
+              <span className="text-sm leading-none">⛶</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] font-bold">
+                Public View
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* Fallback scenic image behind video */}
         <img
@@ -116,39 +217,39 @@ export default function PublicLeaderboardPage() {
           className="pointer-events-none fixed inset-0 h-full w-full object-cover z-0"
         />
 
-        {/* Looping muted background video (only on moderate/fast connections) */}
+        {/* Looping background video */}
         {canPlayVideo && !videoError && (
           <video
             ref={videoRef}
             autoPlay
             loop
-            muted
+            muted={false}
             playsInline
-            preload="metadata"
+            preload="auto"
             poster="/assets/images/leaderboard_scenic_bg.jpg"
             onError={() => {
               console.error('Failed to load /videos/leaderboard-background.mp4');
               setVideoError(true);
             }}
-            className="pointer-events-none fixed inset-0 h-full w-full object-cover z-0"
+            className="pointer-events-none fixed inset-0 h-full w-full object-contain md:object-cover z-0"
           >
             <source src="/videos/leaderboard-background.mp4" type="video/mp4" />
           </video>
         )}
 
-        {/* Subtle overlay (warm cinematic tint) */}
-        <div
-          className="pointer-events-none fixed inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/45 z-[1]"
-        />
-
-        {/* Main Uncharted Signboard Content Grounded at Bottom */}
-        <div className="relative z-10 w-full h-full flex flex-col justify-end items-center pb-12 sm:pb-14">
+        {/* Main Uncharted Signboard Content Centered */}
+        <div className="relative z-10 w-full h-full flex flex-col justify-center items-center p-0">
           <UnchartedSignboardLeaderboard
             leaderboard={leaderboard}
             productStats={productStats}
             isLoading={isLoading}
             error={error}
             isAdmin={true}
+            isPublicView={isPublicView}
+            onTogglePublicView={togglePublicView}
+            initialViewMode="products"
+            isMuted={isMuted}
+            onToggleMute={toggleMute}
             onRefresh={() => {
               fetchLeaderboard();
               fetchProductStats();

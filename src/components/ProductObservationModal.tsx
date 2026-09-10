@@ -116,6 +116,11 @@ export default function ProductObservationModal({
               )}
             </div>
 
+            {/* Product Emoji Icon */}
+            <div className="text-2xl sm:text-3xl my-0.5 select-none drop-shadow-xs">
+              {product.icon || '📦'}
+            </div>
+
             {/* Big Centered Checkpoint Title */}
             <h2 className="text-lg sm:text-2xl font-bold text-[#1c0f05] font-['EB_Garamond',_serif] tracking-tight leading-tight drop-shadow-[0_1px_0_rgba(255,255,255,0.4)]">
               {product.name}

@@ -21,7 +21,10 @@ let dbInstance: Promise<Db> | null = null;
 
 function getDb(): Promise<Db> {
   if (!dbInstance) {
-    dbInstance = getDatabase();
+    dbInstance = getDatabase().catch((err) => {
+      dbInstance = null;
+      throw err;
+    });
   }
   return dbInstance;
 }
@@ -44,13 +47,16 @@ async function doSetup(db: Db): Promise<void> {
     .createIndex({ studentDepartment: 1 });
   await db.collection(USERS_COLLECTION).createIndex({ email: 1 }, { unique: true });
 
-  const [userCount, feedbackCount] = await Promise.all([
+  const [userCount, feedbackCount, meta] = await Promise.all([
     db.collection(USERS_COLLECTION).countDocuments(),
     db.collection(FEEDBACK_COLLECTION).countDocuments(),
+    db.collection('_metadata').findOne({ key: 'demo_seeded' }).catch(() => null),
   ]);
 
-  // Seed demo data only on a completely fresh database.
-  if (userCount === 0 && feedbackCount === 0) {
+  const isDemoDisabled = meta?.disabled === true || process.env.SEED_DEMO_DATA === 'false';
+
+  // Seed demo data only on a completely fresh database if not explicitly disabled.
+  if (userCount === 0 && feedbackCount === 0 && !isDemoDisabled) {
     await db
       .collection(USERS_COLLECTION)
       .insertMany(defaultUsers.map((u) => ({ ...u })) as object[]);
@@ -392,6 +398,12 @@ export async function getProductStatsAggregated(): Promise<
           },
         },
         lastRated: { $max: '$timestamp' },
+      },
+    },
+    {
+      $sort: {
+        avgRating: -1,
+        totalRatings: -1,
       },
     },
   ];

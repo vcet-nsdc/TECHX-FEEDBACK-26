@@ -82,7 +82,7 @@ const oswald = Oswald({
 });
 
 export const metadata: Metadata = {
-  title: "TechX Expedition // Field Recon",
+  title: "TechX Feedback 2026",
   description: "Feedback collection platform for TechX research labs.",
   icons: {
     icon: [
