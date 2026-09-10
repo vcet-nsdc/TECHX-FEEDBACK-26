@@ -21,15 +21,15 @@ import VolumeControl from './VolumeControl';
 const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 
 const defaultLabMapImages: Record<string, string> = {
-  '1': '/assets/images/journal-spread-lab1.jpg',
-  '2': '/assets/images/journal-spread-lab2.jpg',
-  '3': '/assets/images/journal-spread-lab3.jpg',
-  a: '/assets/images/journal-spread-lab1.jpg',
-  b: '/assets/images/journal-spread-lab2.jpg',
-  c: '/assets/images/journal-spread-lab3.jpg',
-  portolan: '/assets/images/journal-spread-lab1.jpg',
-  libertalia: '/assets/images/journal-spread-lab2.jpg',
-  'kings-bay': '/assets/images/journal-spread-lab3.jpg',
+  '1': '/assets/images/journal-spread-lab1.webp',
+  '2': '/assets/images/journal-spread-lab2.webp',
+  '3': '/assets/images/journal-spread-lab3.webp',
+  a: '/assets/images/journal-spread-lab1.webp',
+  b: '/assets/images/journal-spread-lab2.webp',
+  c: '/assets/images/journal-spread-lab3.webp',
+  portolan: '/assets/images/journal-spread-lab1.webp',
+  libertalia: '/assets/images/journal-spread-lab2.webp',
+  'kings-bay': '/assets/images/journal-spread-lab3.webp',
 };
 
 type ExpeditionTheme = 'jungle' | 'ice' | 'volcanic';
@@ -156,7 +156,8 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
   // Real-time reactive labs state from database (syncs with Admin page edits)
   const { labs } = useLabs();
   const labConfig = labs[labKey] || labs[labId] || expeditionLabs[labKey] || expeditionLabs[labId] || expeditionLabs['1'];
-  const mapBgImage = labConfig?.mapImage || defaultLabMapImages[labId] || defaultLabMapImages[labKey] || '/assets/images/journal-spread-lab1.jpg';
+  const rawMapBgImage = labConfig?.mapImage || defaultLabMapImages[labId] || defaultLabMapImages[labKey] || '/assets/images/journal-spread-lab1.webp';
+  const mapBgImage = rawMapBgImage.replace(/\.jpg$/, '.webp');
   // Typed as string: DB-backed configs may carry variant spellings
   // ('ice', 'volcanic') that the normalizer below maps onto themes.
   const themeType: string = labConfig?.themeType || (labKey === '2' ? 'frost' : labKey === '3' ? 'volcano' : 'jungle');
