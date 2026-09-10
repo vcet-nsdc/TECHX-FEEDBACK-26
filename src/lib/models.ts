@@ -118,7 +118,7 @@ export interface Treasure {
 export interface CertificateShard {
   labId: string;
   labName: string;
-  shardNumber: 1 | 2 | 3;
+  shardNumber: 1 | 2 | 3 | 4;
   earnedAt: string; // ISO timestamp
   // A short flavor line printed on the shard card.
   inscription: string;

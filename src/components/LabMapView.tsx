@@ -22,15 +22,20 @@ const defaultLabMapImages: Record<string, string> = {
   '1': '/assets/images/journal-spread-lab1.webp',
   '2': '/assets/images/journal-spread-lab2.webp',
   '3': '/assets/images/journal-spread-lab3.webp',
+  '4': '/assets/images/journal-spread-lab4.webp',
   a: '/assets/images/journal-spread-lab1.webp',
   b: '/assets/images/journal-spread-lab2.webp',
   c: '/assets/images/journal-spread-lab3.webp',
+  d: '/assets/images/journal-spread-lab3.webp',
+  e: '/assets/images/journal-spread-lab4.webp',
+  '510': '/assets/images/journal-spread-lab4.webp',
+  desert: '/assets/images/journal-spread-lab4.webp',
   portolan: '/assets/images/journal-spread-lab1.webp',
   libertalia: '/assets/images/journal-spread-lab2.webp',
   'kings-bay': '/assets/images/journal-spread-lab3.webp',
 };
 
-type ExpeditionTheme = 'jungle' | 'ice' | 'volcanic';
+type ExpeditionTheme = 'jungle' | 'ice' | 'volcanic' | 'desert';
 
 const THEME_STYLES: Record<
   ExpeditionTheme,
@@ -62,6 +67,13 @@ const THEME_STYLES: Record<
     haloStroke: 'rgba(234, 88, 12, 0.28)',
     activeStroke: '#ea580c',
     coreGlow: '#fdba74',
+  },
+  desert: {
+    unsurveyedStroke: '#140903',
+    glowColor: '#d97706',
+    haloStroke: 'rgba(217, 119, 6, 0.28)',
+    activeStroke: '#d97706',
+    coreGlow: '#fde68a',
   },
 };
 
@@ -148,7 +160,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
   const router = useRouter();
   const { user } = useUser();
   const userEmail = propUserEmail || user?.email || 'explorer@field.recon';
-  const labAliases: Record<string, string> = { '1': '1', a: '1', '2': '2', c: '2', '3': '3', d: '3' };
+  const labAliases: Record<string, string> = { '1': '1', a: '1', '2': '2', c: '2', '3': '3', d: '3', '4': '4', e: '4', '510': '4', desert: '4' };
   const labKey = labAliases[labId] || labId || '1';
 
   // Real-time reactive labs state from database (syncs with Admin page edits)
@@ -157,15 +169,17 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
   const rawMapBgImage = labConfig?.mapImage || defaultLabMapImages[labId] || defaultLabMapImages[labKey] || '/assets/images/journal-spread-lab1.webp';
   const mapBgImage = rawMapBgImage.replace(/\.jpg$/, '.webp');
   // Typed as string: DB-backed configs may carry variant spellings
-  // ('ice', 'volcanic') that the normalizer below maps onto themes.
-  const themeType: string = labConfig?.themeType || (labKey === '2' ? 'frost' : labKey === '3' ? 'volcano' : 'jungle');
+  // ('ice', 'volcanic', 'desert') that the normalizer below maps onto themes.
+  const themeType: string = labConfig?.themeType || (labKey === '2' ? 'frost' : labKey === '3' ? 'volcano' : labKey === '4' ? 'desert' : 'jungle');
   
   const normalizedTheme: ExpeditionTheme =
     themeType === 'frost' || themeType === 'ice'
       ? 'ice'
       : themeType === 'volcano' || themeType === 'volcanic'
         ? 'volcanic'
-        : 'jungle';
+        : themeType === 'desert'
+          ? 'desert'
+          : 'jungle';
 
   const themeStyle = THEME_STYLES[normalizedTheme];
 
@@ -531,13 +545,13 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
 
           <div className="min-w-0">
             <span className="block text-[8px] sm:text-[9.5px] font-bold uppercase tracking-[0.25em] text-[#9c7846] font-mono truncate">
-              JOURNAL // {['502', '508', '509'][Number(labKey) - 1] ? `LAB ${['502', '508', '509'][Number(labKey) - 1]}` : (labConfig?.name || 'FIELD RECON')}
+              JOURNAL // {['502', '508', '509', '510'][Number(labKey) - 1] ? `LAB ${['502', '508', '509', '510'][Number(labKey) - 1]}` : (labConfig?.name || 'FIELD RECON')}
             </span>
             <h1
               style={{ fontFamily: "var(--font-geist-sans), system-ui, -apple-system, sans-serif" }}
               className="text-sm sm:text-lg font-black text-[#f2dfbe] truncate tracking-wider leading-tight"
             >
-              {['502', '508', '509'][Number(labKey) - 1] ? `LAB ${['502', '508', '509'][Number(labKey) - 1]}` : (labConfig?.title || 'Expedition Sector')}
+              {['502', '508', '509', '510'][Number(labKey) - 1] ? `LAB ${['502', '508', '509', '510'][Number(labKey) - 1]}` : (labConfig?.title || 'Expedition Sector')}
             </h1>
           </div>
         </div>
@@ -711,7 +725,9 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                         ? 'bg-gradient-to-b from-[#bae6fd] via-[#0284c7] to-[#0c4a6e] border-2 border-[#e0f2fe] text-[#082f49] shadow-[0_0_14px_rgba(56,189,248,0.85)] ring-1 ring-[#38bdf8]'
                         : themeType === 'volcano'
                           ? 'bg-gradient-to-b from-[#fed7aa] via-[#ea580c] to-[#7c2d12] border-2 border-[#ffedd5] text-[#431407] shadow-[0_0_14px_rgba(249,115,22,0.85)] ring-1 ring-[#ea580c]'
-                          : 'bg-gradient-to-b from-[#fef08a] via-[#eab308] to-[#854d0e] border-2 border-[#fffbeb] text-[#1c1917] shadow-[0_0_14px_rgba(234,179,8,0.8)] ring-1 ring-[#eab308]';
+                          : themeType === 'desert'
+                            ? 'bg-gradient-to-b from-[#fef08a] via-[#d97706] to-[#78350f] border-2 border-[#fef3c7] text-[#451a03] shadow-[0_0_14px_rgba(217,119,6,0.85)] ring-1 ring-[#d97706]'
+                            : 'bg-gradient-to-b from-[#fef08a] via-[#eab308] to-[#854d0e] border-2 border-[#fffbeb] text-[#1c1917] shadow-[0_0_14px_rgba(234,179,8,0.8)] ring-1 ring-[#eab308]';
 
                   return (
                     <div

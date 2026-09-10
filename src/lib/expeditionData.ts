@@ -22,7 +22,7 @@ export interface ExpeditionLab {
   fragmentName?: string;
   fragmentImage?: string;
   mapImage?: string;
-  themeType?: 'jungle' | 'frost' | 'volcano';
+  themeType?: 'jungle' | 'frost' | 'volcano' | 'desert';
   inkColor?: string;
   glowColor?: string;
   coreGlow?: string;
@@ -271,21 +271,103 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
       },
     ],
   },
+  '4': {
+    id: '4',
+    labId: '4',
+    sourceLab: '4',
+    chapterNumber: 'Chapter IV',
+    name: 'Lab 510',
+    title: 'LAB 510',
+    subtitle: 'Navigate ancient desert dunes, hidden oases, and sun-scorched pyramid ruins.',
+    badgeTitle: 'Lab 510 Mastered',
+    fragmentId: '4',
+    fragmentName: 'Dune Sunstone Talisman',
+    fragmentImage: '/assets/images/avery-pirate-coin.webp',
+    mapImage: '/assets/images/journal-spread-lab4.webp',
+    themeType: 'desert',
+    inkColor: '#2b1b04',
+    glowColor: '#d97706',
+    coreGlow: '#fef3c7',
+    badgeClass: 'bg-[#b45309]/20 text-[#d97706] border-[#d97706]/40',
+    checkpoints: [
+      {
+        id: 'c4-p1',
+        name: 'SANDSTORM AI',
+        description: 'Autonomous neural navigation and sandstorm filtering vision matrix.',
+        icon: '🌪️',
+        x: 34,
+        y: 20,
+      },
+      {
+        id: 'c4-p2',
+        name: 'SOLARIS GRID',
+        description: 'High-yield photovoltaic power grid and thermal energy storage.',
+        icon: '⚡',
+        x: 74,
+        y: 22,
+      },
+      {
+        id: 'c4-p3',
+        name: 'DUNE ROVER ROBOTICS',
+        description: 'All-terrain autonomous rover designed for extreme dune traverses.',
+        icon: '🚙',
+        x: 82,
+        y: 38,
+      },
+      {
+        id: 'c4-p4',
+        name: 'MIRAGE CYBER DEFENSE',
+        description: 'Next-gen deceptive honeypot architectures and perimeter protection.',
+        icon: '🛡️',
+        x: 45,
+        y: 46,
+      },
+      {
+        id: 'c4-p5',
+        name: 'OASIS HYDRATION IOT',
+        description: 'Smart moisture extraction, water reclamation, and telemetry nodes.',
+        icon: '💧',
+        x: 75,
+        y: 58,
+      },
+      {
+        id: 'c4-p6',
+        name: 'PYRAMID CLOUD',
+        description: 'Hierarchical edge data vault engineered for subterranean resilience.',
+        icon: '🏛️',
+        x: 32,
+        y: 68,
+      },
+      {
+        id: 'c4-p7',
+        name: 'SCARAB SENSORS',
+        description: 'Micro-sensor swarm deploying seismic and environmental telemetry.',
+        icon: '🪲',
+        x: 68,
+        y: 78,
+      },
+    ],
+  },
 };
 
 // 2. Slug & Letter Aliases Mapping
 // Canonical lab IDs come from mock-data.ts: "a" (King's Bay), "c"
-// (Libertalia), "d" (New Devon) — mapped onto sectors 1/2/3.
+// (Libertalia), "d" (New Devon), "e" (Dune/Desert) — mapped onto sectors 1/2/3/4.
 const labAliases: Record<string, string> = {
   a: '1',
   c: '2',
   d: '3',
+  e: '4',
   'kings-bay': '1',
   libertalia: '2',
   'new-devon': '3',
+  'desert': '4',
+  'oasis': '4',
+  'lab-510': '4',
+  '510': '4',
 };
 
-// 3. Proxy Wrapper: Keeps Object.values(expeditionLabs) to 3 items while resolving aliases
+// 3. Proxy Wrapper: Keeps Object.values(expeditionLabs) to 4 items while resolving aliases
 export const expeditionLabs: Record<string, ExpeditionLab> = new Proxy(baseExpeditionLabs, {
   get(target, prop: string) {
     if (typeof prop !== 'string') return undefined;
@@ -297,7 +379,7 @@ export const expeditionLabs: Record<string, ExpeditionLab> = new Proxy(baseExped
     return undefined;
   },
   ownKeys() {
-    return ['1', '2', '3'];
+    return ['1', '2', '3', '4'];
   },
   getOwnPropertyDescriptor(target, prop) {
     return Object.getOwnPropertyDescriptor(target, prop);

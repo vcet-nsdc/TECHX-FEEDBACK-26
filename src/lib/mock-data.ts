@@ -45,9 +45,22 @@ export const LABS: Lab[] = [
       { id: 'c3-p8', name: 'Mend-x', icon: '🩹' },
     ],
   },
+  {
+    labId: 'e',
+    labName: 'Lab 510',
+    products: [
+      { id: 'c4-p1', name: 'SANDSTORM AI', icon: '🌪️' },
+      { id: 'c4-p2', name: 'SOLARIS GRID', icon: '⚡' },
+      { id: 'c4-p3', name: 'DUNE ROVER ROBOTICS', icon: '🚙' },
+      { id: 'c4-p4', name: 'MIRAGE CYBER DEFENSE', icon: '🛡️' },
+      { id: 'c4-p5', name: 'OASIS HYDRATION IOT', icon: '💧' },
+      { id: 'c4-p6', name: 'PYRAMID CLOUD', icon: '🏛️' },
+      { id: 'c4-p7', name: 'SCARAB SENSORS', icon: '🪲' },
+    ],
+  },
 ];
 
-export const LAB_ORDER: string[] = LABS.map((l) => l.labId); // ["a","c","d"]
+export const LAB_ORDER: string[] = LABS.map((l) => l.labId); // ["a","c","d","e"]
 
 export function getLabById(labId: string): Lab | undefined {
   return LABS.find((l) => l.labId === labId);
@@ -99,6 +112,18 @@ export const CLUE_POOL: Clue[] = [
     body: 'A spiral with three dots appears on the cliff face — the same mark is on the final chest.',
     labId: 'c',
   },
+  {
+    id: 'clue-e-1',
+    title: 'Weathered Papyrus',
+    body: 'Hieroglyphs describe a secret entrance behind the shifting sands of the western dune.',
+    labId: 'e',
+  },
+  {
+    id: 'clue-e-2',
+    title: 'Solar Compass Note',
+    body: 'When the midday sun hits the apex of the pyramid, follow the shadow towards the oasis cache.',
+    labId: 'e',
+  },
 ];
 
 // --- Treasure pool — optional mini-game reward, never blocks progression ---
@@ -110,11 +135,12 @@ export const TREASURE_POOL: Treasure[] = [
 ];
 
 // --- Certificate shard templates (1 per lab) ---
-// Keys match the canonical lab IDs in LABS above ("a", "c", "d").
+// Keys match the canonical lab IDs in LABS above ("a", "c", "d", "e").
 export const SHARD_INSCRIPTIONS: Record<string, string> = {
   a: 'Awarded for clearing the Mountain Pass — first leg of the expedition.',
   c: 'Awarded for surviving the Lost Temple — second leg of the expedition.',
-  d: 'Awarded for charting the Coastal Ruins — final leg of the expedition.',
+  d: 'Awarded for charting the Coastal Ruins — third leg of the expedition.',
+  e: 'Awarded for conquering the Shifting Dunes — desert leg of the expedition.',
 };
 
 export function getShardInscription(labId: string): string {

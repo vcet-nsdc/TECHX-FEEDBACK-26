@@ -23,12 +23,13 @@ export default function ExpeditionBottomDock() {
     pathname === '/certificate' ||
     pathname === '/leaderboard';
 
-  // Strictly 3 primary sectors
+  // Primary expedition sectors
   const labList = useMemo(() => {
     return [
       labs['1'] || expeditionLabs['1'],
       labs['2'] || expeditionLabs['2'],
       labs['3'] || expeditionLabs['3'],
+      labs['4'] || expeditionLabs['4'],
     ].filter(Boolean);
   }, [labs]);
 

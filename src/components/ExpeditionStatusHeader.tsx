@@ -12,7 +12,7 @@ interface ExpeditionStatusHeaderProps {
 
 export default function ExpeditionStatusHeader({
   completedCount = 0,
-  totalCount = 3,
+  totalCount = 4,
 }: ExpeditionStatusHeaderProps) {
   return (
     <div className="relative w-full max-w-[480px] mx-auto drop-shadow-[0_14px_32px_rgba(0,0,0,0.92)] select-none">
@@ -41,11 +41,11 @@ export default function ExpeditionStatusHeader({
             </p>
           </div>
 
-          {/* 3 Circular Sector Badge Indicators */}
-          <div className="flex items-center justify-center gap-3 sm:gap-4 my-auto">
+          {/* Circular Sector Badge Indicators */}
+          <div className="flex items-center justify-center gap-2 sm:gap-3 my-auto">
             {Array.from({ length: totalCount }).map((_, idx) => {
               const isCompleted = idx < completedCount;
-              const badgeLabel = ['502', '508', '509'][idx] || `0${idx + 1}`;
+              const badgeLabel = ['502', '508', '509', '510'][idx] || `0${idx + 1}`;
               return (
                 <div
                   key={idx}

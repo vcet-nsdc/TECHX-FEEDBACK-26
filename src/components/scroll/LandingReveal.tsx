@@ -517,6 +517,13 @@ export default function LandingReveal() {
             >
               Lab 509
             </span>
+            <span className="text-amber-400/80 font-bold">•</span>
+            <span
+              style={{ fontFamily: "var(--font-oswald), var(--font-geist-sans), sans-serif", letterSpacing: '0.12em' }}
+              className="text-xs sm:text-sm font-bold uppercase px-3 py-1 rounded-full bg-amber-950/70 border border-amber-400/60 text-amber-300 drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)] shadow-md"
+            >
+              Lab 510
+            </span>
           </div>
 
           {/* Circular Avatar Choosing Menu instead of Enter button */}

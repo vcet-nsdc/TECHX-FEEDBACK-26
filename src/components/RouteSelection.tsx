@@ -24,6 +24,7 @@ const LAB_CONFIGS: Record<string, LabSectorConfig> = {
   '1': { number: '502', bgImage: '/earthy-cards.png' },
   '2': { number: '508', bgImage: '/icey-cards.png' },
   '3': { number: '509', bgImage: '/lava-cards.png' },
+  '4': { number: '510', bgImage: '/desert-cards.png' },
 };
 
 function getLabSectorConfig(lab: ExpeditionLab, index: number): LabSectorConfig {
@@ -35,11 +36,11 @@ function getLabSectorConfig(lab: ExpeditionLab, index: number): LabSectorConfig 
     }
     return byId;
   }
-  const fallbackNumbers = ['502', '508', '509'];
-  const fallbackImages = ['/earthy-cards.png', '/icey-cards.png', '/lava-cards.png'];
+  const fallbackNumbers = ['502', '508', '509', '510'];
+  const fallbackImages = ['/earthy-cards.png', '/icey-cards.png', '/lava-cards.png', '/desert-cards.png'];
   return {
-    number: fallbackNumbers[index % 3],
-    bgImage: fallbackImages[index % 3],
+    number: fallbackNumbers[index % fallbackNumbers.length],
+    bgImage: fallbackImages[index % fallbackImages.length],
   };
 }
 
@@ -63,12 +64,13 @@ export default function RouteSelection() {
     };
   }, []);
 
-  // Strictly 3 primary sectors with dynamic labs context
+  // Primary sectors with dynamic labs context
   const labList: ExpeditionLab[] = useMemo(() => {
     return [
       labs['1'] || expeditionLabs['1'],
       labs['2'] || expeditionLabs['2'],
       labs['3'] || expeditionLabs['3'],
+      labs['4'] || expeditionLabs['4'],
     ].filter(Boolean);
   }, [labs]);
 

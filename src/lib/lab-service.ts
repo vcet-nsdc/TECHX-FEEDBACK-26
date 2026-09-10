@@ -12,12 +12,12 @@ import { getDatabase } from './mongodb';
 import { ExpeditionLab } from './expeditionData';
 
 export type LabDoc = {
-  labKey: string; // '1' | '2' | '3'
+  labKey: string; // '1' | '2' | '3' | '4'
   lab: ExpeditionLab;
   updatedAt: Date;
 };
 
-export const LAB_KEYS = ['1', '2', '3'] as const;
+export const LAB_KEYS = ['1', '2', '3', '4'] as const;
 
 function sanitizeLabs(raw: Record<string, unknown>): Record<string, ExpeditionLab> {
   const result: Record<string, ExpeditionLab> = {};
@@ -45,8 +45,8 @@ export async function getLabsFromDb(): Promise<Record<string, ExpeditionLab>> {
 
   const labs: Record<string, ExpeditionLab> = {};
   for (const key of LAB_KEYS) {
+    const base = baseExpeditionLabs[key] || ({} as ExpeditionLab);
     if (byKey[key]) {
-      const base = baseExpeditionLabs[key] || {};
       labs[key] = {
         ...base,
         ...byKey[key].lab,
@@ -57,6 +57,8 @@ export async function getLabsFromDb(): Promise<Record<string, ExpeditionLab>> {
         coreGlow: byKey[key].lab?.coreGlow || base.coreGlow,
         badgeClass: byKey[key].lab?.badgeClass || base.badgeClass,
       };
+    } else if (base.id) {
+      labs[key] = base;
     }
   }
 
@@ -140,6 +142,7 @@ const CANONICAL_LAB_BY_KEY: Record<string, string> = {
   '1': 'a',
   '2': 'c',
   '3': 'd',
+  '4': 'e',
 };
 
 export async function getCheckpointCatalog(): Promise<Map<string, CheckpointRef>> {

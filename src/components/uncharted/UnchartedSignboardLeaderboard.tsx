@@ -49,7 +49,7 @@ interface UnchartedSignboardLeaderboardProps {
   initialViewMode?: 'users' | 'products';
 }
 
-// Clean lab name to strictly display "Lab 502", "Lab 508", "Lab 509" without any "Chapter 1/2" prefix
+// Clean lab name to strictly display "Lab 502", "Lab 508", "Lab 509", "Lab 510" without any "Chapter" prefix
 function cleanLabName(raw?: string): string {
   if (!raw) return '—';
   const matchNum = raw.match(/\b(5\d{2}|\d{3})\b/);
@@ -58,6 +58,7 @@ function cleanLabName(raw?: string): string {
   if (lower.includes('king') || lower.includes('502') || raw.includes('01')) return 'Lab 502';
   if (lower.includes('forge') || lower.includes('libertalia') || lower.includes('508') || raw.includes('02')) return 'Lab 508';
   if (lower.includes('vault') || lower.includes('devon') || lower.includes('509') || raw.includes('03')) return 'Lab 509';
+  if (lower.includes('desert') || lower.includes('oasis') || lower.includes('dune') || lower.includes('510') || raw.includes('04')) return 'Lab 510';
   const stripped = raw.replace(/Chapter\s*\d+\s*[-—:]*\s*/gi, '').trim();
   return stripped || raw;
 }

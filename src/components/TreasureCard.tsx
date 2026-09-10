@@ -165,7 +165,7 @@ export function generateCipherPattern(name: string): string {
 export function getProductClues(product: ProductWithLab): ProductClues {
   const labNum =
     (product.labName + ' ' + (product.labTitle || '')).match(/\b(5\d{2}|\d{3})\b/)?.[1] ||
-    (product.labId === '1' ? '502' : product.labId === '2' ? '508' : '509');
+    (product.labId === '1' ? '502' : product.labId === '2' ? '508' : product.labId === '3' ? '509' : '510');
 
   const desc = product.description?.trim() || 'Software and technology project.';
   const icon = product.icon || '📦';
@@ -191,6 +191,12 @@ export function getProductClues(product: ProductWithLab): ProductClues {
     '🦾': 'robotic arm',
     '🪑': 'office desk',
     '🩹': 'bandage',
+    '🌪️': 'sandstorm',
+    '⚡': 'lightning bolt',
+    '🚙': 'rover',
+    '💧': 'water drop',
+    '🏛️': 'pyramid temple',
+    '🪲': 'scarab beetle',
   };
   const emojiLabel = emojiNames[icon] || 'symbol';
 
@@ -287,19 +293,25 @@ export default function TreasureCard({
     return isLabCompleted('3', normalizedEmail);
   }, [propLab3Completed, completedLabIds, normalizedEmail, localFeedbackVersion]);
 
-  const completedLabsCount = (isLab1Done ? 1 : 0) + (isLab2Done ? 1 : 0) + (isLab3Done ? 1 : 0);
+  const isLab4Done = useMemo(() => {
+    if (completedLabIds?.includes('4') || completedLabIds?.includes('e')) return true;
+    return isLabCompleted('4', normalizedEmail);
+  }, [completedLabIds, normalizedEmail, localFeedbackVersion]);
+
+  const completedLabsCount = (isLab1Done ? 1 : 0) + (isLab2Done ? 1 : 0) + (isLab3Done ? 1 : 0) + (isLab4Done ? 1 : 0);
 
   // User submitted product IDs across all labs
   const submittedProductIds = useMemo(() => {
     return getSubmittedFeedbackForUser(normalizedEmail);
   }, [normalizedEmail, localFeedbackVersion]);
 
-  // Product pool from all 3 base labs (supports live database override from useLabs)
+  // Product pool from all base labs (supports live database override from useLabs)
   const allProducts: ProductWithLab[] = useMemo(() => {
     const l1 = dbLabs['1'] || baseExpeditionLabs['1'];
     const l2 = dbLabs['2'] || baseExpeditionLabs['2'];
     const l3 = dbLabs['3'] || baseExpeditionLabs['3'];
-    const labsList = [l1, l2, l3].filter(Boolean);
+    const l4 = dbLabs['4'] || baseExpeditionLabs['4'];
+    const labsList = [l1, l2, l3, l4].filter(Boolean);
 
     const pool: ProductWithLab[] = [];
     let globalCounter = 0;

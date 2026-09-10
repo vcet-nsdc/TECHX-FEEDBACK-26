@@ -11,12 +11,13 @@ import type { CheckpointNode, ExpeditionLab } from '@/lib/expeditionData';
 import { generateRandomizedSafeLayout } from '@/lib/mapPlacement';
 import ProductIcon, { isImageUrlIcon } from '@/components/ProductIcon';
 
-type LabKey = '1' | '2' | '3';
+type LabKey = '1' | '2' | '3' | '4';
 
 const LABS_CONFIG: { key: LabKey; id: string; name: string; description: string }[] = [
   { key: '1', id: '1', name: 'Lab 502', description: 'Advanced AI, Network & Mobile Systems' },
   { key: '2', id: '2', name: 'Lab 508', description: 'Robotics, IoT & Hardware Systems' },
   { key: '3', id: '3', name: 'Lab 509', description: 'Cloud, Data & Emerging Technologies' },
+  { key: '4', id: '4', name: 'Lab 510', description: 'Desert Recon, Automation & Cyber Defense' },
 ];
 
 const SUGGESTED_ICONS = ['📱', '💻', '🤖', '🌐', '📶', '📹', '🚁', '⚙️', '🔬', '📊', '🎓', '🚪', '🛠️', '💊', '💰'];
@@ -169,6 +170,7 @@ function AdminDashboard() {
       if (lab.includes('502') || lab.includes('King') || lab.includes('01')) lab = 'Lab 502';
       else if (lab.includes('508') || lab.includes('Forge') || lab.includes('02')) lab = 'Lab 508';
       else if (lab.includes('509') || lab.includes('Vault') || lab.includes('03')) lab = 'Lab 509';
+      else if (lab.includes('510') || lab.includes('Desert') || lab.includes('Oasis') || lab.includes('04')) lab = 'Lab 510';
       counts[lab] = (counts[lab] || 0) + (p.totalRatings || 0);
     }
     let topName = 'None yet';
@@ -513,11 +515,11 @@ function AdminDashboard() {
               </p>
             </div>
 
-            {/* Card 3: Completed All 3 Labs */}
+            {/* Card 3: Completed All Labs */}
             <div className="rounded-xl border border-[#382314] bg-[#18110a] p-5 shadow-lg border-l-4 border-l-[#b45309]">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#c99f58]">
-                  Completed All 3 Labs
+                  Completed All 4 Labs
                 </span>
                 <span className="text-xl">🎓</span>
               </div>
@@ -525,7 +527,7 @@ function AdminDashboard() {
                 {isStatsLoading ? '…' : dashboardStats.completedUsers}
               </div>
               <p className="mt-1 text-xs text-[#9e8369]">
-                Users who submitted feedback in all 3 labs
+                Users who submitted feedback in all 4 labs
               </p>
             </div>
 
