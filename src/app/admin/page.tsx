@@ -8,7 +8,7 @@ import AdminRouteGuard from '@/components/uncharted/AdminRouteGuard';
 import { setLabsCache } from '@/lib/expeditionStore';
 import { csvCell } from '@/lib/utils';
 import type { CheckpointNode, ExpeditionLab } from '@/lib/expeditionData';
-import { generateRandomizedSafeLayout } from '@/lib/mapPlacement';
+import { generateOrderedSerpentineLayout } from '@/lib/mapPlacement';
 import ProductIcon, { isImageUrlIcon } from '@/components/ProductIcon';
 
 type LabKey = '1' | '2' | '3' | '4';
@@ -23,7 +23,11 @@ const LABS_CONFIG: { key: LabKey; id: string; name: string; description: string 
 const SUGGESTED_ICONS = ['📱', '💻', '🤖', '🌐', '📶', '📹', '🚁', '⚙️', '🔬', '📊', '🎓', '🚪', '🛠️', '💊', '💰'];
 
 function applySafeLayout(checkpoints: CheckpointNode[], seed?: number): CheckpointNode[] {
-  const slots = generateRandomizedSafeLayout(checkpoints.length, seed);
+  // Deterministic serpentine: same geometry the runtime map uses, so persisted
+  // positions always match what the map renders and add/delete never break
+  // the connecting trail. `seed` retained for API compatibility.
+  void seed;
+  const slots = generateOrderedSerpentineLayout(checkpoints.length);
   return checkpoints.map((cp, i) => ({
     ...cp,
     x: slots[i]?.x ?? cp.x,

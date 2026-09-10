@@ -15,6 +15,45 @@ const BOUNDS = {
 };
 
 /**
+ * Generates a deterministic, jitter-free serpentine layout for N checkpoints.
+ * Positions flow top-to-bottom in a smooth S-curve (alternating left/right
+ * wings), so connecting them in array order produces a clean, non-crossing
+ * trail. Same geometry (minus random jitter) as the "auto-arrange" layout the
+ * admin page applies on add/delete — guaranteeing the runtime map always
+ * renders a proper trail regardless of stored per-product coordinates.
+ */
+export function generateOrderedSerpentineLayout(count: number): Point2D[] {
+  if (count <= 0) return [];
+  if (count === 1) return [{ x: 49, y: 50 }];
+
+  const spanX = BOUNDS.maxX - BOUNDS.minX;
+  const spanY = BOUNDS.maxY - BOUNDS.minY;
+  const points: Point2D[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const progress = i / (count - 1);
+    // Progressive downward pacing with slight organic variation
+    const nominalY = BOUNDS.minY + progress * spanY;
+    // Serpentine wave: alternates left and right wings of the map
+    const wavePhase = progress * Math.PI * (count <= 4 ? 1.5 : count <= 7 ? 2.5 : 3.5);
+    const nominalX = 49 + Math.sin(wavePhase) * (spanX * 0.44);
+
+    const x = Math.max(
+      BOUNDS.minX,
+      Math.min(BOUNDS.maxX, Math.round(nominalX))
+    );
+    const y = Math.max(
+      BOUNDS.minY,
+      Math.min(BOUNDS.maxY, Math.round(nominalY))
+    );
+
+    points.push({ x, y });
+  }
+
+  return points;
+}
+
+/**
  * Generates an organic, randomized layout for N checkpoints
  * ensuring every node is inside the safe page margins and maintains
  * a minimum spacing distance between all pairs.

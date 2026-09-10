@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
 import { useLabs } from '@/context/LabsContext';
+import { generateOrderedSerpentineLayout } from '@/lib/mapPlacement';
 import {
   expeditionLabs,
   getSubmittedFeedbackForUser,
@@ -186,6 +187,28 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
 
   const products: CheckpointNode[] = useMemo(() => labConfig?.checkpoints || [], [labConfig]);
 
+  // Deterministic serpentine layout computed from the checkpoint array ORDER.
+  // Drives the connecting trail, pins, and Nathan so everything follows a
+  // clean, non-crossing S-curve — even after admin add/delete reflows the
+  // list. Stored per-product x/y are only used as a fallback if the list
+  // changes size (ensuring order and geometry stay in sync).
+  const layoutPoints = useMemo(
+    () => generateOrderedSerpentineLayout(products.length),
+    [products.length]
+  );
+
+  // Checkpoint nodes with deterministic serpentine display positions attached,
+  // so pins, labels, and Nathan all align with the trail (array-order driven).
+  // `x`/`y` are overridden to the layout slots so spline helpers and Nathan
+  // movement consistently ride the same serpentine trail.
+  const displayProducts: (CheckpointNode & { layoutX: number; layoutY: number })[] =
+    useMemo(() => {
+      return products.map((p, i) => {
+        const slot = layoutPoints[i] || p;
+        return { ...p, x: slot.x, y: slot.y, layoutX: slot.x, layoutY: slot.y };
+      });
+    }, [products, layoutPoints]);
+
   const [submittedIds, setSubmittedIds] = useState<string[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<CheckpointNode>(
     products[0] || {
@@ -202,7 +225,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
 
   // Miniature Nathan Drake Map Explorer State
-  const activeNathanNode = selectedProduct || products[0];
+  const activeNathanNode = displayProducts.find((p) => p.id === selectedProduct?.id) || displayProducts[0] || selectedProduct || products[0];
   const [nathanState, setNathanState] = useState<NathanAnimationState>('idle');
   const [nathanFacing, setNathanFacing] = useState<'right' | 'left'>('right');
   const [journeyKeyframes, setJourneyKeyframes] = useState<{ x: string[]; y: string[] } | null>(null);
@@ -214,12 +237,14 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
         return;
       }
 
-      const fromIdx = products.findIndex((p) => p.id === selectedProduct.id);
-      const toIdx = products.findIndex((p) => p.id === targetProduct.id);
+      const fromIdx = displayProducts.findIndex((p) => p.id === selectedProduct.id);
+      const toIdx = displayProducts.findIndex((p) => p.id === targetProduct.id);
 
       if (fromIdx !== -1 && toIdx !== -1) {
-        const kf = getSplinePathBetweenNodes(products, fromIdx, toIdx, 18);
-        setNathanFacing(targetProduct.x >= selectedProduct.x ? 'right' : 'left');
+        const kf = getSplinePathBetweenNodes(displayProducts, fromIdx, toIdx, 18);
+        setNathanFacing(
+          displayProducts[toIdx].x >= displayProducts[fromIdx].x ? 'right' : 'left'
+        );
         setNathanState('run');
         setJourneyKeyframes(kf);
         setSelectedProduct(targetProduct);
@@ -232,7 +257,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
         setSelectedProduct(targetProduct);
       }
     },
-    [products, selectedProduct]
+    [displayProducts, selectedProduct]
   );
 
   const handleNathanArrival = () => {
@@ -399,15 +424,23 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
     });
   }, [labs, allSubmitted]);
 
-  // Exact mathematically aligned pixel positions for each node
+  // Exact mathematically aligned pixel positions for each node.
+  // Positions are driven by the deterministic serpentine layout computed from
+  // the checkpoint array ORDER so the connecting trail always follows a
+  // clean, non-crossing S-curve — even after admin add/delete reflows the
+  // list.
   const nodePixelPositions = useMemo(() => {
     if (containerSize.width === 0 || containerSize.height === 0) return [];
-    return products.map((p) => ({
-      id: p.id,
-      x: (p.x / 100) * containerSize.width,
-      y: (p.y / 100) * containerSize.height,
-    }));
-  }, [products, containerSize]);
+    const useLayout = layoutPoints.length === products.length;
+    return products.map((p, i) => {
+      const slot = useLayout && layoutPoints[i] ? layoutPoints[i] : p;
+      return {
+        id: p.id,
+        x: (slot.x / 100) * containerSize.width,
+        y: (slot.y / 100) * containerSize.height,
+      };
+    });
+  }, [products, layoutPoints, containerSize]);
 
 
 
@@ -756,7 +789,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                 )}
 
                 {/* Interactive Checkpoint Pins (Precisely centered at product.x%, product.y%) */}
-                {products.map((product) => {
+                {displayProducts.map((product) => {
                   const isSubmitted = submittedIds.includes(product.id);
                   const isCurrent = selectedProduct?.id === product.id;
 
@@ -774,7 +807,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                   return (
                     <div
                       key={product.id}
-                      style={{ left: `${product.x}%`, top: `${product.y}%` }}
+                      style={{ left: `${product.layoutX}%`, top: `${product.layoutY}%` }}
                       className="absolute z-20 pointer-events-auto"
                     >
                       <button
