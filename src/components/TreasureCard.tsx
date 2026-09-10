@@ -880,12 +880,6 @@ export default function TreasureCard({
                   </strong>
                 </span>
               </span>
-              <span className="text-[#e5c386] font-bold">
-                Clues Unlocked:{' '}
-                <strong className="text-[#ffd700]">
-                  {(unlockedClues[1] ? 1 : 0) + (unlockedClues[2] ? 1 : 0) + (unlockedClues[3] ? 1 : 0)} / 3
-                </strong>
-              </span>
             </div>
           </div>
 
