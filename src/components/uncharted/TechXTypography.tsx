@@ -143,11 +143,11 @@ export function TechXLogoText({
           <div className="flex items-center justify-center gap-4 sm:gap-6 mt-1">
             {/* Co-Sponsor 1: Career Launcher */}
             <div className="flex items-center justify-center transition-transform duration-300 hover:scale-105">
-              <div className="bg-white/95 px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.6)] flex items-center justify-center">
+              <div className="bg-white/95 h-12 sm:h-14 md:h-16 px-3 sm:px-4 rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.6)] flex items-center justify-center">
                 <img
                   src="/assets/images/career-launcher.webp"
                   alt="Career Launcher"
-                  className="h-5 sm:h-7 md:h-8 w-auto object-contain"
+                  className="max-h-[75%] w-auto object-contain"
                 />
               </div>
             </div>
@@ -157,17 +157,19 @@ export function TechXLogoText({
               className="flex items-center justify-center transition-transform duration-300 hover:scale-105"
               data-angel-one-sponsor
             >
-              <img
-                src="/assets/images/angel-one.webp"
-                alt="Angel One — Authorized Person: Kalpesh Mali, Contact: 8949327700"
-                className="h-9 sm:h-12 md:h-14 w-auto object-contain bg-white/95 rounded-lg px-2 py-1 shadow-[0_4px_16px_rgba(0,0,0,0.6)]"
-                onError={(e) => {
-                  const wrapper = (e.currentTarget.parentElement as HTMLElement | null)?.closest(
-                    '[data-angel-one-sponsor]'
-                  ) as HTMLElement | null;
-                  if (wrapper) wrapper.style.display = 'none';
-                }}
-              />
+              <div className="bg-white/95 h-12 sm:h-14 md:h-16 px-3 sm:px-4 rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.6)] flex items-center justify-center">
+                <img
+                  src="/assets/images/angel-one.webp"
+                  alt="Angel One — Authorized Person: Kalpesh Mali, Contact: 8949327700"
+                  className="max-h-[75%] w-auto object-contain"
+                  onError={(e) => {
+                    const wrapper = (e.currentTarget.parentElement as HTMLElement | null)?.closest(
+                      '[data-angel-one-sponsor]'
+                    ) as HTMLElement | null;
+                    if (wrapper) wrapper.style.display = 'none';
+                  }}
+                />
+              </div>
             </div>
           </div>
         </motion.div>
