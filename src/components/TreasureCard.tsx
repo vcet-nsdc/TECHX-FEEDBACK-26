@@ -1230,7 +1230,7 @@ export default function TreasureCard({
                   ✦ {isFoundEarly ? 'Challenge Won Early' : areAllCluesUnlocked ? 'All Clues Unlocked • Form Closed' : 'Solved'}
                 </span>
               ) : (
-                <span className="px-2 py-0.5 rounded bg-[#8b6943]/15 text-[#6d3e16] border border-[#8b6943]/30 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
+                <span className="shrink-0 whitespace-nowrap px-2 py-0.5 rounded bg-[#8b6943]/15 text-[#6d3e16] border border-[#8b6943]/30 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
                   ✦ Unlimited Guesses
                 </span>
               )}
@@ -1305,7 +1305,7 @@ export default function TreasureCard({
                     onChange={(e) => setGuessInput(e.target.value)}
                     placeholder="Guess project or company name (unlimited attempts)..."
                     style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
-                    className="flex-1 px-3 py-2 sm:py-2.5 rounded-lg border-2 border-[#8b6943]/60 bg-[#fffbf2] text-[#1c0f05] text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:border-[#b38920] shadow-inner placeholder:font-normal placeholder:italic placeholder:text-[#8b6943]/60 transition"
+                    className="flex-1 min-w-0 px-3 py-2 sm:py-2.5 rounded-lg border-2 border-[#8b6943]/60 bg-[#fffbf2] text-[#1c0f05] text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:border-[#b38920] shadow-inner placeholder:font-normal placeholder:italic placeholder:text-[#8b6943]/60 transition"
                   />
                   <button
                     type="submit"
@@ -1319,9 +1319,9 @@ export default function TreasureCard({
                     Verify Solution
                   </button>
                 </div>
-                <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-mono text-[#7a481c] italic px-1">
+                <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between text-[10px] sm:text-[11px] font-mono text-[#7a481c] italic px-1">
                   <span>✦ Unlimited guesses — guess early to unlock your artifact!</span>
-                  <span className="hidden sm:inline">All 3 clues closes guessing & directly reveals artifact</span>
+                  <span className="hidden sm:inline sm:shrink-0">All 3 clues closes guessing & directly reveals artifact</span>
                 </div>
               </form>
             )}
@@ -1351,7 +1351,7 @@ export default function TreasureCard({
               </div>
               <span
                 style={{ fontFamily: "var(--font-oswald), sans-serif" }}
-                className={`text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                className={`shrink-0 whitespace-nowrap text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
                   isArtifactUnlocked
                     ? 'bg-emerald-800/15 text-emerald-900 border-emerald-700/50'
                     : 'bg-[#241308]/10 text-[#7a5a3a] border-[#8b6943]/30'
