@@ -1198,7 +1198,7 @@ export default function TreasureCard({
             ) : (
               <form
                 onSubmit={handleVerifyGuess}
-                className={`flex flex-col sm:flex-row gap-2 ${isShaking ? 'animate-shake' : ''}`}
+                className={`flex flex-col gap-2 ${isShaking ? 'animate-shake' : ''}`}
               >
                 <input
                   type="text"
