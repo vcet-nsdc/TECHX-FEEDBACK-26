@@ -578,12 +578,12 @@ export default function TreasureCard({
           style={{
             backgroundImage: `url('/assets/images/torn-card-bg.webp')`,
           }}
-          className="relative w-full bg-[length:100%_100%] bg-no-repeat bg-center px-7 sm:px-11 pt-7 sm:pt-9 pb-8 sm:pb-10 flex flex-col justify-between text-[#241308]"
+          className="relative w-full bg-[length:100%_100%] bg-no-repeat bg-center px-8 sm:px-12 md:px-14 pt-8 sm:pt-10 pb-16 sm:pb-20 md:pb-24 flex flex-col justify-between text-[#241308]"
         >
           {/* Top Right Wax Seal Badge */}
-          <div className="absolute top-4 right-5 sm:top-5 sm:right-8 w-12 h-12 pointer-events-none opacity-90 z-20">
+          <div className="absolute top-6 right-7 sm:top-8 sm:right-10 w-10 h-10 sm:w-11 sm:h-11 pointer-events-none opacity-90 z-20">
             {isVerified ? (
-              <div className="w-11 h-11 rounded-full border-2 border-dashed border-[#8b261d] flex items-center justify-center rotate-12 bg-[#8b261d]/20 shadow-md">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-dashed border-[#8b261d] flex items-center justify-center rotate-12 bg-[#8b261d]/20 shadow-md">
                 <span
                   style={{ fontFamily: "var(--font-oswald), sans-serif" }}
                   className="text-[9px] font-black text-[#8b261d] uppercase tracking-wider"
@@ -592,7 +592,7 @@ export default function TreasureCard({
                 </span>
               </div>
             ) : completedLabsCount === 0 ? (
-              <div className="w-11 h-11 rounded-full border-2 border-dashed border-[#8b6943]/60 flex items-center justify-center -rotate-6 bg-[#241308]/10 shadow-sm">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-dashed border-[#8b6943]/60 flex items-center justify-center -rotate-6 bg-[#241308]/10 shadow-sm">
                 <span
                   style={{ fontFamily: "var(--font-oswald), sans-serif" }}
                   className="text-[9px] font-black text-[#6b4516] uppercase tracking-wider"
@@ -601,7 +601,7 @@ export default function TreasureCard({
                 </span>
               </div>
             ) : (
-              <div className="w-11 h-11 rounded-full border-2 border-dashed border-[#8b6943] flex items-center justify-center rotate-12 bg-[#8b6943]/15 shadow-sm">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-dashed border-[#8b6943] flex items-center justify-center rotate-12 bg-[#8b6943]/15 shadow-sm">
                 <span
                   style={{ fontFamily: "var(--font-oswald), sans-serif" }}
                   className="text-[9px] font-black text-[#6b4516] uppercase tracking-wider"
@@ -613,12 +613,12 @@ export default function TreasureCard({
           </div>
 
           {/* Section Header with Proper Visible Fonts */}
-          <div className="mb-3 px-1 flex flex-col items-start pr-14">
+          <div className="mb-2 sm:mb-2.5 px-0.5 flex flex-col items-start pr-12 sm:pr-14">
             <div className="flex items-center gap-2">
-              <span className="text-[#b38920] text-lg sm:text-xl animate-pulse">✦</span>
+              <span className="text-[#b38920] text-base sm:text-lg animate-pulse">✦</span>
               <h2
                 style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
-                className="text-xl sm:text-2xl md:text-3xl font-black text-[#1c0f05] tracking-wide leading-tight drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)]"
+                className="text-lg sm:text-2xl md:text-3xl font-black text-[#1c0f05] tracking-wide leading-tight drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)]"
               >
                 EXPEDITION TREASURE MAP
               </h2>
@@ -634,13 +634,13 @@ export default function TreasureCard({
           {/* ========================================================================= */}
           {/* VINTAGE TREASURE MAP CANVAS WITH NATHAN DRAKE & WAYPOINTS                 */}
           {/* ========================================================================= */}
-          <div className="my-2 select-none">
+          <div className="my-1.5 sm:my-2 select-none">
             <div
               style={{
                 backgroundImage: `url('/assets/images/pirate_trail_map.png')`,
               }}
               data-nathan-container="true"
-              className="relative w-full aspect-[16/9.2] bg-[length:100%_100%] bg-center bg-no-repeat rounded-lg overflow-visible select-none border border-[#8b6943]/30 shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
+              className="relative w-full aspect-[16/8.8] bg-[length:100%_100%] bg-center bg-no-repeat rounded-lg overflow-visible select-none border border-[#8b6943]/30 shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
             >
               {/* Dynamic Dotted Trail Highlight Overlay */}
               <svg
@@ -837,7 +837,7 @@ export default function TreasureCard({
             </div>
 
             {/* Map Status Strip */}
-            <div className="mt-2 w-full flex items-center justify-between px-3 py-1.5 rounded-md bg-[#1f1006]/95 border border-[#8b6943]/60 text-[#f5ebd7] font-mono text-[10px] sm:text-xs shadow-inner">
+            <div className="mt-1.5 w-full flex items-center justify-between px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md bg-[#1f1006]/95 border border-[#8b6943]/60 text-[#f5ebd7] font-mono text-[10px] sm:text-xs shadow-inner">
               <span className="flex items-center gap-1.5 text-[#ffd700] font-bold">
                 <span>🧭</span>
                 <span>
@@ -859,9 +859,9 @@ export default function TreasureCard({
           {/* ========================================================================= */}
           {/* THREE CLUES SECTION                                                       */}
           {/* ========================================================================= */}
-          <div className="flex flex-col gap-2.5 my-2">
+          <div className="flex flex-col gap-2 my-1.5 sm:my-2">
             {/* Clues Header Bar with Count on Top */}
-            <div className="flex items-center justify-between px-1 mb-0.5">
+            <div className="flex items-center justify-between px-0.5 mb-0.5">
               <span
                 style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
                 className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#3d1f05] flex items-center gap-1.5"
@@ -871,7 +871,7 @@ export default function TreasureCard({
               </span>
               <span
                 style={{ fontFamily: "var(--font-oswald), sans-serif" }}
-                className="text-xs sm:text-sm font-bold text-[#854d0e] bg-[#fef3c7] border border-[#d4af37]/60 px-3 py-0.5 rounded-full shadow-xs"
+                className="text-xs sm:text-sm font-bold text-[#854d0e] bg-[#fef3c7] border border-[#d4af37]/60 px-2.5 sm:px-3 py-0.5 rounded-full shadow-xs"
               >
                 {(unlockedClues[1] ? 1 : 0) + (unlockedClues[2] ? 1 : 0) + (unlockedClues[3] ? 1 : 0)} / 3 Unlocked
               </span>
@@ -880,7 +880,7 @@ export default function TreasureCard({
             {/* Card 1: Clue 1 */}
             <div
               onClick={() => setActiveCrossClue(activeCrossClue === 1 ? null : 1)}
-              className={`p-3 sm:p-3.5 rounded-lg border-2 transition-all cursor-pointer ${
+              className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all cursor-pointer ${
                 activeCrossClue === 1
                   ? 'ring-2 ring-[#d4af37] shadow-[0_0_14px_rgba(212,175,55,0.4)]'
                   : ''
@@ -892,16 +892,16 @@ export default function TreasureCard({
                   : 'bg-[#241308]/[0.04] border-[#8b6943]/30 text-[#664b32] opacity-80'
               }`}
             >
-              <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-[#8b6943]/20">
+              <div className="flex items-center justify-between mb-1 pb-0.5 border-b border-[#8b6943]/20">
                 <span
                   style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
-                  className="text-sm sm:text-base font-black text-[#2c1405]"
+                  className="text-xs sm:text-sm font-black text-[#2c1405]"
                 >
                   Clue 1
                 </span>
                 <span
                   style={{ fontFamily: "var(--font-oswald), sans-serif" }}
-                  className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                  className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${
                     unlockedClues[1]
                       ? 'bg-emerald-800/15 text-emerald-900 border-emerald-700/50'
                       : completedLabsCount >= 1
@@ -951,7 +951,7 @@ export default function TreasureCard({
             {/* Card 2: Clue 2 */}
             <div
               onClick={() => setActiveCrossClue(activeCrossClue === 2 ? null : 2)}
-              className={`p-3 sm:p-3.5 rounded-lg border-2 transition-all cursor-pointer ${
+              className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all cursor-pointer ${
                 activeCrossClue === 2
                   ? 'ring-2 ring-[#d4af37] shadow-[0_0_14px_rgba(212,175,55,0.4)]'
                   : ''
@@ -963,16 +963,16 @@ export default function TreasureCard({
                   : 'bg-[#241308]/[0.04] border-[#8b6943]/30 text-[#664b32] opacity-80'
               }`}
             >
-              <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-[#8b6943]/20">
+              <div className="flex items-center justify-between mb-1 pb-0.5 border-b border-[#8b6943]/20">
                 <span
                   style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
-                  className="text-sm sm:text-base font-black text-[#2c1405]"
+                  className="text-xs sm:text-sm font-black text-[#2c1405]"
                 >
                   Clue 2
                 </span>
                 <span
                   style={{ fontFamily: "var(--font-oswald), sans-serif" }}
-                  className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                  className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${
                     unlockedClues[2]
                       ? 'bg-emerald-800/15 text-emerald-900 border-emerald-700/50'
                       : completedLabsCount >= 2
@@ -1027,7 +1027,7 @@ export default function TreasureCard({
             {/* Card 3: Clue 3 */}
             <div
               onClick={() => setActiveCrossClue(activeCrossClue === 3 ? null : 3)}
-              className={`p-3 sm:p-3.5 rounded-lg border-2 transition-all cursor-pointer ${
+              className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all cursor-pointer ${
                 activeCrossClue === 3
                   ? 'ring-2 ring-[#d4af37] shadow-[0_0_14px_rgba(212,175,55,0.4)]'
                   : ''
@@ -1039,16 +1039,16 @@ export default function TreasureCard({
                   : 'bg-[#241308]/[0.04] border-[#8b6943]/30 text-[#664b32] opacity-80'
               }`}
             >
-              <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-[#8b6943]/20">
+              <div className="flex items-center justify-between mb-1 pb-0.5 border-b border-[#8b6943]/20">
                 <span
                   style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
-                  className="text-sm sm:text-base font-black text-[#2c1405]"
+                  className="text-xs sm:text-sm font-black text-[#2c1405]"
                 >
                   Clue 3
                 </span>
                 <span
                   style={{ fontFamily: "var(--font-oswald), sans-serif" }}
-                  className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                  className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${
                     unlockedClues[3]
                       ? 'bg-emerald-800/15 text-emerald-900 border-emerald-700/50'
                       : completedLabsCount >= 3
@@ -1109,8 +1109,8 @@ export default function TreasureCard({
           {/* ========================================================================= */}
           {/* USER ANSWER ENTRY INPUT BOX & VERIFICATION                                */}
           {/* ========================================================================= */}
-          <div className="mt-2 pt-2.5 border-t-2 border-[#8b6943]/35">
-            <div className="flex items-center justify-between mb-2">
+          <div className="mt-2 pt-2 border-t-2 border-[#8b6943]/35">
+            <div className="flex items-center justify-between mb-1.5">
               <span
                 style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
                 className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#3d1f05] flex items-center gap-1.5"
@@ -1119,28 +1119,28 @@ export default function TreasureCard({
                 <span>Guess the Secret Project</span>
               </span>
               {isVerified && (
-                <span className="px-2.5 py-0.5 rounded bg-emerald-800/15 text-emerald-900 border border-emerald-800/40 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
+                <span className="px-2 py-0.5 rounded bg-emerald-800/15 text-emerald-900 border border-emerald-800/40 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
                   ✦ Solved
                 </span>
               )}
             </div>
 
             {isVerified ? (
-              <div className="p-3.5 rounded-xl border-2 border-[#b38920] bg-gradient-to-r from-[#fef3c7]/80 to-[#fde68a]/60 flex items-center justify-between gap-3 shadow-md">
+              <div className="p-3 sm:p-3.5 rounded-xl border-2 border-[#b38920] bg-gradient-to-r from-[#fef3c7]/80 to-[#fde68a]/60 flex items-center justify-between gap-3 shadow-md">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-b from-[#1c0f05] to-[#3a1e08] border-2 border-[#ffd700] flex items-center justify-center text-2xl shrink-0 shadow-md overflow-hidden">
-                    <ProductIcon icon={targetProduct?.icon} fallback="🪐" imgClassName="w-8 h-8" />
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-b from-[#1c0f05] to-[#3a1e08] border-2 border-[#ffd700] flex items-center justify-center text-xl sm:text-2xl shrink-0 shadow-md overflow-hidden">
+                    <ProductIcon icon={targetProduct?.icon} fallback="🪐" imgClassName="w-7 h-7 sm:w-8 sm:h-8" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono font-bold text-[#7a481c] uppercase tracking-wider">
+                      <span className="text-[9px] sm:text-[10px] font-mono font-bold text-[#7a481c] uppercase tracking-wider">
                         SOLVED EXPEDITION TREASURE
                       </span>
                       <span className="text-emerald-700 text-xs font-bold">✓</span>
                     </div>
                     <span
                       style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
-                      className="text-base sm:text-lg font-black text-[#1c0f05] truncate block"
+                      className="text-sm sm:text-base md:text-lg font-black text-[#1c0f05] truncate block"
                     >
                       {targetProduct?.name}
                     </span>
@@ -1156,7 +1156,7 @@ export default function TreasureCard({
                       clipPath:
                         'polygon(4px 0%, calc(100% - 4px) 0%, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0% calc(100% - 4px), 0% 4px)',
                     }}
-                    className="py-2 px-3.5 bg-gradient-to-r from-[#d4af37] to-[#b38920] text-[#1a0f05] font-black text-xs uppercase tracking-wider shadow font-bold hover:brightness-110 cursor-pointer shrink-0 animate-pulse"
+                    className="py-1.5 sm:py-2 px-3 sm:px-3.5 bg-gradient-to-r from-[#d4af37] to-[#b38920] text-[#1a0f05] font-black text-[11px] sm:text-xs uppercase tracking-wider shadow hover:brightness-110 cursor-pointer shrink-0 animate-pulse"
                   >
                     View Reward ➔
                   </button>
@@ -1173,7 +1173,7 @@ export default function TreasureCard({
                   onChange={(e) => setGuessInput(e.target.value)}
                   placeholder="Type project or company name..."
                   style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
-                  className="flex-1 px-3.5 py-2.5 rounded-lg border-2 border-[#8b6943]/60 bg-[#fffbf2] text-[#1c0f05] text-sm sm:text-base font-bold focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:border-[#b38920] shadow-inner placeholder:font-normal placeholder:italic placeholder:text-[#8b6943]/60 transition"
+                  className="flex-1 px-3 py-2 sm:py-2.5 rounded-lg border-2 border-[#8b6943]/60 bg-[#fffbf2] text-[#1c0f05] text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:border-[#b38920] shadow-inner placeholder:font-normal placeholder:italic placeholder:text-[#8b6943]/60 transition"
                 />
                 <button
                   type="submit"
@@ -1182,7 +1182,7 @@ export default function TreasureCard({
                     clipPath:
                       'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
                   }}
-                  className="py-2.5 px-6 bg-gradient-to-b from-[#ffd700] via-[#d4af37] to-[#996515] text-[#140802] font-black text-xs sm:text-sm uppercase tracking-widest shadow-md transition hover:brightness-110 active:scale-[0.98] border-t border-[#fff9d6] cursor-pointer shrink-0"
+                  className="py-2 sm:py-2.5 px-5 bg-gradient-to-b from-[#ffd700] via-[#d4af37] to-[#996515] text-[#140802] font-black text-xs sm:text-sm uppercase tracking-widest shadow-md transition hover:brightness-110 active:scale-[0.98] border-t border-[#fff9d6] cursor-pointer shrink-0"
                 >
                   Verify Solution
                 </button>
