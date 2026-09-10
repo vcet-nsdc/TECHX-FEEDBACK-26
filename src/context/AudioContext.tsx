@@ -24,6 +24,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
   const [volume, setVolume] = useState(0.6);
+  // Mirror mute state in a ref so play() callbacks never read a stale closure
+  const isMutedRef = useRef(true);
   const bgmRef = useRef<HTMLAudioElement | null>(null);
   const buttonSoundRef = useRef<HTMLAudioElement | null>(null);
   const coinSoundRef = useRef<HTMLAudioElement | null>(null);
@@ -59,6 +61,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    isMutedRef.current = isMuted;
     if (bgmRef.current) {
       if (isMuted) {
         bgmRef.current.pause();
@@ -106,22 +109,37 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   }, [getBgm]);
 
   const playButtonSound = useCallback(() => {
-    if (isMuted) return;
+    if (isMutedRef.current) return;
     const sound = getButtonSound();
     if (sound) {
       sound.currentTime = 0;
       sound.play().catch(() => {});
     }
-  }, [isMuted, getButtonSound]);
+  }, [getButtonSound]);
 
   const playCoinSound = useCallback(() => {
-    if (isMuted) return;
+    if (isMutedRef.current) return;
     const sound = getCoinSound();
     if (sound) {
       sound.currentTime = 0;
       sound.play().catch(() => {});
     }
-  }, [isMuted, getCoinSound]);
+  }, [getCoinSound]);
+
+  // Global delegated listener: play the button sound for every button /
+  // link / role="button" click anywhere in the app (opt-out via data-no-sound)
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest('[data-no-sound]')) return;
+      if (target.closest('button, a, [role="button"]')) {
+        playButtonSound();
+      }
+    };
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, [playButtonSound]);
 
   return (
     <AudioContext.Provider value={{ isMuted, volume, toggleMute, setVolume, playButtonSound, playCoinSound }}>
