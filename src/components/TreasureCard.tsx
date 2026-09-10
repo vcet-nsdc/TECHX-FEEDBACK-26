@@ -19,6 +19,7 @@ import {
 } from '@/lib/expeditionData';
 import { useLabs } from '@/context/LabsContext';
 import PixelNathanDrake, { NathanAnimationState } from './uncharted/PixelNathanDrake';
+import ProductIcon from './ProductIcon';
 
 // Cubic bezier evaluation along map dotted trail
 function sampleCubicBezier(
@@ -1013,8 +1014,8 @@ export default function TreasureCard({
 
               {unlockedClues[2] ? (
                 <div className="flex items-center gap-3 pt-0.5">
-                  <div className="w-10 h-10 rounded-full bg-[#fef3c7] border border-[#d4af37] flex items-center justify-center text-2xl shrink-0 shadow-xs">
-                    {targetClues?.icon || targetProduct?.icon || '📦'}
+                  <div className="w-10 h-10 rounded-full bg-[#fef3c7] border border-[#d4af37] flex items-center justify-center text-2xl shrink-0 shadow-xs overflow-hidden">
+                    <ProductIcon icon={targetClues?.icon || targetProduct?.icon} fallback="📦" imgClassName="w-7 h-7" />
                   </div>
                   <p
                     style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
@@ -1155,8 +1156,8 @@ export default function TreasureCard({
             {isVerified ? (
               <div className="p-3.5 rounded-xl border-2 border-[#b38920] bg-gradient-to-r from-[#fef3c7]/80 to-[#fde68a]/60 flex items-center justify-between gap-3 shadow-md">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-b from-[#1c0f05] to-[#3a1e08] border-2 border-[#ffd700] flex items-center justify-center text-2xl shrink-0 shadow-md">
-                    {targetProduct?.icon || '🪐'}
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-b from-[#1c0f05] to-[#3a1e08] border-2 border-[#ffd700] flex items-center justify-center text-2xl shrink-0 shadow-md overflow-hidden">
+                    <ProductIcon icon={targetProduct?.icon} fallback="🪐" imgClassName="w-8 h-8" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">

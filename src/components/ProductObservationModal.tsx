@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckpointNode } from '@/lib/expeditionData';
+import ProductIcon from './ProductIcon';
 
 export interface ObservationPayload {
   rating: number;
@@ -116,9 +117,9 @@ export default function ProductObservationModal({
               )}
             </div>
 
-            {/* Product Emoji Icon */}
-            <div className="text-2xl sm:text-3xl my-0.5 select-none drop-shadow-xs">
-              {product.icon || '📦'}
+            {/* Product Logo / Emoji Icon */}
+            <div className="w-8 h-8 sm:w-10 sm:h-10 my-0.5 flex items-center justify-center overflow-hidden text-2xl sm:text-3xl select-none drop-shadow-xs">
+              <ProductIcon icon={product.icon} fallback="📦" />
             </div>
 
             {/* Big Centered Checkpoint Title */}

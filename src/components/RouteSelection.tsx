@@ -13,6 +13,7 @@ import {
 } from '@/lib/expeditionData';
 import ExpeditionStatusHeader from './ExpeditionStatusHeader';
 import TreasureCard from './TreasureCard';
+import ProductIcon from './ProductIcon';
 import { motion } from 'framer-motion';
 
 interface LabSectorConfig {
@@ -250,7 +251,9 @@ export default function RouteSelection() {
                                 : 'bg-[#241308]/10 border-[#7a481c]/35 text-[#241308]'
                             }`}
                           >
-                            <span className="text-xs sm:text-sm shrink-0 drop-shadow-xs">{cp.icon || '📦'}</span>
+                            <span className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 flex items-center justify-center overflow-hidden drop-shadow-xs">
+                              <ProductIcon icon={cp.icon} fallback="📦" imgClassName="w-full h-full" />
+                            </span>
                             <span className="truncate flex-1 font-sans font-bold text-[11px] leading-tight">
                               {cp.name}
                             </span>

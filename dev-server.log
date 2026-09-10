@@ -1,0 +1,455 @@
+
+> nextjs_tailwind_shadcn_ts@0.2.1 dev
+> next dev -p 3000
+
+▲ Next.js 16.3.3 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.6.101:3000
+- Environments: .env.local
+✓ Ready in 426ms
+⚠ Warning: Next.js ignored package-lock.json in C:\Users\varun because it is outside the current Git repository (C:\Users\varun\TECHX-FEEDBACK-26).
+ To use this directory, set `turbopack.root` in your Next.js config.
+
+✓ Running next.config.ts took 32ms
+
+ GET /admin/login 200 in 613ms (next.js: 480ms, application-code: 133ms)
+GET /api/labs failed, serving static fallback: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getLabsFromDb (src\lib\lab-service.ts:37:31)
+    at GET (src\app\api\labs\route.ts:9:37)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/labs 200 in 356ms (next.js: 56ms, application-code: 299ms)
+GET /api/labs failed, serving static fallback: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getLabsFromDb (src\lib\lab-service.ts:37:31)
+    at GET (src\app\api\labs\route.ts:9:37)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/labs 200 in 12ms (next.js: 4ms, application-code: 8ms)
+ POST /api/admin/login 401 in 52ms (next.js: 40ms, proxy.ts: 4ms, application-code: 8ms)
+ POST /api/admin/login 200 in 12ms (next.js: 3ms, proxy.ts: 3ms, application-code: 6ms)
+ GET /api/admin/session 200 in 273ms (next.js: 263ms, proxy.ts: 5ms, application-code: 5ms)
+ POST /api/admin/login 401 in 13ms (next.js: 4ms, proxy.ts: 3ms, application-code: 6ms)
+ POST /api/admin/login 200 in 15ms (next.js: 4ms, proxy.ts: 5ms, application-code: 6ms)
+ GET /api/admin/session 200 in 13ms (next.js: 5ms, proxy.ts: 3ms, application-code: 5ms)
+ POST /api/admin/login 401 in 13ms (next.js: 3ms, proxy.ts: 4ms, application-code: 6ms)
+ GET /admin/login 200 in 40ms (next.js: 7ms, application-code: 33ms)
+GET /api/labs failed, serving static fallback: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getLabsFromDb (src\lib\lab-service.ts:37:31)
+    at GET (src\app\api\labs\route.ts:9:37)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/labs 200 in 23ms (next.js: 7ms, application-code: 16ms)
+GET /api/labs failed, serving static fallback: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getLabsFromDb (src\lib\lab-service.ts:37:31)
+    at GET (src\app\api\labs\route.ts:9:37)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/labs 200 in 13ms (next.js: 4ms, application-code: 9ms)
+ POST /api/admin/login 401 in 12ms (next.js: 3ms, proxy.ts: 4ms, application-code: 5ms)
+ POST /api/admin/login 200 in 18ms (next.js: 4ms, proxy.ts: 8ms, application-code: 6ms)
+ GET /admin 200 in 70ms (next.js: 35ms, application-code: 35ms)
+ GET /admin 200 in 71ms (next.js: 14ms, application-code: 57ms)
+GET /api/admin/labs failed: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getLabsFromDb (src\lib\lab-service.ts:37:31)
+    at GET (src\app\api\admin\labs\route.ts:12:37)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/admin/labs 200 in 130ms (next.js: 50ms, proxy.ts: 13ms, application-code: 67ms)
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getFeedback (src\lib\mongo-services.ts:129:29)
+    at <unknown> (src\lib\services.ts:86:57)
+    at withMongo (src\lib\services.ts:39:18)
+    at getFeedback (src\lib\services.ts:86:24)
+    at GET (src\app\api\admin\feedback\route.ts:33:39)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+[store] Falling back to memory store: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+ GET /api/admin/feedback 200 in 281ms (next.js: 221ms, proxy.ts: 13ms, application-code: 47ms)
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getFeedbackStats (src\lib\mongo-services.ts:186:29)
+    at <unknown> (src\lib\services.ts:135:61)
+    at withMongo (src\lib\services.ts:39:18)
+    at getFeedbackStats (src\lib\services.ts:135:23)
+    at getAdminDashboardData (src\lib\services.ts:376:5)
+    at GET (src\app\api\admin\dashboard\route.ts:9:45)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getFeedbackStats (src\lib\mongo-services.ts:186:29)
+    at <unknown> (src\lib\services.ts:135:61)
+    at withMongo (src\lib\services.ts:39:18)
+    at getFeedbackStats (src\lib\services.ts:135:23)
+    at getAdminDashboardData (src\lib\services.ts:376:5)
+    at GET (src\app\api\admin\dashboard\route.ts:9:45)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getProductStatsAggregated (src\lib\mongo-services.ts:372:29)
+    at <unknown> (src\lib\services.ts:296:75)
+    at withMongo (src\lib\services.ts:39:18)
+    at getProductStats (src\lib\services.ts:296:28)
+    at async getAdminDashboardData (src\lib\services.ts:375:46)
+    at async GET (src\app\api\admin\dashboard\route.ts:9:18)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/admin/dashboard 200 in 370ms (next.js: 315ms, proxy.ts: 13ms, application-code: 42ms)
+GET /api/admin/labs failed: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getLabsFromDb (src\lib\lab-service.ts:37:31)
+    at GET (src\app\api\admin\labs\route.ts:12:37)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/admin/labs 200 in 32ms (next.js: 9ms, proxy.ts: 15ms, application-code: 8ms)
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getFeedback (src\lib\mongo-services.ts:129:29)
+    at <unknown> (src\lib\services.ts:86:57)
+    at withMongo (src\lib\services.ts:39:18)
+    at getFeedback (src\lib\services.ts:86:24)
+    at GET (src\app\api\admin\feedback\route.ts:33:39)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/admin/feedback 200 in 41ms (next.js: 18ms, proxy.ts: 14ms, application-code: 9ms)
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getFeedbackStats (src\lib\mongo-services.ts:186:29)
+    at <unknown> (src\lib\services.ts:135:61)
+    at withMongo (src\lib\services.ts:39:18)
+    at getFeedbackStats (src\lib\services.ts:135:23)
+    at getAdminDashboardData (src\lib\services.ts:376:5)
+    at GET (src\app\api\admin\dashboard\route.ts:9:45)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getFeedbackStats (src\lib\mongo-services.ts:186:29)
+    at <unknown> (src\lib\services.ts:135:61)
+    at withMongo (src\lib\services.ts:39:18)
+    at getFeedbackStats (src\lib\services.ts:135:23)
+    at getAdminDashboardData (src\lib\services.ts:376:5)
+    at GET (src\app\api\admin\dashboard\route.ts:9:45)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getProductStatsAggregated (src\lib\mongo-services.ts:372:29)
+    at <unknown> (src\lib\services.ts:296:75)
+    at withMongo (src\lib\services.ts:39:18)
+    at getProductStats (src\lib\services.ts:296:28)
+    at async getAdminDashboardData (src\lib\services.ts:375:46)
+    at async GET (src\app\api\admin\dashboard\route.ts:9:18)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/admin/dashboard 200 in 53ms (next.js: 29ms, proxy.ts: 13ms, application-code: 10ms)
+ GET /admin 200 in 55ms (next.js: 24ms, application-code: 31ms)
+ GET /admin 200 in 30ms (next.js: 7ms, application-code: 23ms)
+GET /api/admin/labs failed: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getLabsFromDb (src\lib\lab-service.ts:37:31)
+    at GET (src\app\api\admin\labs\route.ts:12:37)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/admin/labs 200 in 34ms (next.js: 9ms, proxy.ts: 14ms, application-code: 11ms)
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getFeedback (src\lib\mongo-services.ts:129:29)
+    at <unknown> (src\lib\services.ts:86:57)
+    at withMongo (src\lib\services.ts:39:18)
+    at getFeedback (src\lib\services.ts:86:24)
+    at GET (src\app\api\admin\feedback\route.ts:33:39)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/admin/feedback 200 in 47ms (next.js: 23ms, proxy.ts: 14ms, application-code: 9ms)
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getFeedbackStats (src\lib\mongo-services.ts:186:29)
+    at <unknown> (src\lib\services.ts:135:61)
+    at withMongo (src\lib\services.ts:39:18)
+    at getFeedbackStats (src\lib\services.ts:135:23)
+    at getAdminDashboardData (src\lib\services.ts:376:5)
+    at GET (src\app\api\admin\dashboard\route.ts:9:45)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getFeedbackStats (src\lib\mongo-services.ts:186:29)
+    at <unknown> (src\lib\services.ts:135:61)
+    at withMongo (src\lib\services.ts:39:18)
+    at getFeedbackStats (src\lib\services.ts:135:23)
+    at getAdminDashboardData (src\lib\services.ts:376:5)
+    at GET (src\app\api\admin\dashboard\route.ts:9:45)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getProductStatsAggregated (src\lib\mongo-services.ts:372:29)
+    at <unknown> (src\lib\services.ts:296:75)
+    at withMongo (src\lib\services.ts:39:18)
+    at getProductStats (src\lib\services.ts:296:28)
+    at async getAdminDashboardData (src\lib\services.ts:375:46)
+    at async GET (src\app\api\admin\dashboard\route.ts:9:18)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/admin/dashboard 200 in 68ms (next.js: 40ms, proxy.ts: 14ms, application-code: 15ms)
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getFeedback (src\lib\mongo-services.ts:129:29)
+    at <unknown> (src\lib\services.ts:86:57)
+    at withMongo (src\lib\services.ts:39:18)
+    at getFeedback (src\lib\services.ts:86:24)
+    at GET (src\app\api\admin\feedback\route.ts:33:39)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/admin/feedback 200 in 25ms (next.js: 6ms, proxy.ts: 14ms, application-code: 6ms)
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getFeedbackStats (src\lib\mongo-services.ts:186:29)
+    at <unknown> (src\lib\services.ts:135:61)
+    at withMongo (src\lib\services.ts:39:18)
+    at getFeedbackStats (src\lib\services.ts:135:23)
+    at getAdminDashboardData (src\lib\services.ts:376:5)
+    at GET (src\app\api\admin\dashboard\route.ts:9:45)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getFeedbackStats (src\lib\mongo-services.ts:186:29)
+    at <unknown> (src\lib\services.ts:135:61)
+    at withMongo (src\lib\services.ts:39:18)
+    at getFeedbackStats (src\lib\services.ts:135:23)
+    at getAdminDashboardData (src\lib\services.ts:376:5)
+    at GET (src\app\api\admin\dashboard\route.ts:9:45)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+[store-error] withMongo caught error: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getDb (src\lib\mongo-services.ts:24:29)
+    at collection (src\lib\mongo-services.ts:79:20)
+    at Module.getProductStatsAggregated (src\lib\mongo-services.ts:372:29)
+    at <unknown> (src\lib\services.ts:296:75)
+    at withMongo (src\lib\services.ts:39:18)
+    at getProductStats (src\lib\services.ts:296:28)
+    at async getAdminDashboardData (src\lib\services.ts:375:46)
+    at async GET (src\app\api\admin\dashboard\route.ts:9:18)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/admin/dashboard 200 in 35ms (next.js: 13ms, proxy.ts: 13ms, application-code: 10ms)
+GET /api/admin/labs failed: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getLabsFromDb (src\lib\lab-service.ts:37:31)
+    at GET (src\app\api\admin\labs\route.ts:12:37)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/admin/labs 200 in 41ms (next.js: 23ms, proxy.ts: 12ms, application-code: 6ms)
+ GET /labs 200 in 103ms (next.js: 27ms, application-code: 76ms)
+ GET /api/admin/session 200 in 25ms (next.js: 8ms, proxy.ts: 9ms, application-code: 8ms)
+ GET /api/admin/session 200 in 34ms (next.js: 17ms, proxy.ts: 11ms, application-code: 6ms)
+GET /api/labs failed, serving static fallback: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getLabsFromDb (src\lib\lab-service.ts:37:31)
+    at GET (src\app\api\labs\route.ts:9:37)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/labs 200 in 16ms (next.js: 6ms, application-code: 11ms)
+GET /api/labs failed, serving static fallback: Error: MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.
+    at getClientPromise (src\lib\mongodb.ts:31:11)
+    at getDatabase (src\lib\mongodb.ts:51:24)
+    at getLabsFromDb (src\lib\lab-service.ts:37:31)
+    at GET (src\app\api\labs\route.ts:9:37)
+  29 |
+  30 |   if (!uri) {
+> 31 |     throw new Error(
+     |           ^
+  32 |       'MONGODB_URI is not set. Add it to .env.local (e.g. mongodb://localhost:27017/feedback-portal) or configure it in your hosting provider.'
+  33 |     );
+  34 |   }
+ GET /api/labs 200 in 19ms (next.js: 8ms, application-code: 11ms)

@@ -9,6 +9,7 @@ import { setLabsCache } from '@/lib/expeditionStore';
 import { csvCell } from '@/lib/utils';
 import type { CheckpointNode, ExpeditionLab } from '@/lib/expeditionData';
 import { generateRandomizedSafeLayout } from '@/lib/mapPlacement';
+import ProductIcon, { isImageUrlIcon } from '@/components/ProductIcon';
 
 type LabKey = '1' | '2' | '3';
 
@@ -81,6 +82,8 @@ function AdminDashboard() {
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [newProductName, setNewProductName] = useState('');
   const [newProductIcon, setNewProductIcon] = useState('📦');
+  const [newProductIconMode, setNewProductIconMode] = useState<'emoji' | 'image'>('emoji');
+  const [newProductImageUrl, setNewProductImageUrl] = useState('');
 
   // Edit Product state
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -269,11 +272,16 @@ function AdminDashboard() {
     const currentLab = labs[activeLabKey];
     if (!currentLab) return;
 
+    const resolvedIcon =
+      newProductIconMode === 'image'
+        ? newProductImageUrl.trim() || '📦'
+        : newProductIcon.trim() || '📦';
+
     const newCheckpoint: CheckpointNode = {
       id: `cp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       name: newProductName.trim(),
       description: '',
-      icon: newProductIcon.trim() || '📦',
+      icon: resolvedIcon,
       x: 50,
       y: 50,
     };
@@ -557,6 +565,8 @@ function AdminDashboard() {
                   onClick={() => {
                     setNewProductName('');
                     setNewProductIcon('📦');
+                    setNewProductIconMode('emoji');
+                    setNewProductImageUrl('');
                     setShowAddProductModal(true);
                   }}
                   className="flex items-center gap-1.5 rounded-lg bg-[#c99f58] hover:bg-[#dfb46e] px-4 py-2 text-xs font-bold text-[#140c06] shadow-sm transition active:scale-95 cursor-pointer"
@@ -619,12 +629,16 @@ function AdminDashboard() {
                           {isEditing ? (
                             /* Inline Edit Form */
                             <div className="flex flex-1 flex-wrap items-center gap-2.5">
+                              <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded border border-[#4a2f1a] bg-[#18110a] text-base">
+                                <ProductIcon icon={editProductIcon} fallback="📦" />
+                              </span>
                               <input
                                 type="text"
                                 value={editProductIcon}
                                 onChange={(e) => setEditProductIcon(e.target.value)}
-                                className="w-12 rounded border border-[#4a2f1a] bg-[#18110a] px-2 py-1.5 text-center text-base text-[#fdfbf7]"
-                                title="Icon / Emoji"
+                                className="w-40 rounded border border-[#4a2f1a] bg-[#18110a] px-2 py-1.5 text-center text-xs text-[#fdfbf7]"
+                                title="Icon / Emoji or Image URL"
+                                placeholder="Emoji or Image URL"
                               />
                               <input
                                 type="text"
@@ -650,8 +664,8 @@ function AdminDashboard() {
                             /* Display Row */
                             <>
                               <div className="flex items-center gap-3 min-w-0">
-                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#18110a] text-xl border border-[#382314]">
-                                  {product.icon || '📦'}
+                                <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#18110a] text-xl border border-[#382314]">
+                                  <ProductIcon icon={product.icon} fallback="📦" />
                                 </span>
                                 <div>
                                   <h4 className="text-sm font-bold text-[#fdfbf7] truncate">
@@ -822,7 +836,9 @@ function AdminDashboard() {
                                       >
                                         <div className="flex items-center justify-between gap-2 border-b border-[#2d1b0e] pb-2">
                                           <div className="flex items-center gap-1.5 min-w-0">
-                                            <span className="text-base">{prodIcon}</span>
+                                            <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden text-base">
+                                              <ProductIcon icon={prodIcon} fallback="📦" />
+                                            </span>
                                             <span className="font-bold text-xs text-[#fdfbf7] truncate">
                                               {prodName}
                                             </span>
@@ -891,32 +907,79 @@ function AdminDashboard() {
 
               <div>
                 <label className="block text-xs font-bold text-[#c99f58] mb-1">
-                  Product Logo / Icon (Emoji)
+                  Product Logo / Icon
                 </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={newProductIcon}
-                    onChange={(e) => setNewProductIcon(e.target.value)}
-                    className="w-14 rounded-lg border border-[#382314] bg-[#0e0905] px-2 py-2 text-center text-lg text-[#fdfbf7] outline-none"
-                  />
-                  <div className="flex flex-wrap gap-1">
-                    {SUGGESTED_ICONS.slice(0, 9).map((icon) => (
-                      <button
-                        key={icon}
-                        type="button"
-                        onClick={() => setNewProductIcon(icon)}
-                        className={`flex h-7 w-7 items-center justify-center rounded border text-sm transition cursor-pointer ${
-                          newProductIcon === icon
-                            ? 'border-[#c99f58] bg-[#3a2514] text-[#c99f58]'
-                            : 'border-[#382314] bg-[#22170f] text-[#fdfbf7] hover:bg-[#2e1e12]'
-                        }`}
-                      >
-                        {icon}
-                      </button>
-                    ))}
-                  </div>
+
+                {/* Emoji / Image URL mode toggle */}
+                <div className="mb-2 flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setNewProductIconMode('emoji')}
+                    className={`rounded px-2.5 py-1 text-[11px] font-bold transition cursor-pointer ${
+                      newProductIconMode === 'emoji'
+                        ? 'bg-[#c99f58] text-[#140c06]'
+                        : 'border border-[#382314] bg-[#22170f] text-[#c99f58] hover:bg-[#2e1e12]'
+                    }`}
+                  >
+                    Emoji
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewProductIconMode('image')}
+                    className={`rounded px-2.5 py-1 text-[11px] font-bold transition cursor-pointer ${
+                      newProductIconMode === 'image'
+                        ? 'bg-[#c99f58] text-[#140c06]'
+                        : 'border border-[#382314] bg-[#22170f] text-[#c99f58] hover:bg-[#2e1e12]'
+                    }`}
+                  >
+                    Image URL (PNG / WebP)
+                  </button>
                 </div>
+
+                {newProductIconMode === 'emoji' ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={newProductIcon}
+                      onChange={(e) => setNewProductIcon(e.target.value)}
+                      className="w-14 rounded-lg border border-[#382314] bg-[#0e0905] px-2 py-2 text-center text-lg text-[#fdfbf7] outline-none"
+                    />
+                    <div className="flex flex-wrap gap-1">
+                      {SUGGESTED_ICONS.slice(0, 9).map((icon) => (
+                        <button
+                          key={icon}
+                          type="button"
+                          onClick={() => setNewProductIcon(icon)}
+                          className={`flex h-7 w-7 items-center justify-center rounded border text-sm transition cursor-pointer ${
+                            newProductIcon === icon
+                              ? 'border-[#c99f58] bg-[#3a2514] text-[#c99f58]'
+                              : 'border-[#382314] bg-[#22170f] text-[#fdfbf7] hover:bg-[#2e1e12]'
+                          }`}
+                        >
+                          {icon}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#382314] bg-[#0e0905] text-lg">
+                      <ProductIcon icon={newProductImageUrl} fallback="📦" />
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="https://example.com/logo.png or /tablet/coins.webp"
+                      value={newProductImageUrl}
+                      onChange={(e) => setNewProductImageUrl(e.target.value)}
+                      className="w-full rounded-lg border border-[#382314] bg-[#0e0905] px-3 py-2 text-xs font-semibold text-[#fdfbf7] placeholder-[#7d6550] outline-none focus:border-[#c99f58]"
+                    />
+                  </div>
+                )}
+                {newProductIconMode === 'image' && newProductImageUrl.trim() !== '' && !isImageUrlIcon(newProductImageUrl) && (
+                  <p className="mt-1 text-[10px] text-[#f59e0b]">
+                    Tip: use a full URL (https://…), a data:image URI, or a /public path ending in .png/.webp/.jpg/.svg
+                  </p>
+                )}
               </div>
             </div>
 

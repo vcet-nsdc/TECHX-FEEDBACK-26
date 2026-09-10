@@ -64,15 +64,11 @@ export function verifySessionToken(token: string | null | undefined): boolean {
 }
 
 export function verifyAdminCredentials(username: string, password: string): boolean {
-  const expectedUsername =
-    process.env.ADMIN_USERNAME ||
-    process.env.USERNAME ||
-    'vcet-nsdc';
-  const expectedPassword =
-    process.env.ADMIN_PASSWORD ||
-    process.env.Password ||
-    process.env.PASSWORD ||
-    'AIDS@2026';
+  // Only trust explicit ADMIN_USERNAME / ADMIN_PASSWORD env vars.
+  // Never fall back to generic OS env vars (e.g. Windows USERNAME) —
+  // those leak machine-specific values and silently break documented logins.
+  const expectedUsername = process.env.ADMIN_USERNAME || 'vcet-nsdc';
+  const expectedPassword = process.env.ADMIN_PASSWORD || 'AIDS@2026';
   const expectedPasswordHash = process.env.ADMIN_PASSWORD_HASH;
 
   const usernameOk = safeEqual(username.trim(), expectedUsername.trim());

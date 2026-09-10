@@ -11,6 +11,7 @@ import {
   CheckpointNode,
 } from '@/lib/expeditionData';
 import ProductObservationModal from './ProductObservationModal';
+import ProductIcon from './ProductIcon';
 import { CheckpointIcon } from './RusticIcons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { enqueueSubmission, fetchWithTimeout } from '@/lib/offline-queue';
@@ -749,9 +750,9 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                           <div className="absolute -left-0.5 w-0.5 h-1 bg-[#8c6d23] rounded-full pointer-events-none" />
                           <div className="absolute -right-0.5 w-0.5 h-1 bg-[#8c6d23] rounded-full pointer-events-none" />
 
-                          {/* Product Emoji Icon (Future Logo spot) */}
-                          <span className="text-xs sm:text-sm leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] select-none">
-                            {product.icon || '📦'}
+                          {/* Product Logo / Emoji Icon */}
+                          <span className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center overflow-hidden leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] select-none">
+                            <ProductIcon icon={product.icon} fallback="📦" imgClassName="w-full h-full" />
                           </span>
 
                           {/* Completed checkmark badge */}
@@ -1003,7 +1004,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                           : 'bg-[#2B1B11] text-[#D4AF37] border border-[#8A6839]'
                       }`}
                     >
-                      {product.icon || '📦'}
+                      <ProductIcon icon={product.icon} fallback="📦" imgClassName="w-6 h-6" />
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm font-bold text-[#F5E6CC] truncate font-['Cinzel',_serif] flex items-center gap-1.5">
