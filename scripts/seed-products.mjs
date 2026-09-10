@@ -42,46 +42,69 @@ function loadEnv() {
 
 loadEnv();
 
-const uri = process.env.MONGODB_URI;
+function normalizeMongoUri(rawUri) {
+  if (rawUri.includes('mongodb+srv://') && rawUri.includes('feedback-26.oskfbzz.mongodb.net')) {
+    const credMatch = rawUri.match(/mongodb\+srv:\/\/([^@]+)@/);
+    const creds = credMatch ? `${credMatch[1]}@` : '';
+    return `mongodb://${creds}ac-kfmjx7c-shard-00-00.oskfbzz.mongodb.net:27017,ac-kfmjx7c-shard-00-01.oskfbzz.mongodb.net:27017,ac-kfmjx7c-shard-00-02.oskfbzz.mongodb.net:27017/techx-feedback-2026?ssl=true&replicaSet=atlas-5vxff4-shard-0&authSource=admin&retryWrites=true&w=majority&appName=FeedBack-26`;
+  }
+  return rawUri;
+}
+
+const rawUri = process.env.MONGODB_URI;
 const dbName = process.env.DB_NAME || 'techx-feedback-2026';
 
-if (!uri) {
+if (!rawUri) {
   console.error('\x1b[31m[ERROR]\x1b[0m MONGODB_URI is not defined in .env.local or environment.');
   process.exit(1);
 }
 
-// 7 in Lab 502
+const uri = normalizeMongoUri(rawUri);
+
+// 10 in Lab 502
 export const PRODUCTS_LAB_502 = [
-  { id: 'c1-p1', name: 'ASSETORBIT', icon: '🪐', description: 'Asset management and orbital telemetry tracking platform.', x: 35, y: 20 },
-  { id: 'c1-p2', name: 'SUNTECH TECHNOLOGY', icon: '☀️', description: 'Solar intelligence and smart power distribution matrix.', x: 74, y: 22 },
-  { id: 'c1-p3', name: 'ABCD IT SOLUTIONS', icon: '💻', description: 'Enterprise IT infrastructure and software acceleration.', x: 82, y: 40 },
-  { id: 'c1-p4', name: 'ADSNEX AI', icon: '🤖', description: 'Next-generation neural targeting and AI analytics engine.', x: 44, y: 46 },
-  { id: 'c1-p5', name: 'META GLASSES', icon: '👓', description: 'Augmented reality vision and spatial computing interface.', x: 76, y: 58 },
-  { id: 'c1-p6', name: 'OPTINEXT GLOBAL.IN', icon: '🌐', description: 'Global optical networking and low-latency routing gateway.', x: 34, y: 68 },
-  { id: 'c1-p7', name: 'PRELAUNCH', icon: '🚀', description: 'Product readiness telemetry and agile launchpad monitor.', x: 66, y: 76 },
+  { id: 'c1-p1', name: 'ASSETORBIT', icon: '🪐', description: 'Asset management and orbital telemetry tracking platform.', x: 32, y: 18 },
+  { id: 'c1-p2', name: 'SYNKARO', icon: '🔄', description: 'Real-time synchronization and cross-platform data orchestration engine.', x: 55, y: 16 },
+  { id: 'c1-p3', name: 'ABCD IT SOLUTIONS', icon: '💻', description: 'Enterprise IT infrastructure and digital solutions architecture.', x: 78, y: 22 },
+  { id: 'c1-p4', name: 'MAITRI', icon: '🤝', description: 'Inclusive assistive intelligence and community collaboration platform.', x: 84, y: 38 },
+  { id: 'c1-p5', name: 'R DISCOVERY', icon: '🔬', description: 'Academic paper recommendation and scholarly literature discovery suite.', x: 58, y: 42 },
+  { id: 'c1-p6', name: 'PAPERPAL', icon: '📝', description: 'AI-powered scholarly writing assistant and manuscript editor.', x: 34, y: 48 },
+  { id: 'c1-p7', name: 'ADSNEX AI', icon: '🤖', description: 'Next-generation neural targeting and predictive marketing AI engine.', x: 52, y: 60 },
+  { id: 'c1-p8', name: 'META GLASSES', icon: '👓', description: 'Smart augmented reality vision and spatial audio computing interface.', x: 78, y: 64 },
+  { id: 'c1-p9', name: 'OPTINEXT', icon: '🌐', description: 'Global optical networking and low-latency optical routing gateway.', x: 62, y: 78 },
+  { id: 'c1-p10', name: 'LED LIGHT (frequency)', icon: '💡', description: 'Tunable high-frequency illumination and optical frequency analysis system.', x: 35, y: 80 },
 ];
 
-// 7 in Lab 508
+// 5 in Lab 508
 export const PRODUCTS_LAB_508 = [
-  { id: 'c2-p1', name: 'MAITRI', icon: '🤝', description: 'Collaborative community intelligence and inclusive assistive tech.', x: 32, y: 20 },
-  { id: 'c2-p2', name: 'R DISCOVERY', icon: '🔬', description: 'Academic paper recommendation and research synthesis platform.', x: 72, y: 24 },
-  { id: 'c2-p3', name: 'PAPERPAL', icon: '📝', description: 'Real-time scholarly writing assistance and citation analysis.', x: 80, y: 42 },
-  { id: 'c2-p4', name: 'LED LIGHT (frequency)', icon: '💡', description: 'High-frequency tunable illumination and stroboscopic telemetry.', x: 44, y: 48 },
-  { id: 'c2-p5', name: 'SETH COMPUTERS', icon: '🖥️', description: 'Custom computing architectures and high-throughput systems.', x: 74, y: 60 },
-  { id: 'c2-p6', name: 'ANAY IT SOLUTIONS', icon: '📊', description: 'Business analytics and agile technology infrastructure.', x: 30, y: 70 },
-  { id: 'c2-p7', name: 'SHIVAM STOCKS', icon: '📈', description: 'Real-time equity market analysis and algorithmic trading signals.', x: 62, y: 78 },
+  { id: 'c2-p1', name: 'BYTEVERSE', icon: '🌌', description: 'Decentralized spatial metaverse and interactive 3D virtual environment.', x: 34, y: 22 },
+  { id: 'c2-p2', name: 'IN-OUT DESK', icon: '🪑', description: 'Smart biometric ergonomic workstation and attendance tracking telemetry.', x: 76, y: 28 },
+  { id: 'c2-p3', name: 'MEND-X', icon: '🩹', description: 'Automated digital first-aid and rapid medical triage assistant.', x: 48, y: 48 },
+  { id: 'c2-p4', name: 'DEUEX', icon: '⚡', description: 'Portable dual-display productivity setup and visual hardware interface.', x: 78, y: 66 },
+  { id: 'c2-p5', name: 'ASTRON', icon: '🔭', description: 'Advanced space exploration telemetry and celestial observation platform.', x: 36, y: 76 },
 ];
 
-// 8 in Lab 509
+// 10 in Lab 509
 export const PRODUCTS_LAB_509 = [
-  { id: 'c3-p1', name: 'SAMSUNG ECOSYSTEM', icon: '📱', description: 'Unified multi-device interconnectivity and smart home relay.', x: 35, y: 18 },
-  { id: 'c3-p2', name: 'ios', icon: '🍏', description: 'Modern iOS application ecosystem and mobile experience stack.', x: 72, y: 22 },
-  { id: 'c3-p3', name: 'AVG', icon: '🛡️', description: 'Real-time threat detection and endpoint cybersecurity shield.', x: 82, y: 36 },
-  { id: 'c3-p4', name: 'Robotic arm', icon: '🦾', description: 'Precision multi-axis articulated robotic arm for automated tasks.', x: 46, y: 42 },
-  { id: 'c3-p5', name: 'robot', icon: '🤖', description: 'Autonomous mobile robot with LIDAR navigation and obstacle avoidance.', x: 70, y: 54 },
-  { id: 'c3-p6', name: 'Byteverse', icon: '🪐', description: 'Decentralized digital realm and interactive 3D virtual environment.', x: 28, y: 62 },
-  { id: 'c3-p7', name: 'In-Out Desk', icon: '🪑', description: 'Smart biometric ergonomic workstation and attendance tracking.', x: 55, y: 72 },
-  { id: 'c3-p8', name: 'Mend-x', icon: '🩹', description: 'Automated digital first-aid and medical diagnostics assistant.', x: 78, y: 80 },
+  { id: 'c3-p1', name: 'SETH COMPUTERS', icon: '🖥️', description: 'High-performance computing architectures and customized workstation systems.', x: 34, y: 18 },
+  { id: 'c3-p2', name: 'ANAY IT SOLUTIONS', icon: '📊', description: 'Business intelligence analytics and agile enterprise cloud services.', x: 56, y: 16 },
+  { id: 'c3-p3', name: 'SHIVAM STOCK', icon: '📈', description: 'Real-time financial market analytics and stock portfolio intelligence.', x: 78, y: 24 },
+  { id: 'c3-p4', name: 'SAMSUNG ECOSYSTEMS', icon: '📱', description: 'Interconnected multi-device smart ecosystem and unified mobile relay.', x: 84, y: 38 },
+  { id: 'c3-p5', name: 'IOS SYSTEM', icon: '🍏', description: 'Modern iOS application ecosystem and mobile experience stack.', x: 56, y: 42 },
+  { id: 'c3-p6', name: 'SYNERGY AUTOMATION', icon: '⚙️', description: 'Industrial process automation and coordinated smart workflow integration.', x: 32, y: 48 },
+  { id: 'c3-p7', name: 'TECH SAI CARE', icon: '🩺', description: 'Digital healthcare monitoring and smart medical diagnostic telemetry.', x: 54, y: 58 },
+  { id: 'c3-p8', name: 'FODUU', icon: '🚀', description: 'Creative web development, digital solutions and interactive web portal design.', x: 78, y: 64 },
+  { id: 'c3-p9', name: 'AVG', icon: '🛡️', description: 'Real-time cybersecurity shield and endpoint threat prevention system.', x: 64, y: 78 },
+  { id: 'c3-p10', name: 'ROBOT', icon: '🤖', description: 'Autonomous mobile robot with precision navigation and obstacle avoidance.', x: 34, y: 80 },
+];
+
+// 5 in Lab 510
+export const PRODUCTS_LAB_510 = [
+  { id: 'c4-p1', name: 'GLOBALNET', icon: '📡', description: 'Worldwide distributed telecommunications network and high-capacity satellite routing.', x: 34, y: 22 },
+  { id: 'c4-p2', name: 'LEARNIMO', icon: '📚', description: 'Interactive gamified learning platform and adaptive digital education suite.', x: 76, y: 28 },
+  { id: 'c4-p3', name: 'TECH CRYPTERS', icon: '🔐', description: 'Next-gen cryptographic protocols and decentralized blockchain security ledger.', x: 48, y: 48 },
+  { id: 'c4-p4', name: 'MICROSOFT POWER AUTOMATE', icon: '⚡', description: 'Enterprise robotic process automation and cross-service workflow streamlining.', x: 78, y: 66 },
+  { id: 'c4-p5', name: 'MICROSOFT ACCESS', icon: '🗄️', description: 'Rapid database application system and structured data inventory management.', x: 36, y: 76 },
 ];
 
 const LAB_CONFIG = {
@@ -112,7 +135,7 @@ const LAB_CONFIG = {
     chapterNumber: 'Chapter II',
     name: 'Lab 508',
     title: 'LAB 508',
-    subtitle: 'Explore research assistants, smart frequency systems, and market platforms.',
+    subtitle: 'Explore spatial metaverses, ergonomic desks, triage tech, and space platforms.',
     badgeTitle: 'Lab 508 Mastered',
     fragmentId: '2',
     fragmentName: 'Magellan Cross Key',
@@ -132,7 +155,7 @@ const LAB_CONFIG = {
     chapterNumber: 'Chapter III',
     name: 'Lab 509',
     title: 'LAB 509',
-    subtitle: 'Inspect mobile ecosystems, cybersecurity tools, robotics, and smart desks.',
+    subtitle: 'Inspect mobile ecosystems, cybersecurity tools, robotics, and smart automation.',
     badgeTitle: 'Lab 509 Mastered',
     fragmentId: '3',
     fragmentName: 'King’s Astrolabe Crest',
@@ -144,6 +167,26 @@ const LAB_CONFIG = {
     coreGlow: '#fef08a',
     badgeClass: 'bg-[#9a3412]/20 text-[#c2410c] border-[#ea580c]/40',
     checkpoints: PRODUCTS_LAB_509,
+  },
+  '4': {
+    id: '4',
+    labId: '4',
+    sourceLab: '4',
+    chapterNumber: 'Chapter IV',
+    name: 'Lab 510',
+    title: 'LAB 510',
+    subtitle: 'Discover global networks, learning platforms, crypto security, and database systems.',
+    badgeTitle: 'Lab 510 Mastered',
+    fragmentId: '4',
+    fragmentName: 'Dune Sunstone Talisman',
+    fragmentImage: '/assets/images/avery-pirate-coin.webp',
+    mapImage: '/assets/images/journal-spread-lab4.webp',
+    themeType: 'desert',
+    inkColor: '#2b1b04',
+    glowColor: '#d97706',
+    coreGlow: '#fef3c7',
+    badgeClass: 'bg-[#b45309]/20 text-[#d97706] border-[#d97706]/40',
+    checkpoints: PRODUCTS_LAB_510,
   },
 };
 
@@ -179,10 +222,11 @@ async function seedProducts() {
     }
 
     console.log('\n\x1b[32m========================================\x1b[0m');
-    console.log('\x1b[1m\x1b[32m  All 22 Products Seeded Successfully! \x1b[0m');
-    console.log('  Lab 502: 7 products');
-    console.log('  Lab 508: 7 products');
-    console.log('  Lab 509: 8 products');
+    console.log('\x1b[1m\x1b[32m  All 30 Products Seeded Successfully! \x1b[0m');
+    console.log('  Lab 502: 10 products');
+    console.log('  Lab 508: 5 products');
+    console.log('  Lab 509: 10 products');
+    console.log('  Lab 510: 5 products');
     console.log('\x1b[32m========================================\x1b[0m\n');
   } catch (err) {
     console.error('\x1b[31m[ERROR] Failed to seed products:\x1b[0m', err.message || err);

@@ -14,9 +14,31 @@ export default function ExpeditionBottomDock() {
 
   const userEmail = user?.email || 'explorer@field.recon';
 
-  // Do not show on landing page ('/'), admin routes, leaderboard, or finish certificate
+  // Check if certificate downloaded / expedition concluded
+  const [isConcluded, setIsConcluded] = useState(false);
+
+  useEffect(() => {
+    const check = () => {
+      if (typeof window === 'undefined') return;
+      const email = (userEmail || '').trim().toLowerCase();
+      const c1 = Boolean(email && localStorage.getItem(`techx_certificate_downloaded_${email}`) === 'true');
+      const c2 = Boolean(email && localStorage.getItem(`techx_expedition_concluded_${email}`) === 'true');
+      const c3 = localStorage.getItem('techx_certificate_downloaded_global') === 'true';
+      setIsConcluded(c1 || c2 || c3);
+    };
+    check();
+    window.addEventListener('certificateDownloaded', check);
+    window.addEventListener('storage', check);
+    return () => {
+      window.removeEventListener('certificateDownloaded', check);
+      window.removeEventListener('storage', check);
+    };
+  }, [userEmail]);
+
+  // Do not show on landing page ('/'), admin routes, leaderboard, finish certificate, or when concluded
   const shouldHide =
     !pathname ||
+    isConcluded ||
     pathname === '/' ||
     pathname.startsWith('/admin') ||
     pathname === '/finish' ||

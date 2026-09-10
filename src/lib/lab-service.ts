@@ -26,7 +26,7 @@ function sanitizeLabs(raw: Record<string, unknown>): Record<string, ExpeditionLa
     if (lab && lab.id && Array.isArray(lab.checkpoints)) {
       result[key] = {
         ...lab,
-        checkpoints: lab.checkpoints.slice(0, 10),
+        checkpoints: lab.checkpoints.slice(0, 20),
       };
     }
   }

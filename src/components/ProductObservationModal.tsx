@@ -13,6 +13,8 @@ export interface ObservationPayload {
 interface ProductObservationModalProps {
   product: CheckpointNode;
   isSubmitted: boolean;
+  isLabSealed?: boolean;
+  userEmail?: string;
   onClose: () => void;
   onSuccess: (payload: ObservationPayload) => void;
 }
@@ -20,17 +22,36 @@ interface ProductObservationModalProps {
 export default function ProductObservationModal({
   product,
   isSubmitted,
+  isLabSealed = false,
+  userEmail,
   onClose,
   onSuccess,
 }: ProductObservationModalProps) {
   const [rating, setRating] = useState<number>(isSubmitted ? 5 : 0);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [feedback, setFeedback] = useState<string>('');
+  const [savedNotes, setSavedNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const coinRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
+
+  const isLocked = isSubmitted || isLabSealed;
+
+  // Load saved note if previously submitted
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const email = userEmail || 'user@techx.in';
+        const key = `checkpointNotes_${email}`;
+        const stored = JSON.parse(localStorage.getItem(key) || '{}') as Record<string, string>;
+        if (stored[product.id]) {
+          setSavedNotes(stored[product.id]);
+        }
+      } catch {}
+    }
+  }, [product.id, userEmail]);
 
   // Clear the fake-submit timer if the modal unmounts mid-flight.
   useEffect(() => {
@@ -41,9 +62,9 @@ export default function ProductObservationModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (rating === 0) return;
+    if (isLocked || rating === 0) return;
 
-    // 1. Calculate origin from the exact selected rating coin (e.g. 4th coin for rating 4)
+    // 1. Calculate origin from the exact selected rating coin
     let startX = typeof window !== 'undefined' ? window.innerWidth / 2 : 200;
     let startY = typeof window !== 'undefined' ? window.innerHeight / 2 : 300;
 
@@ -58,7 +79,7 @@ export default function ProductObservationModal({
       startY = rect.top + rect.height / 2;
     }
 
-    // 2. Trigger the train-path coin animation starting from that exact rating coin
+    // 2. Trigger the train-path coin animation
     const coinCount = Math.max(1, Math.min(5, rating || 4));
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
@@ -102,17 +123,17 @@ export default function ProductObservationModal({
           </span>
         </button>
 
-        {/* Printable Safe Parchment Content (Centered & Lowered for Balance) */}
+        {/* Printable Safe Parchment Content */}
         <div className="absolute inset-0 pt-[21%] pb-[14%] px-[12%] sm:px-[14%] flex flex-col justify-between overflow-hidden">
-          {/* 1. Header (Centered, Prominent, Lowered into Open Parchment) */}
+          {/* 1. Header */}
           <div className="flex flex-col items-center text-center border-b border-[#8b6943]/35 pb-1.5">
             <div className="flex items-center justify-center gap-2 mb-0.5">
               <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] text-[#7a481c] font-['Cinzel',_serif]">
-                RECON DOSSIER // OBSERVATION
+                {isLocked ? 'ARCHIVED DOSSIER // SEALED' : 'RECON DOSSIER // OBSERVATION'}
               </span>
-              {isSubmitted && (
-                <span className="rotate-[-2deg] border border-[#8b261d] px-1.5 py-0.2 rounded bg-[#8b261d]/15 text-[#8b261d] font-mono font-bold text-[8.5px] tracking-wider uppercase">
-                  LOGGED ✓
+              {isLocked && (
+                <span className="rotate-[-2deg] border border-[#166534] px-1.5 py-0.2 rounded bg-emerald-800/15 text-emerald-900 font-mono font-bold text-[8.5px] tracking-wider uppercase">
+                  SEALED ✦
                 </span>
               )}
             </div>
@@ -133,97 +154,162 @@ export default function ProductObservationModal({
             </p>
           </div>
 
-          {/* 2. Feedback Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-2 flex-1 justify-end pt-1">
-            {/* Avery Pirate Coin Rating */}
-            <div>
-              <div className="flex items-center justify-between mb-1 px-0.5">
-                <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] text-[#5c3e21] font-['Cinzel',_serif]">
-                  Sector Reliability <span className="text-[#8b261d] font-black">*</span>
-                </label>
+          {/* 2. Content Area */}
+          {isLocked ? (
+            /* SEALED / READ-ONLY VIEW: Option to send review again is REMOVED */
+            <div className="flex flex-col gap-2.5 flex-1 justify-center pt-1 text-center">
+              {/* Read-Only Inked Coins Well */}
+              <div>
+                <div className="flex items-center justify-between mb-1 px-0.5">
+                  <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] text-[#5c3e21] font-['Cinzel',_serif]">
+                    Sector Reliability
+                  </label>
+                  <span className="text-[10px] font-mono font-bold text-emerald-800 bg-emerald-800/10 px-1.5 py-0.5 rounded border border-emerald-700/30">
+                    5 / 5 Verified ✦
+                  </span>
+                </div>
 
-                <span className="text-[10px] font-mono font-bold text-[#7a481c]">
-                  {rating > 0 ? `${rating} / 5 Coins` : 'Select Rating'}
-                </span>
-              </div>
-
-              {/* Recessed Leather Coin Well */}
-              <div className="flex items-center justify-between px-2.5 py-1 rounded bg-[#241308]/10 border border-[#7a481c]/30 shadow-inner">
-                {[1, 2, 3, 4, 5].map((coinIndex) => {
-                  const filled = coinIndex <= (hoverRating || rating);
-                  return (
-                    <button
-                      key={coinIndex}
-                      ref={(el) => {
-                        coinRefs.current[coinIndex - 1] = el;
-                      }}
-                      type="button"
-                      onClick={() => setRating(coinIndex)}
-                      onMouseEnter={() => setHoverRating(coinIndex)}
-                      onMouseLeave={() => setHoverRating(0)}
-                      className="group relative transition-transform duration-150 hover:scale-115 active:scale-95 focus:outline-none cursor-pointer p-0.5"
-                    >
-                      {filled && (
-                        <span className="absolute inset-0 rounded-full bg-amber-400/30 blur-sm pointer-events-none" />
-                      )}
-
+                <div className="flex items-center justify-center gap-2.5 py-1.5 px-3 rounded bg-[#241308]/10 border border-[#7a481c]/30 shadow-inner">
+                  {[1, 2, 3, 4, 5].map((coinIndex) => (
+                    <div key={coinIndex} className="relative p-0.5">
                       <img
                         src="/assets/images/avery-pirate-coin.webp"
-                        alt={`Rating Coin ${coinIndex}`}
-                        className={`relative w-7 h-7 sm:w-8 sm:h-8 object-contain transition-all duration-150 ${
-                          filled
-                            ? 'opacity-100 drop-shadow-[0_2px_6px_rgba(212,175,55,0.75)] brightness-110 contrast-110 scale-105'
-                            : 'opacity-30 grayscale brightness-50 contrast-90 group-hover:opacity-75 group-hover:grayscale-0'
-                        }`}
+                        alt="Sealed Rating Coin"
+                        className="w-7 h-7 sm:w-8 sm:h-8 object-contain opacity-100 drop-shadow-[0_2px_6px_rgba(212,175,55,0.75)] brightness-110 contrast-110"
                       />
-                    </button>
-                  );
-                })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recorded Observations Entry Box */}
+              <div className="p-2 sm:p-2.5 rounded bg-[#f7f0e3]/95 border border-[#8b6943]/40 shadow-inner flex flex-col gap-1 text-left">
+                <div className="flex items-center justify-between border-b border-[#8b6943]/20 pb-0.5">
+                  <span className="text-[9px] font-mono font-bold uppercase text-[#7a481c]">
+                    {isLabSealed ? 'LAB STATUS' : 'SURVEYOR LOG'}
+                  </span>
+                  <span className="text-[8px] font-mono font-extrabold text-[#8b261d] tracking-widest uppercase">
+                    LOCKED RECORD
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-[#3d240f] font-[family-name:var(--font-handwriting)] italic leading-tight">
+                  &quot;{savedNotes || (isSubmitted ? 'Observations officially recorded and verified in expedition archives.' : 'This lab is fully completed and sealed. No further submissions permitted.')}&quot;
+                </p>
+              </div>
+
+              {/* Action Button: Sealed Notice & Close Only (NO Submit Button) */}
+              <div className="pt-1 flex flex-col items-center gap-1">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  style={{
+                    clipPath:
+                      'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
+                  }}
+                  className="w-full py-2.5 sm:py-3 px-4 font-black text-[10px] sm:text-xs uppercase tracking-widest bg-gradient-to-b from-[#2e1a0d] via-[#201207] to-[#120803] text-[#f5ebd7] hover:text-[#ffd700] border-t border-[#d4af37]/60 rounded shadow-md cursor-pointer transition active:scale-[0.98] flex items-center justify-center gap-2 font-['Cinzel',_serif]"
+                >
+                  <span>✦ {isLabSealed ? 'LAB SEALED (CLOSE)' : 'OBSERVATION SEALED (CLOSE)'} ✦</span>
+                </button>
+                <span className="text-[8.5px] sm:text-[9px] font-mono text-[#8b4513] italic text-center">
+                  {isLabSealed
+                    ? 'All reviews for this lab are finalized and closed.'
+                    : 'Re-submitting reviews for completed checkpoints is disabled.'}
+                </span>
               </div>
             </div>
+          ) : (
+            /* 2. Editable Feedback Form (First-time submission only) */
+            <form onSubmit={handleSubmit} className="flex flex-col gap-2 flex-1 justify-end pt-1">
+              {/* Avery Pirate Coin Rating */}
+              <div>
+                <div className="flex items-center justify-between mb-1 px-0.5">
+                  <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] text-[#5c3e21] font-['Cinzel',_serif]">
+                    Sector Reliability <span className="text-[#8b261d] font-black">*</span>
+                  </label>
 
-            {/* Surveyor Observations Textarea */}
-            <div>
-              <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] text-[#5c3e21] font-['Cinzel',_serif] mb-0.5 px-0.5">
-                Surveyor Notes & Impressions
-              </label>
+                  <span className="text-[10px] font-mono font-bold text-[#7a481c]">
+                    {rating > 0 ? `${rating} / 5 Coins` : 'Select Rating'}
+                  </span>
+                </div>
 
-              <textarea
-                rows={2}
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Inscribe telemetry findings or impressions..."
-                className="w-full p-2 rounded bg-[#f7f0e3]/95 text-[#1f1006] placeholder-[#8c6f4b]/70 text-base sm:text-sm font-[family-name:var(--font-handwriting)] font-semibold focus:outline-none focus:ring-1.5 focus:ring-[#7a481c] resize-none shadow-inner border border-[#7a481c]/40 leading-snug"
-              />
-            </div>
+                {/* Recessed Leather Coin Well */}
+                <div className="flex items-center justify-between px-2.5 py-1 rounded bg-[#241308]/10 border border-[#7a481c]/30 shadow-inner">
+                  {[1, 2, 3, 4, 5].map((coinIndex) => {
+                    const filled = coinIndex <= (hoverRating || rating);
+                    return (
+                      <button
+                        key={coinIndex}
+                        ref={(el) => {
+                          coinRefs.current[coinIndex - 1] = el;
+                        }}
+                        type="button"
+                        onClick={() => setRating(coinIndex)}
+                        onMouseEnter={() => setHoverRating(coinIndex)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="group relative transition-transform duration-150 hover:scale-115 active:scale-95 focus:outline-none cursor-pointer p-0.5"
+                      >
+                        {filled && (
+                          <span className="absolute inset-0 rounded-full bg-amber-400/30 blur-sm pointer-events-none" />
+                        )}
 
-            {/* Action Plaque Button (Positioned Cleanly Inside Parchment Above Bottom Rim) */}
-            <div className="pt-0.5">
-              <button
-                ref={submitButtonRef}
-                type="submit"
-                disabled={rating === 0 || isSubmitting}
-                style={{
-                  clipPath:
-                    'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
-                }}
-                className={`w-full py-2 sm:py-2.5 px-4 font-black text-[10px] sm:text-xs uppercase tracking-widest transition flex items-center justify-center gap-2 font-['Cinzel',_serif] shadow-md touch-manipulation cursor-pointer border-t border-[#fff3cc]/60 ${
-                  rating > 0 && !isSubmitting
-                    ? 'bg-gradient-to-b from-[#d4af37] via-[#b38920] to-[#7a5214] text-[#140802] hover:brightness-110 active:scale-[0.98]'
-                    : 'bg-[#5c3e21]/40 text-[#241308]/40 cursor-not-allowed border-none'
-                }`}
-              >
-                {isSubmitting ? (
-                  <span>Inking Observations...</span>
-                ) : (
-                  <>
-                    <span>{isSubmitted ? 'Update Checkpoint Notes' : 'Seal & Submit Observations'}</span>
-                    <span>➔</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+                        <img
+                          src="/assets/images/avery-pirate-coin.webp"
+                          alt={`Rating Coin ${coinIndex}`}
+                          className={`relative w-7 h-7 sm:w-8 sm:h-8 object-contain transition-all duration-150 ${
+                            filled
+                              ? 'opacity-100 drop-shadow-[0_2px_6px_rgba(212,175,55,0.75)] brightness-110 contrast-110 scale-105'
+                              : 'opacity-30 grayscale brightness-50 contrast-90 group-hover:opacity-75 group-hover:grayscale-0'
+                          }`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Surveyor Observations Textarea */}
+              <div>
+                <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] text-[#5c3e21] font-['Cinzel',_serif] mb-0.5 px-0.5">
+                  Surveyor Notes & Impressions
+                </label>
+
+                <textarea
+                  rows={2}
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  placeholder="Inscribe telemetry findings or impressions..."
+                  className="w-full p-2 rounded bg-[#f7f0e3]/95 text-[#1f1006] placeholder-[#8c6f4b]/70 text-base sm:text-sm font-[family-name:var(--font-handwriting)] font-semibold focus:outline-none focus:ring-1.5 focus:ring-[#7a481c] resize-none shadow-inner border border-[#7a481c]/40 leading-snug"
+                />
+              </div>
+
+              {/* Action Plaque Button */}
+              <div className="pt-0.5">
+                <button
+                  ref={submitButtonRef}
+                  type="submit"
+                  disabled={rating === 0 || isSubmitting}
+                  style={{
+                    clipPath:
+                      'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
+                  }}
+                  className={`w-full py-2 sm:py-2.5 px-4 font-black text-[10px] sm:text-xs uppercase tracking-widest transition flex items-center justify-center gap-2 font-['Cinzel',_serif] shadow-md touch-manipulation cursor-pointer border-t border-[#fff3cc]/60 ${
+                    rating > 0 && !isSubmitting
+                      ? 'bg-gradient-to-b from-[#d4af37] via-[#b38920] to-[#7a5214] text-[#140802] hover:brightness-110 active:scale-[0.98]'
+                      : 'bg-[#5c3e21]/40 text-[#241308]/40 cursor-not-allowed border-none'
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <span>Inking Observations...</span>
+                  ) : (
+                    <>
+                      <span>Seal & Submit Observations</span>
+                      <span>➔</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </motion.div>
     </div>

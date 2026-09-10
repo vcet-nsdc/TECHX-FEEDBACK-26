@@ -13,6 +13,8 @@ import {
 import ExpeditionStatusHeader from './ExpeditionStatusHeader';
 import TreasureCard from './TreasureCard';
 import ProductIcon from './ProductIcon';
+import CertificateModal from './CertificateModal';
+import ThankYouScreen from './ThankYouScreen';
 import { motion } from 'framer-motion';
 
 interface LabSectorConfig {
@@ -21,10 +23,10 @@ interface LabSectorConfig {
 }
 
 const LAB_CONFIGS: Record<string, LabSectorConfig> = {
-  '1': { number: '502', bgImage: '/earthy-cards.png' },
-  '2': { number: '508', bgImage: '/icey-cards.png' },
-  '3': { number: '509', bgImage: '/lava-cards.png' },
-  '4': { number: '510', bgImage: '/desert-cards.png' },
+  '1': { number: '502', bgImage: '/cards/jungle.png' },
+  '2': { number: '508', bgImage: '/cards/ice.png' },
+  '3': { number: '509', bgImage: '/cards/lava.png' },
+  '4': { number: '510', bgImage: '/cards/dessert.png' },
 };
 
 function getLabSectorConfig(lab: ExpeditionLab, index: number): LabSectorConfig {
@@ -37,7 +39,7 @@ function getLabSectorConfig(lab: ExpeditionLab, index: number): LabSectorConfig 
     return byId;
   }
   const fallbackNumbers = ['502', '508', '509', '510'];
-  const fallbackImages = ['/earthy-cards.png', '/icey-cards.png', '/lava-cards.png', '/desert-cards.png'];
+  const fallbackImages = ['/cards/jungle.png', '/cards/ice.png', '/cards/lava.png', '/cards/dessert.png'];
   return {
     number: fallbackNumbers[index % fallbackNumbers.length],
     bgImage: fallbackImages[index % fallbackImages.length],
@@ -101,8 +103,35 @@ export default function RouteSelection() {
   const completedCheckpoints = labList.reduce((acc, lab) => {
     return acc + (perLabProgress[lab.id]?.completed || 0);
   }, 0);
+  const totalCheckpoints = labList.reduce((acc, lab) => {
+    return acc + (perLabProgress[lab.id]?.total || 0);
+  }, 0);
+  const allReviewsCompleted = totalCheckpoints > 0 && completedCheckpoints >= totalCheckpoints;
 
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [activeLabId, setActiveLabId] = useState<string>('1');
+
+  // Check if expedition is concluded (certificate has been downloaded)
+  const [isConcluded, setIsConcluded] = useState(false);
+
+  useEffect(() => {
+    const checkConcluded = () => {
+      if (typeof window === 'undefined') return;
+      const email = (userEmail || user?.email || '').trim().toLowerCase();
+      const c1 = Boolean(email && localStorage.getItem(`techx_certificate_downloaded_${email}`) === 'true');
+      const c2 = Boolean(email && localStorage.getItem(`techx_expedition_concluded_${email}`) === 'true');
+      const c3 = localStorage.getItem('techx_certificate_downloaded_global') === 'true';
+      setIsConcluded(c1 || c2 || c3);
+    };
+
+    checkConcluded();
+    window.addEventListener('certificateDownloaded', checkConcluded);
+    window.addEventListener('storage', checkConcluded);
+    return () => {
+      window.removeEventListener('certificateDownloaded', checkConcluded);
+      window.removeEventListener('storage', checkConcluded);
+    };
+  }, [userEmail, user?.email]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -129,6 +158,11 @@ export default function RouteSelection() {
     router.push(`/labs/${labId}`);
   };
 
+  // If certificate was downloaded, permanently lock routes and display Thank You Screen!
+  if (isConcluded) {
+    return <ThankYouScreen userName={user?.name} userEmail={userEmail} />;
+  }
+
   return (
     <div className="relative min-h-[100dvh] w-full text-[#2c1a0e] flex flex-col items-center justify-start pt-6 pb-28 sm:pb-32 px-3 sm:px-6 overflow-x-hidden font-['Georgia'] select-none">
       {/* Original Parchment Map Background */}
@@ -144,6 +178,41 @@ export default function RouteSelection() {
           completedCount={completedSectorsCount}
           totalCount={labList.length}
         />
+
+        {/* Celebratory Certificate Banner when all reviews across all labs are over */}
+        {allReviewsCompleted && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full relative overflow-hidden rounded-xl border-2 border-[#d4af37] bg-gradient-to-b from-[#2e190b] via-[#1a0e05] to-[#0d0702] p-4 sm:p-5 text-center shadow-[0_12px_32px_rgba(212,175,55,0.45)]"
+          >
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#d4af37]/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#d4af37]/20 border border-[#d4af37]/50 text-[#fef08a] font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1.5">
+              <span>✦ ALL 30 REVIEWS COMPLETED ✦</span>
+            </div>
+            <h3
+              style={{ fontFamily: "var(--font-cinzel), 'Cinzel', Georgia, serif" }}
+              className="text-lg sm:text-2xl font-black text-[#fdf8e2] tracking-wide"
+            >
+              ALL REVIEWS SEALED & ARCHIVED
+            </h3>
+            <p className="text-[11px] sm:text-xs text-[#d4b988] font-serif italic max-w-sm mx-auto mt-1 mb-3.5 leading-relaxed">
+              You have surveyed all 4 research sectors and recorded observations across all product innovations. Claim your official TechX 2026 Certificate of Discovery now!
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsCertModalOpen(true)}
+              style={{
+                clipPath:
+                  'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
+              }}
+              className="w-full py-3 px-4 bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#b45309] text-[#1c0f05] font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer border border-[#fff3cc]"
+            >
+              <span>🎓 GET YOUR CERTIFICATE</span>
+              <span className="text-base leading-none">➔</span>
+            </button>
+          </motion.div>
+        )}
 
         {/* 3 Authentic Torn Parchment Sector Expedition Cards */}
         <div className="w-full flex flex-col gap-5">
@@ -183,7 +252,7 @@ export default function RouteSelection() {
                       maskImage: `url('/assets/images/torn-card-bg.webp')`,
                       maskSize: '100% 100%',
                     }}
-                    className="absolute inset-0 bg-cover bg-center opacity-[0.28] mix-blend-multiply pointer-events-none"
+                    className="absolute inset-0 bg-cover bg-bottom bg-no-repeat opacity-[0.44] pointer-events-none"
                   />
                   {/* Centered Large Ink Stamp with Paper Grain Bleed */}
                   {isCompleted && (
@@ -213,8 +282,8 @@ export default function RouteSelection() {
                       LAB {config.number}
                     </h2>
                     {isCompleted && (
-                      <span className="text-[9.5px] font-mono font-bold uppercase tracking-wider text-emerald-800 bg-emerald-800/10 border border-emerald-800/30 px-2 py-0.5 rounded">
-                        ✦ Completed
+                      <span className="text-[9px] sm:text-[9.5px] font-mono font-bold uppercase tracking-wider text-[#8b261d] bg-[#8b261d]/10 border border-[#8b261d]/35 px-2 py-0.5 rounded">
+                        ✦ Sealed
                       </span>
                     )}
                   </div>
@@ -245,11 +314,10 @@ export default function RouteSelection() {
                         return (
                           <div
                             key={cp.id}
-                            className={`flex items-center gap-1.5 px-2 py-1 rounded text-[10.5px] sm:text-[11px] font-mono border backdrop-blur-[1px] transition-colors ${
-                              isDone
+                            className={`flex items-center gap-1.5 px-2 py-1 rounded text-[10.5px] sm:text-[11px] font-mono border backdrop-blur-[1px] transition-colors ${isDone
                                 ? 'bg-emerald-950/20 border-emerald-700/50 text-emerald-950 font-semibold'
                                 : 'bg-[#241308]/10 border-[#7a481c]/35 text-[#241308]'
-                            }`}
+                              }`}
                           >
                             <span className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 flex items-center justify-center overflow-hidden drop-shadow-xs">
                               <ProductIcon icon={cp.icon} fallback="📦" imgClassName="w-full h-full" />
@@ -276,12 +344,12 @@ export default function RouteSelection() {
                           handleEnterLab(lab.id);
                         }}
                         className="uncharted-btn-card"
-                        aria-label={`Review Lab ${config.number}`}
+                        aria-label={`View Sealed Lab ${config.number}`}
                       >
                         <div className="btn-inner">
-                          <span className="btn-title">REVIEW LAB {config.number}</span>
-                          <span className="px-2 py-0.5 text-[9px] bg-black/70 text-emerald-300 rounded-full border border-emerald-500/40 font-mono font-bold uppercase tracking-wider shrink-0">
-                            ✦ Completed
+                          <span className="btn-title">LAB {config.number} SEALED ✦</span>
+                          <span className="px-2 py-0.5 text-[9px] bg-black/70 text-amber-300 rounded-full border border-amber-500/40 font-mono font-bold uppercase tracking-wider shrink-0">
+                            All Reviews Sealed
                           </span>
                         </div>
                       </button>
@@ -312,7 +380,7 @@ export default function RouteSelection() {
           {/* Unlockable 3-Tier Mystery Treasure Card */}
           <TreasureCard
             completedCount={completedCheckpoints}
-            targetCount={7}
+            targetCount={totalCheckpoints || 30}
             userEmail={userEmail}
             currentLabId={activeLabId}
             lab1Completed={perLabProgress['1']?.isCompleted ?? false}
@@ -322,6 +390,15 @@ export default function RouteSelection() {
           />
         </div>
       </div>
+
+      {/* Certificate Modal Popup */}
+      <CertificateModal
+        isOpen={isCertModalOpen}
+        onClose={() => setIsCertModalOpen(false)}
+        userEmail={userEmail}
+        userName={user?.name}
+        department={user?.department}
+      />
     </div>
   );
 }

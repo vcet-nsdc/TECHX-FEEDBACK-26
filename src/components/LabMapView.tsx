@@ -11,6 +11,7 @@ import {
   CheckpointNode,
 } from '@/lib/expeditionData';
 import ProductObservationModal from './ProductObservationModal';
+import CertificateModal from './CertificateModal';
 import ProductIcon from './ProductIcon';
 import { CheckpointIcon } from './RusticIcons';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -197,6 +198,7 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
     }
   );
   const [activeModalProduct, setActiveModalProduct] = useState<CheckpointNode | null>(null);
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
 
   // Miniature Nathan Drake Map Explorer State
@@ -248,6 +250,19 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
       setSubmittedIds(submitted);
     }
   }, [userEmail]);
+
+  // If certificate was downloaded, lock access to individual labs and redirect to thank you screen
+  useEffect(() => {
+    if (typeof window !== 'undefined' && userEmail) {
+      const email = userEmail.trim().toLowerCase();
+      const c1 = Boolean(email && localStorage.getItem(`techx_certificate_downloaded_${email}`) === 'true');
+      const c2 = Boolean(email && localStorage.getItem(`techx_expedition_concluded_${email}`) === 'true');
+      const c3 = localStorage.getItem('techx_certificate_downloaded_global') === 'true';
+      if (c1 || c2 || c3) {
+        router.push('/labs');
+      }
+    }
+  }, [userEmail, router]);
 
   // Keep selectedProduct in sync when products change or initial load
   useEffect(() => {
@@ -372,6 +387,17 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
 
   const completedCount = products.filter((p) => submittedIds.includes(p.id)).length;
   const totalCount = products.length;
+  const isLabSealed = totalCount > 0 && completedCount >= totalCount;
+
+  // Check if all reviews across all 4 labs are finished
+  const allSubmitted = useMemo(() => getSubmittedFeedbackForUser(userEmail), [userEmail, submittedIds]);
+  const isAllReviewsCompleted = useMemo(() => {
+    const labIds = ['1', '2', '3', '4'];
+    return labIds.every((id) => {
+      const l = labs[id] || expeditionLabs[id];
+      return l?.checkpoints && l.checkpoints.length > 0 && l.checkpoints.every((cp) => allSubmitted.includes(cp.id));
+    });
+  }, [labs, allSubmitted]);
 
   // Exact mathematically aligned pixel positions for each node
   const nodePixelPositions = useMemo(() => {
@@ -547,17 +573,33 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
             <span className="block text-[8px] sm:text-[9.5px] font-bold uppercase tracking-[0.25em] text-[#9c7846] font-mono truncate">
               JOURNAL // {['502', '508', '509', '510'][Number(labKey) - 1] ? `LAB ${['502', '508', '509', '510'][Number(labKey) - 1]}` : (labConfig?.name || 'FIELD RECON')}
             </span>
-            <h1
-              style={{ fontFamily: "var(--font-geist-sans), system-ui, -apple-system, sans-serif" }}
-              className="text-sm sm:text-lg font-black text-[#f2dfbe] truncate tracking-wider leading-tight"
-            >
-              {['502', '508', '509', '510'][Number(labKey) - 1] ? `LAB ${['502', '508', '509', '510'][Number(labKey) - 1]}` : (labConfig?.title || 'Expedition Sector')}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1
+                style={{ fontFamily: "var(--font-geist-sans), system-ui, -apple-system, sans-serif" }}
+                className="text-sm sm:text-lg font-black text-[#f2dfbe] truncate tracking-wider leading-tight"
+              >
+                {['502', '508', '509', '510'][Number(labKey) - 1] ? `LAB ${['502', '508', '509', '510'][Number(labKey) - 1]}` : (labConfig?.title || 'Expedition Sector')}
+              </h1>
+              {isLabSealed && (
+                <span className="px-1.5 py-0.2 rounded bg-[#8b261d]/20 border border-[#8b261d]/50 text-[#fca5a5] text-[7.5px] sm:text-[8.5px] font-mono font-bold tracking-wider uppercase shrink-0">
+                  ✦ Sealed
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
         {/* View Switcher & Volume Control */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {isAllReviewsCompleted && (
+            <button
+              type="button"
+              onClick={() => setIsCertModalOpen(true)}
+              className="px-2.5 py-1 rounded bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#b45309] text-[#1c0f05] text-[8.5px] sm:text-[10px] font-black uppercase tracking-wider shadow cursor-pointer active:scale-95 transition"
+            >
+              🎓 Certificate
+            </button>
+          )}
           <div className="flex p-0.5 rounded bg-[#0d0704] border border-[#52351e]">
             <button
               onClick={() => setViewMode('map')}
@@ -970,19 +1012,43 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
 
               {/* Bottom Info Note / Continue Expedition if Complete */}
               <div className="pt-3 border-t border-[#8b6943]/25 flex flex-col gap-2">
-                {completedCount === totalCount && totalCount > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => router.push('/labs')}
-                    style={{
-                      clipPath:
-                        'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
-                    }}
-                    className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-b from-[#22c55e] via-[#16a34a] to-[#15803d] text-white font-bold text-xs uppercase tracking-widest shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2 font-['Cinzel',_serif] cursor-pointer border-t border-[#86efac]/60"
-                  >
-                    <span>Continue Expedition</span>
-                    <span className="text-xs">➔</span>
-                  </button>
+                {isLabSealed ? (
+                  <div className="flex flex-col gap-1.5 w-full">
+                    {isAllReviewsCompleted ? (
+                      <button
+                        type="button"
+                        onClick={() => setIsCertModalOpen(true)}
+                        style={{
+                          clipPath:
+                            'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
+                        }}
+                        className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#b45309] text-[#1c0f05] font-black text-xs uppercase tracking-widest shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2 font-['Cinzel',_serif] cursor-pointer border-t border-[#fff3cc]"
+                      >
+                        <span>🎓 GET YOUR CERTIFICATE</span>
+                        <span className="text-xs">➔</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => router.push('/labs')}
+                        style={{
+                          clipPath:
+                            'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
+                        }}
+                        className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-b from-[#2e1a0d] via-[#201207] to-[#120803] text-[#d4af37] font-bold text-xs uppercase tracking-widest shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2 font-['Cinzel',_serif] cursor-pointer border-t border-[#d4af37]/60"
+                      >
+                        <span>✦ LAB SEALED • CONTINUE EXPEDITION</span>
+                        <span className="text-xs">➔</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => router.push('/labs')}
+                      className="w-full py-1 text-[10px] font-mono uppercase tracking-wider text-[#7a481c] hover:text-[#241308] transition text-center cursor-pointer"
+                    >
+                      Return to Map Overview ➔
+                    </button>
+                  </div>
                 ) : (
                   <div className="flex items-center justify-between text-[11px] font-mono text-[#7a481c] py-1">
                     <span className="flex items-center gap-1.5 font-semibold">
@@ -1046,6 +1112,8 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
           <ProductObservationModal
             product={activeModalProduct}
             isSubmitted={submittedIds.includes(activeModalProduct.id)}
+            isLabSealed={isLabSealed}
+            userEmail={userEmail}
             onClose={() => setActiveModalProduct(null)}
             onSuccess={({ rating, comment }) =>
               handleProductSubmitSuccess(
@@ -1057,6 +1125,15 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
           />
         )}
       </AnimatePresence>
+
+      {/* Certificate Modal */}
+      <CertificateModal
+        isOpen={isCertModalOpen}
+        onClose={() => setIsCertModalOpen(false)}
+        userEmail={userEmail}
+        userName={user?.name}
+        department={user?.department}
+      />
     </div>
   );
 }

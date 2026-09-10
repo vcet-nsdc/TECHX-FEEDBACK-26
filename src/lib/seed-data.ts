@@ -9,10 +9,10 @@ export const defaultUsers: ExpeditionUser[] = [
     name: 'Aarav Sharma',
     department: 'AI-DS',
     completedProducts: [
-      'c1-p1', 'c1-p2', 'c1-p3', 'c1-p4', 'c1-p5', 'c1-p6', 'c1-p7',
-      'c2-p1', 'c2-p2', 'c2-p3', 'c2-p4', 'c2-p5', 'c2-p6', 'c2-p7',
-      'c3-p1', 'c3-p2', 'c3-p3', 'c3-p4', 'c3-p5', 'c3-p6', 'c3-p7', 'c3-p8',
-      'c4-p1', 'c4-p2', 'c4-p3', 'c4-p4', 'c4-p5', 'c4-p6', 'c4-p7'
+      'c1-p1', 'c1-p2', 'c1-p3', 'c1-p4', 'c1-p5', 'c1-p6', 'c1-p7', 'c1-p8', 'c1-p9', 'c1-p10',
+      'c2-p1', 'c2-p2', 'c2-p3', 'c2-p4', 'c2-p5',
+      'c3-p1', 'c3-p2', 'c3-p3', 'c3-p4', 'c3-p5', 'c3-p6', 'c3-p7', 'c3-p8', 'c3-p9', 'c3-p10',
+      'c4-p1', 'c4-p2', 'c4-p3', 'c4-p4', 'c4-p5'
     ],
     unlockedLabs: ['a', 'c', 'd', 'e'],
     completedLabs: ['a', 'c', 'd', 'e'],
@@ -25,10 +25,10 @@ export const defaultUsers: ExpeditionUser[] = [
     name: 'Diya Patel',
     department: 'COMPS',
     completedProducts: [
-      'c1-p1', 'c1-p2', 'c1-p3', 'c1-p4', 'c1-p5', 'c1-p6', 'c1-p7',
-      'c2-p1', 'c2-p2', 'c2-p3', 'c2-p4', 'c2-p5', 'c2-p6', 'c2-p7',
-      'c3-p1', 'c3-p2', 'c3-p3', 'c3-p4', 'c3-p5', 'c3-p6', 'c3-p7', 'c3-p8',
-      'c4-p1', 'c4-p2', 'c4-p3', 'c4-p4', 'c4-p5', 'c4-p6', 'c4-p7'
+      'c1-p1', 'c1-p2', 'c1-p3', 'c1-p4', 'c1-p5', 'c1-p6', 'c1-p7', 'c1-p8', 'c1-p9', 'c1-p10',
+      'c2-p1', 'c2-p2', 'c2-p3', 'c2-p4', 'c2-p5',
+      'c3-p1', 'c3-p2', 'c3-p3', 'c3-p4', 'c3-p5', 'c3-p6', 'c3-p7', 'c3-p8', 'c3-p9', 'c3-p10',
+      'c4-p1', 'c4-p2', 'c4-p3', 'c4-p4', 'c4-p5'
     ],
     unlockedLabs: ['a', 'c', 'd', 'e'],
     completedLabs: ['a', 'c', 'd', 'e'],
@@ -41,10 +41,10 @@ export const defaultUsers: ExpeditionUser[] = [
     name: 'Rohan Mehta',
     department: 'IT',
     completedProducts: [
-      'c1-p1', 'c1-p2', 'c1-p3', 'c1-p4', 'c1-p5', 'c1-p6', 'c1-p7',
-      'c2-p1', 'c2-p2', 'c2-p3', 'c2-p4', 'c2-p5', 'c2-p6', 'c2-p7',
-      'c3-p1', 'c3-p2', 'c3-p3', 'c3-p4', 'c3-p5', 'c3-p6', 'c3-p7', 'c3-p8',
-      'c4-p1', 'c4-p2', 'c4-p3', 'c4-p4', 'c4-p5', 'c4-p6', 'c4-p7'
+      'c1-p1', 'c1-p2', 'c1-p3', 'c1-p4', 'c1-p5', 'c1-p6', 'c1-p7', 'c1-p8', 'c1-p9', 'c1-p10',
+      'c2-p1', 'c2-p2', 'c2-p3', 'c2-p4', 'c2-p5',
+      'c3-p1', 'c3-p2', 'c3-p3', 'c3-p4', 'c3-p5', 'c3-p6', 'c3-p7', 'c3-p8', 'c3-p9', 'c3-p10',
+      'c4-p1', 'c4-p2', 'c4-p3', 'c4-p4', 'c4-p5'
     ],
     unlockedLabs: ['a', 'c', 'd', 'e'],
     completedLabs: ['a', 'c', 'd', 'e'],
@@ -87,7 +87,7 @@ export const defaultUsers: ExpeditionUser[] = [
     name: 'Tanvi Kulkarni',
     department: 'AI-DS',
     completedProducts: [
-      'c1-p1', 'c1-p2', 'c1-p3', 'c1-p4', 'c1-p5', 'c1-p6', 'c1-p7',
+      'c1-p1', 'c1-p2', 'c1-p3', 'c1-p4', 'c1-p5', 'c1-p6', 'c1-p7', 'c1-p8', 'c1-p9', 'c1-p10',
       'c2-p1', 'c2-p2'
     ],
     unlockedLabs: ['a', 'c'],

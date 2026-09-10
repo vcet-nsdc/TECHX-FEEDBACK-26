@@ -94,43 +94,52 @@ export interface ProductClues {
   labNum?: string;
 }
 
-export interface RelicReward {
+export interface ExpeditionItemReward {
   id: string;
   name: string;
-  rarity: 'Legendary' | 'Mythic' | 'Artifact';
+  image: string;
+  rarity: 'Legendary' | 'Mythic' | 'Artifact' | 'Ancient Relic';
   origin: string;
   inscription: string;
   lore: string;
-  type: 'astrolabe' | 'key' | 'coin';
 }
 
-const SECRET_RELICS: RelicReward[] = [
+export const EXPEDITION_REWARD_ITEMS: ExpeditionItemReward[] = [
   {
-    id: 'relic-key',
-    name: 'TechX Golden Key',
+    id: 'item-spyglass',
+    name: "Explorer's Brass Spyglass",
+    image: '/items/item1.png',
     rarity: 'Legendary',
-    origin: 'TechX 2026',
-    inscription: 'Excellence in Research & Innovation',
-    lore: 'Awarded for completing all labs and solving the mystery project.',
-    type: 'key',
+    origin: 'Cartographer’s Quarters',
+    inscription: 'Seek the horizons unseen.',
+    lore: 'A collapsible marine brass spyglass with multi-coated crystal optics, once used to chart unknown archipelagoes.',
   },
   {
-    id: 'relic-compass',
-    name: 'TechX Navigator Compass',
-    rarity: 'Legendary',
-    origin: 'TechX 2026',
-    inscription: 'Guiding Future Explorers',
-    lore: 'Awarded for completing all labs and solving the mystery project.',
-    type: 'astrolabe',
+    id: 'item-chalice',
+    name: 'Golden El Dorado Chalice',
+    image: '/items/item2.png',
+    rarity: 'Mythic',
+    origin: 'Lost City of Gold',
+    inscription: 'Rich beyond mortal measure.',
+    lore: 'An exquisite pre-Columbian gold goblet hand-chiseled with solar deities and studded with polished emeralds.',
   },
   {
-    id: 'relic-coin',
-    name: 'TechX Gold Medal',
-    rarity: 'Legendary',
-    origin: 'TechX 2026',
-    inscription: 'TechX Feedback Challenge',
-    lore: 'Awarded for completing all labs and solving the mystery project.',
-    type: 'coin',
+    id: 'item-compass',
+    name: "Drake's Navigator Compass",
+    image: '/items/item3.png',
+    rarity: 'Artifact',
+    origin: 'Sir Francis Drake Fleet',
+    inscription: 'Sic Parvis Magna.',
+    lore: 'An authentic brass gimballed pocket compass recovered from the flagship Golden Hind. Guided Drake around the globe.',
+  },
+  {
+    id: 'item-phurba',
+    name: 'Golden Phurba Dagger',
+    image: '/items/item4.png',
+    rarity: 'Ancient Relic',
+    origin: 'Shambhala Sanctuary',
+    inscription: 'The key to the hidden world.',
+    lore: 'A three-edged ceremonial bronze and gold ritual blade depicting fierce guardian visages, unlocking sacred gates.',
   },
 ];
 
@@ -197,6 +206,15 @@ export function getProductClues(product: ProductWithLab): ProductClues {
     '💧': 'water drop',
     '🏛️': 'pyramid temple',
     '🪲': 'scarab beetle',
+    '🔄': 'sync arrows',
+    '⚙️': 'gear',
+    '🩺': 'stethoscope',
+    '🌌': 'galaxy',
+    '🔭': 'telescope',
+    '📡': 'satellite antenna',
+    '📚': 'books',
+    '🔐': 'lock and key',
+    '🗄️': 'file cabinet',
   };
   const emojiLabel = emojiNames[icon] || 'symbol';
 
@@ -253,8 +271,7 @@ export default function TreasureCard({
   const [isVerified, setIsVerified] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isShaking, setIsShaking] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [claimedRelic, setClaimedRelic] = useState<RelicReward | null>(null);
+  const [selectedRewardItem, setSelectedRewardItem] = useState<ExpeditionItemReward | null>(null);
   const [localFeedbackVersion, setLocalFeedbackVersion] = useState(0);
 
   // Listen for feedback updates across tabs or components
@@ -494,28 +511,92 @@ export default function TreasureCard({
     const chosen = allProducts[Math.abs(hash) % allProducts.length];
     if (typeof window !== 'undefined' && chosen) {
       localStorage.setItem(`treasure_target_product_${normalizedEmail}`, chosen.id);
+      localStorage.setItem(`treasure_target_product_${userEmail}`, chosen.id);
     }
     return chosen;
   }, [allProducts, normalizedEmail, userEmail]);
 
+  // Generate & store 3 clues randomly and persistently for this user
   const targetClues = useMemo(() => {
     if (!targetProduct) return null;
-    return getProductClues(targetProduct);
-  }, [targetProduct]);
+    if (typeof window !== 'undefined') {
+      try {
+        const stored =
+          localStorage.getItem(`treasure_clues_${normalizedEmail}`) ||
+          localStorage.getItem(`treasure_clues_${userEmail}`);
+        if (stored) return JSON.parse(stored) as ProductClues;
+      } catch {}
+    }
+    const generated = getProductClues(targetProduct);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(`treasure_clues_${normalizedEmail}`, JSON.stringify(generated));
+        localStorage.setItem(`treasure_clues_${userEmail}`, JSON.stringify(generated));
+      } catch {}
+    }
+    return generated;
+  }, [targetProduct, normalizedEmail, userEmail]);
 
-  // Load verified state & claimed relic from localStorage
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const storedRelic =
-        localStorage.getItem(`treasure_character_relic_${normalizedEmail}`) ||
-        localStorage.getItem(`treasure_character_relic_${userEmail}`);
-      if (storedRelic) {
-        setClaimedRelic(JSON.parse(storedRelic));
-      } else {
-        setClaimedRelic(null);
+  // Deterministically select & persist 1 single random expedition reward item for this user
+  const userRewardItem = useMemo<ExpeditionItemReward>(() => {
+    if (typeof window !== 'undefined') {
+      const storedItemId =
+        localStorage.getItem(`treasure_user_reward_item_${normalizedEmail}`) ||
+        localStorage.getItem(`treasure_user_reward_item_${userEmail}`);
+      if (storedItemId) {
+        const found = EXPEDITION_REWARD_ITEMS.find((it) => it.id === storedItemId);
+        if (found) return found;
       }
+    }
 
+    // Stable hash based on email string to pick 1 random reward item
+    const hash = normalizedEmail
+      .split('')
+      .reduce((acc, c, idx) => acc + c.charCodeAt(0) * (idx + 31), 0);
+
+    const chosen =
+      EXPEDITION_REWARD_ITEMS[Math.abs(hash) % EXPEDITION_REWARD_ITEMS.length] ||
+      EXPEDITION_REWARD_ITEMS[0];
+    if (typeof window !== 'undefined' && chosen) {
+      try {
+        localStorage.setItem(`treasure_user_reward_item_${normalizedEmail}`, chosen.id);
+        localStorage.setItem(`treasure_user_reward_item_${userEmail}`, chosen.id);
+      } catch {}
+    }
+    return chosen;
+  }, [normalizedEmail, userEmail]);
+
+  // Has the user submitted feedback for this target product in its lab?
+  const isTargetSubmitted = useMemo(() => {
+    if (!targetProduct) return false;
+    return submittedProductIds.includes(targetProduct.id);
+  }, [targetProduct, submittedProductIds]);
+
+  // Are all 3 clues unlocked? (Clue 3 is the final clue waypoint on the map)
+  const areAllCluesUnlocked = Boolean(unlockedClues[3] || (unlockedClues[1] && unlockedClues[2] && unlockedClues[3]));
+
+  // Did the user solve or review the secret product early before all 3 clues?
+  const isFoundEarly = Boolean((isVerified || isTargetSubmitted) && !areAllCluesUnlocked);
+
+  // If user completed all reviews across all labs
+  const isAllReviewsCompleted = useMemo(() => {
+    return totalProductsCount > 0 && completedProductsCount >= totalProductsCount;
+  }, [completedProductsCount, totalProductsCount]);
+
+  // Auto-reveal: solved if user verified guess, or submitted target product, or got all clues
+  const isAutoRevealed = areAllCluesUnlocked;
+  const isSolved = isVerified || isTargetSubmitted || isAutoRevealed;
+
+  // Artifact is unlocked if:
+  // 1. User found/guessed the product early (guaranteed to award artifact immediately)
+  // 2. All clues are unlocked (blocks form and directly reveals artifact)
+  // 3. User completed all reviews
+  const isArtifactUnlocked = isSolved || areAllCluesUnlocked || isAllReviewsCompleted;
+
+  // Load verified state from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') return;
+    try {
       const storedVerified =
         localStorage.getItem(`treasure_verified_${normalizedEmail}`) ||
         localStorage.getItem(`treasure_verified_${userEmail}`);
@@ -529,10 +610,10 @@ export default function TreasureCard({
     } catch { }
   }, [normalizedEmail, userEmail, localFeedbackVersion]);
 
-  // Handle User Guess / Verification
+  // Handle User Guess / Verification (unlimited attempts allowed)
   const handleVerifyGuess = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!targetProduct || isVerified) return;
+    if (!targetProduct || isSolved || areAllCluesUnlocked) return;
 
     const cleanInput = normalizeName(guessInput);
     if (!cleanInput) {
@@ -559,20 +640,14 @@ export default function TreasureCard({
 
     if (isCorrect) {
       setIsVerified(true);
-      setStatusMessage('✦ Correct! Mystery project solved.');
-
-      const charCodeSum = normalizedEmail.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-      const chosen = claimedRelic || SECRET_RELICS[charCodeSum % SECRET_RELICS.length];
-      setClaimedRelic(chosen);
+      setStatusMessage('✦ Correct! Mystery project solved early — your artifact has been unlocked below!');
       if (typeof window !== 'undefined') {
-        localStorage.setItem(`treasure_character_relic_${normalizedEmail}`, JSON.stringify(chosen));
         localStorage.setItem(`treasure_verified_${normalizedEmail}`, 'true');
         localStorage.setItem(`treasure_verified_${userEmail}`, 'true');
-        appendTreasure(normalizedEmail, chosen.id);
       }
     } else {
       setIsShaking(true);
-      setStatusMessage('Not quite right. Check the 3 clues above and try again!');
+      setStatusMessage('Not quite right — guesses are unlimited! Check the clues or keep trying.');
       setTimeout(() => setIsShaking(false), 500);
     }
   };
@@ -590,10 +665,22 @@ export default function TreasureCard({
           style={{
             backgroundImage: `url('/assets/images/torn-card-bg.webp')`,
           }}
-          className="relative w-full bg-[length:100%_100%] bg-no-repeat bg-center px-8 sm:px-12 md:px-14 pt-8 sm:pt-10 pb-16 sm:pb-20 md:pb-24 flex flex-col justify-between text-[#241308]"
+          className="relative w-full bg-[length:100%_100%] bg-no-repeat bg-center px-8 sm:px-12 md:px-14 pt-11 sm:pt-14 md:pt-16 pb-16 sm:pb-20 md:pb-24 flex flex-col justify-between text-[#241308] overflow-hidden"
         >
+          {/* Treasure Undersea Background Artwork with Low Opacity */}
+          <div
+            style={{
+              backgroundImage: `url('/treasure.png')`,
+              WebkitMaskImage: `url('/assets/images/torn-card-bg.webp')`,
+              WebkitMaskSize: '100% 100%',
+              maskImage: `url('/assets/images/torn-card-bg.webp')`,
+              maskSize: '100% 100%',
+            }}
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.14] pointer-events-none"
+          />
+
           {/* Top Right Wax Seal Badge */}
-          <div className="absolute top-6 right-7 sm:top-8 sm:right-10 w-10 h-10 sm:w-11 sm:h-11 pointer-events-none opacity-90 z-20">
+          <div className="absolute top-8 right-8 sm:top-10 sm:right-11 md:top-11 md:right-13 w-10 h-10 sm:w-11 sm:h-11 pointer-events-none opacity-90 z-20">
             {isVerified ? (
               <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-dashed border-[#8b261d] flex items-center justify-center rotate-12 bg-[#8b261d]/20 shadow-md">
                 <span
@@ -624,8 +711,8 @@ export default function TreasureCard({
             )}
           </div>
 
-          {/* Section Header with Proper Visible Fonts */}
-          <div className="mb-2 sm:mb-2.5 px-0.5 flex flex-col items-start pr-12 sm:pr-14">
+          {/* Section Header with Proper Visible Fonts & Stated Challenge */}
+          <div className="mb-2.5 sm:mb-3 px-0.5 flex flex-col items-start pr-14 sm:pr-16 relative z-10 w-full">
             <div className="flex items-center gap-2">
               <span className="text-[#b38920] text-base sm:text-lg animate-pulse">✦</span>
               <h2
@@ -635,18 +722,26 @@ export default function TreasureCard({
                 EXPEDITION TREASURE MAP
               </h2>
             </div>
-            <p
-              style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
-              className="text-xs sm:text-sm font-semibold text-[#5c3710] mt-0.5 tracking-normal leading-snug"
-            >
-              Solve the mystery project by uncovering 3 Sector Clues from the expedition labs.
-            </p>
+
+            {/* Clear Challenge Explanation Box */}
+            <div className="mt-1.5 p-2 sm:p-2.5 rounded-lg bg-[#241308]/[0.08] border border-[#8b6943]/40 text-[#3d1f05] w-full">
+              <div className="flex items-center gap-1.5 font-bold text-[11px] sm:text-xs text-[#854d0e] uppercase tracking-wider font-mono">
+                <span>🎯</span>
+                <span>Secret Product Challenge</span>
+              </div>
+              <p
+                style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                className="text-xs sm:text-[13px] font-semibold text-[#3d1f05] mt-0.5 leading-snug"
+              >
+                Find and submit your review for the mystery product in its lab before you get all 3 clues! Once you get all three clues, the secret product is automatically revealed.
+              </p>
+            </div>
           </div>
 
           {/* ========================================================================= */}
           {/* VINTAGE TREASURE MAP CANVAS WITH NATHAN DRAKE & WAYPOINTS                 */}
           {/* ========================================================================= */}
-          <div className="my-1.5 sm:my-2 select-none">
+          <div className="my-1.5 sm:my-2 select-none relative z-10">
             <div
               style={{
                 backgroundImage: `url('/assets/images/pirate_trail_map.png')`,
@@ -871,7 +966,7 @@ export default function TreasureCard({
           {/* ========================================================================= */}
           {/* THREE CLUES SECTION                                                       */}
           {/* ========================================================================= */}
-          <div className="flex flex-col gap-2 my-1.5 sm:my-2">
+          <div className="flex flex-col gap-2 my-1.5 sm:my-2 relative z-10">
             {/* Clues Header Bar with Count on Top */}
             <div className="flex items-center justify-between px-0.5 mb-0.5">
               <span
@@ -1121,105 +1216,285 @@ export default function TreasureCard({
           {/* ========================================================================= */}
           {/* USER ANSWER ENTRY INPUT BOX & VERIFICATION                                */}
           {/* ========================================================================= */}
-          <div className="mt-2 pt-2 border-t-2 border-[#8b6943]/35">
+          <div className="mt-2 pt-2 border-t-2 border-[#8b6943]/35 relative z-10">
             <div className="flex items-center justify-between mb-1.5">
               <span
                 style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
                 className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#3d1f05] flex items-center gap-1.5"
               >
                 <span>🗝️</span>
-                <span>Guess the Secret Project</span>
+                <span>Mystery Secret Product</span>
               </span>
-              {isVerified && (
+              {isSolved ? (
                 <span className="px-2 py-0.5 rounded bg-emerald-800/15 text-emerald-900 border border-emerald-800/40 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
-                  ✦ Solved
+                  ✦ {isFoundEarly ? 'Challenge Won Early' : areAllCluesUnlocked ? 'All Clues Unlocked • Form Closed' : 'Solved'}
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded bg-[#8b6943]/15 text-[#6d3e16] border border-[#8b6943]/30 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
+                  ✦ Unlimited Guesses
                 </span>
               )}
             </div>
 
-            {isVerified ? (
-              <div className="p-3 sm:p-3.5 rounded-xl border-2 border-[#b38920] bg-gradient-to-r from-[#fef3c7]/80 to-[#fde68a]/60 flex items-center justify-between gap-3 shadow-md">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-b from-[#1c0f05] to-[#3a1e08] border-2 border-[#ffd700] flex items-center justify-center text-xl sm:text-2xl shrink-0 shadow-md overflow-hidden">
-                    <ProductIcon icon={targetProduct?.icon} fallback="🪐" imgClassName="w-7 h-7 sm:w-8 sm:h-8" />
+            {isSolved ? (
+              <div className="p-3 sm:p-4 rounded-xl border-2 border-[#b38920] bg-gradient-to-r from-[#fef3c7] via-[#fffbeb] to-[#fde68a] flex flex-col gap-2 shadow-md">
+                <div className="flex items-center justify-between border-b border-[#b38920]/40 pb-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base sm:text-lg">
+                      {isFoundEarly ? '🏆' : areAllCluesUnlocked ? '✨' : '🗝️'}
+                    </span>
+                    <span className="text-[10px] sm:text-xs font-mono font-bold uppercase tracking-wider text-[#7a481c]">
+                      {isFoundEarly
+                        ? 'CHALLENGE WON • SOLVED EARLY BEFORE ALL CLUES!'
+                        : areAllCluesUnlocked
+                        ? 'ALL 3 CLUES UNCOVERED • GUESSING CLOSED & REVEALED'
+                        : 'MYSTERY PROJECT SOLVED'}
+                    </span>
                   </div>
-                  <div className="min-w-0">
+                  <span className="text-emerald-700 text-xs font-bold font-mono">
+                    ✓ Cleared
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-b from-[#1c0f05] to-[#3a1e08] border-2 border-[#ffd700] flex items-center justify-center text-2xl sm:text-3xl shrink-0 shadow-md overflow-hidden">
+                    <ProductIcon icon={targetProduct?.icon} fallback="🪐" imgClassName="w-8 h-8 sm:w-9 sm:h-9" />
+                  </div>
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] sm:text-[10px] font-mono font-bold text-[#7a481c] uppercase tracking-wider">
-                        SOLVED EXPEDITION TREASURE
+                      <span className="text-xs sm:text-sm font-mono font-bold text-[#b45309]">
+                        Lab {targetClues?.labNum || '502'}
                       </span>
-                      <span className="text-emerald-700 text-xs font-bold">✓</span>
+                      {isTargetSubmitted && (
+                        <span className="text-[9px] font-mono text-emerald-800 bg-emerald-800/15 px-1.5 py-0.2 rounded border border-emerald-700/30 font-bold">
+                          ✓ Reviewed by you
+                        </span>
+                      )}
                     </div>
-                    <span
+                    <h3
                       style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
-                      className="text-sm sm:text-base md:text-lg font-black text-[#1c0f05] truncate block"
+                      className="text-base sm:text-xl font-black text-[#1c0f05] truncate"
                     >
                       {targetProduct?.name}
-                    </span>
+                    </h3>
+                    <p className="text-[11px] sm:text-xs text-[#5c3710] font-serif italic truncate mt-0.5">
+                      &quot;{targetProduct?.description}&quot;
+                    </p>
                   </div>
                 </div>
 
-                {claimedRelic && (
-                  <button
-                    type="button"
-                    onClick={() => setModalOpen(true)}
-                    style={{
-                      fontFamily: "var(--font-cinzel), 'Cinzel', serif",
-                      clipPath:
-                        'polygon(4px 0%, calc(100% - 4px) 0%, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0% calc(100% - 4px), 0% 4px)',
-                    }}
-                    className="py-1.5 sm:py-2 px-3 sm:px-3.5 bg-gradient-to-r from-[#d4af37] to-[#b38920] text-[#1a0f05] font-black text-[11px] sm:text-xs uppercase tracking-wider shadow hover:brightness-110 cursor-pointer shrink-0 animate-pulse"
-                  >
-                    View Reward ➔
-                  </button>
-                )}
+                {isFoundEarly ? (
+                  <div className="text-[10px] sm:text-[11px] font-mono text-emerald-900 bg-emerald-100/80 px-2.5 py-1 rounded border border-emerald-400 font-semibold text-center">
+                    Outstanding recon! You guessed this product early — your mystery artifact has been awarded below!
+                  </div>
+                ) : areAllCluesUnlocked ? (
+                  <div className="text-[10px] sm:text-[11px] font-mono text-[#854d0e] bg-amber-100/80 px-2.5 py-1 rounded border border-amber-400 font-semibold text-center">
+                    All clues unlocked! Guess form is sealed and your artifact has been directly revealed below.
+                  </div>
+                ) : null}
               </div>
             ) : (
               <form
                 onSubmit={handleVerifyGuess}
                 className={`flex flex-col gap-2 ${isShaking ? 'animate-shake' : ''}`}
               >
-                <input
-                  type="text"
-                  value={guessInput}
-                  onChange={(e) => setGuessInput(e.target.value)}
-                  placeholder="Type project or company name..."
-                  style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
-                  className="flex-1 px-3 py-2 sm:py-2.5 rounded-lg border-2 border-[#8b6943]/60 bg-[#fffbf2] text-[#1c0f05] text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:border-[#b38920] shadow-inner placeholder:font-normal placeholder:italic placeholder:text-[#8b6943]/60 transition"
-                />
-                <button
-                  type="submit"
-                  style={{
-                    fontFamily: "var(--font-cinzel), 'Cinzel', serif",
-                    clipPath:
-                      'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
-                  }}
-                  className="py-2 sm:py-2.5 px-5 bg-gradient-to-b from-[#ffd700] via-[#d4af37] to-[#996515] text-[#140802] font-black text-xs sm:text-sm uppercase tracking-widest shadow-md transition hover:brightness-110 active:scale-[0.98] border-t border-[#fff9d6] cursor-pointer shrink-0"
-                >
-                  Verify Solution
-                </button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    value={guessInput}
+                    onChange={(e) => setGuessInput(e.target.value)}
+                    placeholder="Guess project or company name (unlimited attempts)..."
+                    style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                    className="flex-1 px-3 py-2 sm:py-2.5 rounded-lg border-2 border-[#8b6943]/60 bg-[#fffbf2] text-[#1c0f05] text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:border-[#b38920] shadow-inner placeholder:font-normal placeholder:italic placeholder:text-[#8b6943]/60 transition"
+                  />
+                  <button
+                    type="submit"
+                    style={{
+                      fontFamily: "var(--font-cinzel), 'Cinzel', serif",
+                      clipPath:
+                        'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
+                    }}
+                    className="py-2 sm:py-2.5 px-5 bg-gradient-to-b from-[#ffd700] via-[#d4af37] to-[#996515] text-[#140802] font-black text-xs sm:text-sm uppercase tracking-widest shadow-md transition hover:brightness-110 active:scale-[0.98] border-t border-[#fff9d6] cursor-pointer shrink-0"
+                  >
+                    Verify Solution
+                  </button>
+                </div>
+                <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-mono text-[#7a481c] italic px-1">
+                  <span>✦ Unlimited guesses — guess early to unlock your artifact!</span>
+                  <span className="hidden sm:inline">All 3 clues closes guessing & directly reveals artifact</span>
+                </div>
               </form>
             )}
 
             {/* Status Feedback Banner */}
-            {statusMessage && !isVerified && (
+            {statusMessage && !isSolved && (
               <div className="mt-2 py-1.5 px-3 rounded-lg text-xs sm:text-sm font-semibold text-center bg-rose-100 border border-rose-400 text-rose-900 shadow-sm flex items-center justify-center gap-1.5">
                 <span>⚠️</span>
                 <span>{statusMessage}</span>
               </div>
             )}
           </div>
+
+          {/* ========================================================================= */}
+          {/* 1 SINGLE RANDOM EXPEDITION REWARD SECTION (FROM /items)                   */}
+          {/* ========================================================================= */}
+          <div className="mt-3 pt-3 border-t-2 border-[#8b6943]/35 relative z-10">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base sm:text-lg">🎁</span>
+                <span
+                  style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                  className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#3d1f05]"
+                >
+                  Expedition Item Reward
+                </span>
+              </div>
+              <span
+                style={{ fontFamily: "var(--font-oswald), sans-serif" }}
+                className={`text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                  isArtifactUnlocked
+                    ? 'bg-emerald-800/15 text-emerald-900 border-emerald-700/50'
+                    : 'bg-[#241308]/10 text-[#7a5a3a] border-[#8b6943]/30'
+                }`}
+              >
+                {isArtifactUnlocked
+                  ? isFoundEarly
+                    ? '✦ Unlocked Early'
+                    : '✦ Artifact Revealed'
+                  : '🔒 Sealed Relic'}
+              </span>
+            </div>
+
+            {isArtifactUnlocked ? (
+              /* User Solved Early OR All Clues Unlocked OR All Reviews Done -> 1 Surprise Reward Revealed! */
+              <div className="flex flex-col gap-2.5">
+                <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#d4af37]/25 via-[#fef3c7] to-[#d4af37]/25 border border-[#d4af37] text-center shadow-xs">
+                  <span className="inline-block text-[10px] sm:text-xs font-mono font-bold uppercase tracking-widest text-[#854d0e]">
+                    {isFoundEarly
+                      ? '✦ EARLY DISCOVERY REWARD SECURED ✦'
+                      : areAllCluesUnlocked
+                      ? '✦ EXPEDITION ARTIFACT REVEALED ✦'
+                      : '✦ SURPRISE REWARD REVEALED ✦'}
+                  </span>
+                  <p
+                    style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                    className="text-xs sm:text-sm font-black text-[#1c0f05] mt-0.5"
+                  >
+                    {isFoundEarly
+                      ? 'You correctly found the mystery product early and unlocked your expedition artifact!'
+                      : areAllCluesUnlocked
+                      ? 'All clues unlocked! Your unique expedition relic has been directly revealed!'
+                      : 'You completed all reviews and have unlocked your unique expedition relic!'}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] text-[#6b4516] font-serif italic mt-0.5">
+                    Click the artifact below to inspect its archaeological lore and inscription.
+                  </p>
+                </div>
+
+                <div
+                  onClick={() => setSelectedRewardItem(userRewardItem)}
+                  className="p-3.5 sm:p-4 rounded-xl border-2 border-[#b38920] bg-gradient-to-b from-[#fffbf2] via-[#fbf3e2] to-[#f4e4c3] flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:border-[#d4af37] transition-all cursor-pointer group"
+                >
+                  <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 text-center sm:text-left">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-b from-[#1c0f05]/10 to-[#1c0f05]/5 border-2 border-[#d4af37]/60 group-hover:border-[#d4af37] flex items-center justify-center p-1.5 group-hover:scale-105 transition-transform shrink-0 shadow-sm">
+                      <img
+                        src={userRewardItem.image}
+                        alt={userRewardItem.name}
+                        className="w-full h-full object-contain drop-shadow-md"
+                      />
+                    </div>
+                    <div className="flex flex-col items-center sm:items-start gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[8.5px] sm:text-[9.5px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-[#d4af37]/25 text-[#854d0e] border border-[#d4af37]/50">
+                          {userRewardItem.rarity}
+                        </span>
+                        <span className="text-[9.5px] sm:text-[10.5px] font-mono text-[#8b6943]">
+                          {userRewardItem.origin}
+                        </span>
+                      </div>
+                      <h4
+                        style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                        className="text-sm sm:text-base font-black text-[#1c0f05] leading-tight group-hover:text-[#8b261d] transition-colors"
+                      >
+                        {userRewardItem.name}
+                      </h4>
+                      <p className="text-[10px] sm:text-[11px] text-[#5c3710] font-mono italic">
+                        &ldquo;{userRewardItem.inscription}&rdquo;
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedRewardItem(userRewardItem);
+                    }}
+                    style={{
+                      fontFamily: "var(--font-cinzel), 'Cinzel', serif",
+                      clipPath:
+                        'polygon(4px 0%, calc(100% - 4px) 0%, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0% calc(100% - 4px), 0% 4px)',
+                    }}
+                    className="py-2 px-4 bg-gradient-to-b from-[#ffd700] via-[#d4af37] to-[#996515] text-[#140802] font-black text-xs uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition shrink-0 cursor-pointer"
+                  >
+                    Inspect Relic ➔
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Not Yet Unlocked: 1 SURPRISE REWARD LOCKED */
+              <div className="flex flex-col gap-2">
+                <div className="p-2 rounded-lg bg-[#241308]/[0.06] border border-[#8b6943]/35 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🔒</span>
+                    <p className="text-[11px] sm:text-xs text-[#5c3710] font-serif italic">
+                      Surprise artifact remains sealed! Guess the product early with unlimited attempts or unlock all 3 clues to reveal your relic.
+                    </p>
+                  </div>
+                  <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-[#241308]/10 text-[#7a5a3a] border border-[#8b6943]/30 shrink-0">
+                    HIDDEN
+                  </span>
+                </div>
+
+                <div className="p-3.5 sm:p-4 rounded-xl border-2 border-dashed border-[#8b6943]/45 bg-gradient-to-b from-[#241308]/[0.08] via-[#241308]/[0.04] to-[#241308]/[0.08] flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3 sm:gap-4 text-center sm:text-left select-none relative overflow-hidden">
+                  <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-b from-[#3a2010]/20 to-[#241308]/30 border-2 border-[#8b6943]/40 flex items-center justify-center text-2xl text-[#b38920] shadow-inner shrink-0">
+                    <span className="animate-pulse">❓</span>
+                    <span className="absolute -bottom-1 -right-1 text-xs">🔒</span>
+                  </div>
+                  <div className="flex flex-col items-center sm:items-start gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[8.5px] sm:text-[9.5px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-[#8b6943]/20 text-[#8b6943] border border-[#8b6943]/30">
+                        Surprise Relic
+                      </span>
+                      <span className="text-[8.5px] sm:text-[9.5px] font-mono font-bold text-[#8b261d]">
+                        🔒 Sealed
+                      </span>
+                    </div>
+                    <h4
+                      style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
+                      className="text-sm sm:text-base font-black text-[#2e1908] tracking-wide"
+                    >
+                      Locked Mystery Artifact
+                    </h4>
+                    <p className="text-[11px] sm:text-xs text-[#6b4516] font-serif italic max-w-md">
+                      Find and guess the product early with unlimited guesses, or uncover all 3 clues along the expedition trail to unlock this artifact!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </motion.div>
 
-      {/* Relic Reward Inspection Modal */}
+      {/* 4 Items Reward Inspection Modal */}
       <AnimatePresence>
-        {modalOpen && claimedRelic && (
+        {selectedRewardItem && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
             role="dialog"
             aria-modal="true"
-            onClick={() => setModalOpen(false)}
+            onClick={() => setSelectedRewardItem(null)}
           >
             <motion.div
               initial={{ scale: 0.85, opacity: 0, y: 20 }}
@@ -1230,8 +1505,8 @@ export default function TreasureCard({
               className="relative w-full max-w-md rounded-2xl border-2 border-[#d4af37] bg-gradient-to-b from-[#1f1207] via-[#2c1a0e] to-[#120a03] p-6 sm:p-7 text-[#f5ebd7] shadow-[0_0_40px_rgba(212,175,55,0.45)] overflow-hidden font-['Georgia'] transform-gpu will-change-transform"
             >
               <button
-                onClick={() => setModalOpen(false)}
-                className="absolute top-3.5 right-3.5 text-[#d4af37]/70 hover:text-[#fffbeb] transition text-sm font-mono w-7 h-7 rounded-full border border-[#8c6d23]/40 flex items-center justify-center hover:bg-[#8c6d23]/20"
+                onClick={() => setSelectedRewardItem(null)}
+                className="absolute top-3.5 right-3.5 text-[#d4af37]/70 hover:text-[#fffbeb] transition text-sm font-mono w-7 h-7 rounded-full border border-[#8c6d23]/40 flex items-center justify-center hover:bg-[#8c6d23]/20 cursor-pointer"
                 aria-label="Close"
               >
                 ✕
@@ -1239,24 +1514,23 @@ export default function TreasureCard({
 
               <div className="text-center pb-2">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#d4af37]/60 bg-[#d4af37]/15 text-[#fef08a] font-mono text-[10px] sm:text-xs font-extrabold uppercase tracking-widest shadow-sm">
-                  <span>✦ EXPEDITION CHALLENGE COMPLETED ✦</span>
+                  <span>✦ EXPEDITION ITEM SECURED ✦</span>
                 </div>
               </div>
 
+              {/* Large Image Preview */}
               <div className="relative my-4 flex flex-col items-center justify-center">
-                <div className="relative w-20 h-20 rounded-full bg-gradient-to-b from-[#451a03] to-[#1a0b02] border-2 border-[#d4af37] flex items-center justify-center shadow-[0_0_24px_rgba(212,175,55,0.55)]">
-                  {claimedRelic.type === 'key' ? (
-                    <TreasureKeyIcon size={32} color="#d4af37" />
-                  ) : claimedRelic.type === 'astrolabe' ? (
-                    <AntiqueCompassIcon size={32} color="#d4af37" />
-                  ) : (
-                    <RelicCoinIcon size={32} color="#d4af37" />
-                  )}
+                <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-2xl bg-gradient-to-b from-[#451a03] to-[#1a0b02] border-2 border-[#d4af37] flex items-center justify-center shadow-[0_0_28px_rgba(212,175,55,0.5)] p-2">
+                  <img
+                    src={selectedRewardItem.image}
+                    alt={selectedRewardItem.name}
+                    className="w-full h-full object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.8)]"
+                  />
                 </div>
 
                 <div className="mt-2 text-center">
                   <span className="px-3 py-0.5 rounded border border-[#f59e0b]/40 bg-[#f59e0b]/20 text-[#fbbf24] font-mono text-[10px] sm:text-xs font-bold uppercase tracking-wider">
-                    {claimedRelic.name}
+                    {selectedRewardItem.rarity}
                   </span>
                 </div>
               </div>
@@ -1266,33 +1540,32 @@ export default function TreasureCard({
                   style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
                   className="text-xl sm:text-2xl font-bold text-[#ffd700] tracking-tight leading-snug"
                 >
-                  {claimedRelic.name}
+                  {selectedRewardItem.name}
                 </h3>
                 <p className="text-xs font-mono uppercase tracking-wider text-[#a07246]">
-                  {claimedRelic.origin}
+                  Origin: {selectedRewardItem.origin}
                 </p>
 
                 <div className="my-3 p-3.5 rounded-lg border border-[#8c6d23]/40 bg-[#140a02]/60 text-left">
                   <p className="text-xs sm:text-sm text-[#e2d3be] font-mono leading-relaxed">
-                    {claimedRelic.lore}
+                    {selectedRewardItem.lore}
                   </p>
                 </div>
 
                 <div className="pt-1">
                   <p className="text-xs font-mono italic text-[#d4af37]/90 bg-[#2b1708]/70 py-2 px-3 rounded border border-[#8c6d23]/30">
-                    &ldquo;{claimedRelic.inscription}&rdquo;
+                    &ldquo;{selectedRewardItem.inscription}&rdquo;
                   </p>
                 </div>
               </div>
 
               <div className="mt-5 pt-3 border-t border-[#8c6d23]/40 flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-mono text-[#a07246]">
-                  <RelicCoinIcon size={14} color="#d4af37" />
-                  <span>Relic Secured</span>
+                  <span>✦ Item Saved in Inventory</span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setModalOpen(false)}
+                  onClick={() => setSelectedRewardItem(null)}
                   style={{
                     fontFamily: "var(--font-cinzel), 'Cinzel', serif",
                     clipPath:

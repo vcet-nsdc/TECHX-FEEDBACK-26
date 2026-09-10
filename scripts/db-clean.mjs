@@ -16,13 +16,24 @@ if (typeof process.loadEnvFile === 'function') {
   }
 }
 
-const uri = process.env.MONGODB_URI;
+function normalizeMongoUri(rawUri) {
+  if (rawUri.includes('mongodb+srv://') && rawUri.includes('feedback-26.oskfbzz.mongodb.net')) {
+    const credMatch = rawUri.match(/mongodb\+srv:\/\/([^@]+)@/);
+    const creds = credMatch ? `${credMatch[1]}@` : '';
+    return `mongodb://${creds}ac-kfmjx7c-shard-00-00.oskfbzz.mongodb.net:27017,ac-kfmjx7c-shard-00-01.oskfbzz.mongodb.net:27017,ac-kfmjx7c-shard-00-02.oskfbzz.mongodb.net:27017/techx-feedback-2026?ssl=true&replicaSet=atlas-5vxff4-shard-0&authSource=admin&retryWrites=true&w=majority&appName=FeedBack-26`;
+  }
+  return rawUri;
+}
+
+const rawUri = process.env.MONGODB_URI;
 const dbName = process.env.DB_NAME || 'techx-feedback-2026';
 
-if (!uri) {
+if (!rawUri) {
   console.error('\x1b[31m[ERROR]\x1b[0m MONGODB_URI is not defined in .env.local or environment.');
   process.exit(1);
 }
+
+const uri = normalizeMongoUri(rawUri);
 
 // Parse optional CLI flags: --seed (re-seed after clean), --labs (also reset labs catalog)
 const args = process.argv.slice(2);
@@ -34,7 +45,10 @@ console.log('\x1b[1m\x1b[36m  TechX 2026 Database Clean Utility    \x1b[0m');
 console.log('\x1b[33m========================================\x1b[0m');
 console.log(`Target Database: \x1b[32m${dbName}\x1b[0m`);
 
-const client = new MongoClient(uri);
+const client = new MongoClient(uri, {
+  tls: true,
+  tlsAllowInvalidCertificates: true,
+});
 
 async function cleanDatabase() {
   try {
