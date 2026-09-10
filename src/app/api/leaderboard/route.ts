@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(publicLeaderboard, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Cache-Control': 'public, s-maxage=3, stale-while-revalidate=6',
       },
     });
   } catch (error) {

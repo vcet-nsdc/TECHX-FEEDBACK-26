@@ -26,27 +26,62 @@ export function generateOrderedSerpentineLayout(count: number): Point2D[] {
   if (count <= 0) return [];
   if (count === 1) return [{ x: 49, y: 50 }];
 
-  const spanX = BOUNDS.maxX - BOUNDS.minX;
-  const spanY = BOUNDS.maxY - BOUNDS.minY;
+  // Dedicated handcrafted optimal layouts for standard lab product counts:
+  // 10 Checkpoints (Labs 502 & 509): perfectly alternating left/right with 17% vertical clearance
+  if (count === 10) {
+    return [
+      { x: 50, y: 13 }, // 0: Top center
+      { x: 76, y: 21 }, // 1: Upper right
+      { x: 24, y: 29 }, // 2: Upper left
+      { x: 76, y: 38 }, // 3: Mid-upper right
+      { x: 24, y: 46 }, // 4: Mid-left
+      { x: 76, y: 55 }, // 5: Mid-right
+      { x: 24, y: 63 }, // 6: Lower-mid left
+      { x: 76, y: 72 }, // 7: Lower-mid right
+      { x: 24, y: 80 }, // 8: Bottom left
+      { x: 50, y: 88 }, // 9: Bottom center
+    ];
+  }
+
+  // 6 Checkpoints (Lab 508): sweeping S-curve with 14% vertical separation
+  if (count === 6) {
+    return [
+      { x: 49, y: 14 },
+      { x: 76, y: 28 },
+      { x: 24, y: 42 },
+      { x: 76, y: 56 },
+      { x: 24, y: 70 },
+      { x: 50, y: 84 },
+    ];
+  }
+
+  // 4 Checkpoints (Lab 510): wide open trail with 22% vertical separation
+  if (count === 4) {
+    return [
+      { x: 49, y: 18 },
+      { x: 76, y: 40 },
+      { x: 24, y: 62 },
+      { x: 50, y: 84 },
+    ];
+  }
+
+  // Generic fallback for any arbitrary count:
+  const minY = 14;
+  const maxY = 86;
+  const spanY = maxY - minY;
   const points: Point2D[] = [];
 
   for (let i = 0; i < count; i++) {
     const progress = i / (count - 1);
-    // Progressive downward pacing with slight organic variation
-    const nominalY = BOUNDS.minY + progress * spanY;
-    // Serpentine wave: alternates left and right wings of the map
-    const wavePhase = progress * Math.PI * (count <= 4 ? 1.5 : count <= 7 ? 2.5 : 3.5);
-    const nominalX = 49 + Math.sin(wavePhase) * (spanX * 0.44);
-
-    const x = Math.max(
-      BOUNDS.minX,
-      Math.min(BOUNDS.maxX, Math.round(nominalX))
-    );
-    const y = Math.max(
-      BOUNDS.minY,
-      Math.min(BOUNDS.maxY, Math.round(nominalY))
-    );
-
+    const y = Math.round(minY + progress * spanY);
+    let x = 49;
+    if (i === 0) {
+      x = 49;
+    } else if (i === count - 1) {
+      x = i % 2 === 1 ? 70 : 30;
+    } else {
+      x = i % 2 === 1 ? 75 : 25;
+    }
     points.push({ x, y });
   }
 

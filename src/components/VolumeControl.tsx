@@ -23,14 +23,14 @@ export default function VolumeControl({ embedded = false, className = '' }: Volu
     return (
       <button
         onClick={toggleMute}
-        className={`p-1 sm:p-1.5 rounded bg-[#0d0704] border border-[#52351e] text-[#8c6f4b] hover:text-[#ffd700] hover:border-[#8c6d23] active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-sm ${className}`}
+        className={`p-2 sm:p-2.5 rounded-lg bg-[#0d0704] border border-[#52351e] text-[#8c6f4b] hover:text-[#ffd700] hover:border-[#8c6d23] active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-md ${className}`}
         aria-label={isMuted || volume === 0 ? "Unmute audio" : "Mute audio"}
         title={isMuted || volume === 0 ? "Unmute audio" : "Mute audio"}
       >
         {isMuted || volume === 0 ? (
-          <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#e5a842]" />
+          <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-[#e5a842]" />
         ) : (
-          <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#ffd700]" />
+          <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#ffd700]" />
         )}
       </button>
     );

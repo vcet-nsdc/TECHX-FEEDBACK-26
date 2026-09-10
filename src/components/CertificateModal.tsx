@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
 
 interface CertificateModalProps {
@@ -19,6 +20,7 @@ export default function CertificateModal({
   userName,
   department: _department,
 }: CertificateModalProps) {
+  const router = useRouter();
   const { user } = useUser();
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
@@ -39,15 +41,15 @@ export default function CertificateModal({
   const cleanName = (userName || user?.name || fallbackStoredName || 'Explorer').trim();
   const displayName = cleanName.toUpperCase();
 
-  // Client-side canvas generator (used for offline or fallback / print)
+  // Client-side canvas generator (primary, 100% reliable across Netlify, mobile, offline)
   const generateCertificateCanvas = async (): Promise<HTMLCanvasElement> => {
-    if (typeof window !== 'undefined' && document.fonts) {
+    if (typeof document !== 'undefined' && document.fonts) {
       try {
         await document.fonts.ready;
       } catch {}
     }
 
-    const img = new Image();
+    const img = new window.Image();
     img.crossOrigin = 'anonymous';
     img.src = '/certificate/certificate.png';
 
@@ -56,7 +58,7 @@ export default function CertificateModal({
         resolve();
       } else {
         img.onload = () => resolve();
-        img.onerror = (e) => reject(e);
+        img.onerror = () => reject(new Error('Failed to load certificate template image'));
       }
     });
 
@@ -73,7 +75,7 @@ export default function CertificateModal({
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#5c3a1e';
-    ctx.font = 'bold 26px Georgia, "Times New Roman", serif';
+    ctx.font = 'bold 26px Cinzel, Georgia, "Times New Roman", serif';
     ctx.fillText('P R O U D L Y   P R E S E N T E D   T O', 1000, 550);
 
     // 3. Participant Name in large, prominent lettering
@@ -85,6 +87,11 @@ export default function CertificateModal({
     } else if (displayName.length > 14) {
       fontSize = 68;
     }
+
+    // High contrast warm outline backing
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.font = `bold ${fontSize}px Cinzel, Georgia, "Times New Roman", serif`;
+    ctx.fillText(displayName, 1000, 637);
 
     ctx.fillStyle = '#140701';
     ctx.font = `bold ${fontSize}px Cinzel, Georgia, "Times New Roman", serif`;
@@ -100,23 +107,23 @@ export default function CertificateModal({
     const cleanFileName = `TechX_2026_Certificate_${displayName.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
 
     try {
-      // Primary: High-fidelity server-side sharp render (pixel-perfect SVG typography)
-      const downloadUrl = `/api/certificate?name=${encodeURIComponent(displayName)}&t=${Date.now()}`;
-      const response = await fetch(downloadUrl);
+      // Primary: High-fidelity client-side canvas render (ensures name is ALWAYS rendered on Netlify & mobile)
+      const canvas = await generateCertificateCanvas();
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob((b) => resolve(b), 'image/png', 1.0)
+      );
 
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}`);
-      }
+      if (!blob) throw new Error('Canvas blob export failed');
 
-      const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
-
       const link = document.createElement('a');
       link.href = blobUrl;
       link.download = cleanFileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+
       // Persist expedition conclusion & certificate downloaded
       if (typeof window !== 'undefined') {
         const emailKey = (_userEmail || user?.email || '').trim().toLowerCase();
@@ -133,18 +140,23 @@ export default function CertificateModal({
       setDownloadSuccess(true);
       setTimeout(() => {
         onClose();
-      }, 1200);
+        router.push('/finish');
+      }, 700);
     } catch (err) {
-      console.warn('API certificate download failed, falling back to canvas:', err);
+      console.warn('Canvas download failed, trying server API fallback:', err);
       try {
-        const canvas = await generateCertificateCanvas();
-        const dataUrl = canvas.toDataURL('image/png', 1.0);
+        const downloadUrl = `/api/certificate?name=${encodeURIComponent(displayName)}&t=${Date.now()}`;
+        const response = await fetch(downloadUrl);
+        if (!response.ok) throw new Error(`API returned ${response.status}`);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = dataUrl;
+        link.href = blobUrl;
         link.download = cleanFileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
 
         if (typeof window !== 'undefined') {
           const emailKey = (_userEmail || user?.email || '').trim().toLowerCase();
@@ -161,44 +173,13 @@ export default function CertificateModal({
         setDownloadSuccess(true);
         setTimeout(() => {
           onClose();
-        }, 1200);
+          router.push('/finish');
+        }, 700);
       } catch (fallbackErr) {
         console.error('All certificate download methods failed:', fallbackErr);
       }
     } finally {
       setIsDownloading(false);
-    }
-  };
-
-  const handlePrint = async () => {
-    try {
-      // Use API or canvas for print preview
-      const printUrl = `/api/certificate?name=${encodeURIComponent(displayName)}&t=${Date.now()}`;
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>TechX 2026 Certificate - ${displayName}</title>
-              <style>
-                @page { size: landscape; margin: 0; }
-                body { margin: 0; display: flex; align-items: center; justify-content: center; background: #000; }
-                img { width: 100vw; height: 100vh; object-fit: contain; }
-              </style>
-            </head>
-            <body>
-              <img src="${printUrl}" onload="window.print();window.close();" />
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-      } else {
-        window.print();
-      }
-    } catch (err) {
-      console.error('Error opening print preview:', err);
-      window.print();
     }
   };
 
@@ -304,8 +285,8 @@ export default function CertificateModal({
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full mt-4 pt-3 border-t border-[#8c6d23]/40">
+          {/* Action Button: Download Now — Single prominent button */}
+          <div className="w-full mt-4 pt-3 border-t border-[#8c6d23]/40">
             <button
               type="button"
               onClick={handleDownloadPNG}
@@ -315,20 +296,11 @@ export default function CertificateModal({
                 clipPath:
                   'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
               }}
-              className="flex-1 py-3 px-5 bg-gradient-to-r from-[#ffd700] via-[#d4af37] to-[#996515] text-[#140802] font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer border border-[#fff9d6] disabled:opacity-50"
+              className="w-full py-3.5 px-6 bg-gradient-to-r from-[#ffd700] via-[#d4af37] to-[#996515] text-[#140802] font-black text-sm sm:text-base uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer border border-[#fff9d6] disabled:opacity-50"
             >
               <span>
-                {isDownloading ? 'Generating 2000x1414 PNG...' : '⬇ Download Certificate (High-Res PNG)'}
+                {isDownloading ? 'Downloading Certificate...' : '⬇ DOWNLOAD NOW'}
               </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handlePrint}
-              style={{ fontFamily: "var(--font-cinzel), 'Cinzel', Georgia, serif" }}
-              className="py-3 px-5 bg-[#2b1708] text-[#f5ebd7] rounded-md font-bold text-xs sm:text-sm uppercase tracking-wider border border-[#8c6d23]/70 hover:bg-[#3d220c] active:scale-[0.98] transition cursor-pointer flex items-center justify-center gap-2 shrink-0"
-            >
-              <span>🖨️ Print / Save PDF</span>
             </button>
           </div>
         </motion.div>

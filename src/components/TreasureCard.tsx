@@ -670,7 +670,7 @@ export default function TreasureCard({
           {/* Treasure Undersea Background Artwork with Low Opacity */}
           <div
             style={{
-              backgroundImage: `url('/treasure.png')`,
+              backgroundImage: `url('/treasure.webp')`,
               WebkitMaskImage: `url('/assets/images/torn-card-bg.webp')`,
               WebkitMaskSize: '100% 100%',
               maskImage: `url('/assets/images/torn-card-bg.webp')`,

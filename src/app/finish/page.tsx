@@ -7,15 +7,22 @@ import FinalCertificate from '@/components/FinalCertificate';
 
 export default function FinishPage() {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isLoading } = useUser();
 
   useEffect(() => {
-    if (!user) {
-      router.push('/');
+    if (!isLoading) {
+      const hasStoredSession =
+        typeof window !== 'undefined' &&
+        (Boolean(localStorage.getItem('user_session')) ||
+          localStorage.getItem('techx_certificate_downloaded_global') === 'true' ||
+          localStorage.getItem('techx_expedition_concluded_global') === 'true');
+      if (!user && !hasStoredSession) {
+        router.push('/');
+      }
     }
-  }, [user, router]);
+  }, [user, isLoading, router]);
 
-  if (!user) return null;
+  if (isLoading) return null;
 
   return (
     <main style={{ minHeight: '100vh', backgroundColor: '#0d0a08' }}>
@@ -23,3 +30,4 @@ export default function FinishPage() {
     </main>
   );
 }
+

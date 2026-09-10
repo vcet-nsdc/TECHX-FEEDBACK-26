@@ -36,7 +36,11 @@ function getClientPromise(): Promise<MongoClient> {
   if (!globalWithMongo._mongoClientPromise) {
     const resolvedUri = normalizeMongoUri(uri);
     const client = new MongoClient(resolvedUri, {
-      serverSelectionTimeoutMS: 8000,
+      maxPoolSize: 10,
+      minPoolSize: 0,
+      maxIdleTimeMS: 30000,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
     });
     globalWithMongo._mongoClientPromise = client.connect().catch((err) => {
       delete globalWithMongo._mongoClientPromise;

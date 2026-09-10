@@ -12,6 +12,20 @@ export default function LabProductsPage() {
   const labId = (params.labId as string) || 'a';
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const emailKey = (user?.email || '').trim().toLowerCase();
+      const isConcluded =
+        localStorage.getItem('techx_certificate_downloaded_global') === 'true' ||
+        localStorage.getItem('techx_expedition_concluded_global') === 'true' ||
+        (emailKey && localStorage.getItem(`techx_certificate_downloaded_${emailKey}`) === 'true') ||
+        (emailKey && localStorage.getItem(`techx_expedition_concluded_${emailKey}`) === 'true');
+
+      if (isConcluded) {
+        router.replace('/finish');
+        return;
+      }
+    }
+
     if (!isLoading && !user) {
       router.push('/');
     }
@@ -24,4 +38,4 @@ export default function LabProductsPage() {
       <LabMapView labId={labId} />
     </main>
   );
-}
+}

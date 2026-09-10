@@ -36,9 +36,7 @@ export default function CompletionChecker() {
 
       if (allDone && !isCompleted) {
         localStorage.setItem(`completion_${user.email}`, 'true');
-        redirectTimerRef.current = setTimeout(() => {
-          router.push('/finish');
-        }, 1000);
+        // Do not auto-redirect; let the user claim their certificate on /labs
       }
     };
 

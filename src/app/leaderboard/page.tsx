@@ -66,6 +66,7 @@ export default function PublicLeaderboardPage() {
     fetchLeaderboard();
     fetchProductStats();
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       fetchLeaderboard();
       fetchProductStats();
     }, 4000);

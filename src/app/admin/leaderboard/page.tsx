@@ -112,6 +112,7 @@ export default function AdminLeaderboardPage() {
     fetchLeaderboard();
     fetchProductStats();
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       fetchLeaderboard();
       fetchProductStats();
     }, 4000);

@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { motion, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
 import { DEPARTMENT_OPTIONS } from '@/lib/mock-data';
@@ -10,18 +10,26 @@ import { getSubmittedFeedbackForUser } from '@/lib/expeditionData';
 import { TechXLogoText } from '@/components/uncharted/TechXTypography';
 import { getNetworkTier, getDeviceTier, isSaveDataEnabled } from '@/lib/network-tier';
 
-const TOTAL_FRAMES = 120;
+// Cap frames to 65: scrubs right up to avatar/showcase appearance, saving 50% extra frames
+const TOTAL_SOURCE_FRAMES = 65;
 const FRAME_PREFIX = '/frames/frame_';
 // WebP frames downscaled for smooth mobile & desktop scrub
 const FRAME_SUFFIX = '_delay-0.016s.webp';
-// Scroll distance the frame sequence plays out over, in viewport heights.
-// Reduced to 200 for a 2-scroll experience: Logo → Showcase + Begin button.
+// Scroll distance in viewport heights: 200vh gives a tight 2-swipe journey directly to the showcase.
 const SCROLL_HEIGHT_VH = 200;
 
 function frameSrc(i: number, suffix: string = FRAME_SUFFIX) {
-  // Internal frame index is 0-based (0..TOTAL_FRAMES-1); filenames on disk
-  // are 1-based (frame_000.webp .. frame_119.webp).
   return `${FRAME_PREFIX}${String(i).padStart(3, '0')}${suffix}`;
+}
+
+// Sample every 2nd frame (33 frames total) — silky smooth scrub, cuts network payload in half
+const FRAME_STRIDE = 2;
+const SAMPLED_INDICES: number[] = [];
+for (let i = 0; i < TOTAL_SOURCE_FRAMES; i += FRAME_STRIDE) {
+  SAMPLED_INDICES.push(i);
+}
+if (SAMPLED_INDICES[SAMPLED_INDICES.length - 1] !== TOTAL_SOURCE_FRAMES - 1) {
+  SAMPLED_INDICES.push(TOTAL_SOURCE_FRAMES - 1);
 }
 
 export interface AvatarOption {
@@ -37,53 +45,28 @@ export const AVATAR_OPTIONS: AvatarOption[] = [
     id: 'nathan',
     name: 'Nathan Drake',
     displayName: 'Nathan Drake',
-    image: '/avatar/nathan.png',
+    image: '/avatar/nathan.webp',
   },
   {
     id: 'victor',
     name: 'Victor Sullivan (Sully)',
     displayName: 'Victor Sullivan',
     subName: '(Sully)',
-    image: '/avatar/victor.png',
+    image: '/avatar/victor.webp',
   },
   {
     id: 'elena',
     name: 'Elena Fisher',
     displayName: 'Elena Fisher',
-    image: '/avatar/elena.png',
+    image: '/avatar/elena.webp',
   },
   {
     id: 'chloe',
     name: 'Chloe Frazer',
     displayName: 'Chloe Frazer',
-    image: '/avatar/chloe.png',
+    image: '/avatar/chloe.webp',
   },
 ];
-
-function checkIsLowEnd(): boolean {
-  if (typeof window === 'undefined') return false;
-
-  // 1. Manual query param override for testing (?lowend=true or ?perf=low or ?lowend=false)
-  try {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('lowend') === 'true' || params.get('perf') === 'low') return true;
-    if (params.get('lowend') === 'false' || params.get('perf') === 'high') return false;
-  } catch { }
-
-  // 2. Network constraints apply to ALL devices (desktop, laptop, mobile alike)
-  const netTier = getNetworkTier();
-  if (netTier === 'slow' || isSaveDataEnabled()) {
-    return true;
-  }
-
-  // 3. Hardware constraints (low memory / limited cores)
-  const deviceTier = getDeviceTier();
-  if (deviceTier === 'low') {
-    return true;
-  }
-
-  return false;
-}
 
 export default function LandingReveal() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -93,9 +76,6 @@ export default function LandingReveal() {
 
   const [ready, setReady] = useState(false);
   const [showFormOverlay, setShowFormOverlay] = useState(false);
-  const [isLowEnd, setIsLowEnd] = useState(false);
-
-
 
   const router = useRouter();
   const { user, login } = useUser();
@@ -133,6 +113,17 @@ export default function LandingReveal() {
     []
   );
 
+  // Lock body scroll when the registration tablet modal is open
+  useEffect(() => {
+    if (showFormOverlay) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [showFormOverlay]);
+
   useEffect(() => {
     if (user) {
       if (!name) setName(user.name);
@@ -141,160 +132,39 @@ export default function LandingReveal() {
     }
   }, [user]);
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
-  });
+  const { scrollYProgress } = useScroll();
 
-  // Fast, silky smooth spring interpolation tuned to eliminate mobile micro-jitter
+  // Smooth spring interpolation for silky 60fps frame scrubbing
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 280,
-    damping: 34,
-    mass: 0.1,
+    stiffness: 300,
+    damping: 32,
+    mass: 0.08,
     restDelta: 0.001,
   });
 
-  // Ratchet that resets when the user is back at the very top of the page.
-  const maxProgress = useMotionValue(0);
-  useEffect(() => {
-    const unsub = smoothProgress.on('change', (v) => {
-      if (v <= 0.01) {
-        maxProgress.set(v);
-      } else if (v > maxProgress.get()) {
-        maxProgress.set(v);
-      }
-    });
-    return () => unsub();
-  }, [smoothProgress, maxProgress]);
+  // Scroll 1: Logo — fully visible at top, fades out cleanly
+  const logoOpacity = useTransform(smoothProgress, [0, 0.12, 0.35], [1, 1, 0]);
+  const logoScale = useTransform(smoothProgress, [0, 0.35], [1, 0.90]);
 
-  // ─── 2-scroll layout ───────────────────────────────────────────
-  // Scroll 1 (0–40%):  TechX Logo — visible at top, fades out
-  // Scroll 2 (40–100%): Product Showcase + treasure + Begin Exploration (stays)
-  // Registration form: overlay triggered by button click only
-  // ────────────────────────────────────────────────────────────────
-
-  // Scroll 1: Logo — fully visible at top, fades out by ~40%
-  const logoOpacity = useTransform(maxProgress, [0, 0.15, 0.40], [1, 1, 0]);
-  const logoScale = useTransform(maxProgress, [0, 0.40], [1, 0.88]);
-
-  // Scroll 2: Product Showcase + treasure + CTA — appears at 40%, stays visible
-  const midOpacity = useTransform(smoothProgress, [0.38, 0.52], [0, 1]);
-  const midY = useTransform(smoothProgress, [0.38, 0.52], [20, 0]);
+  // Scroll 2: Product Showcase + treasure + CTA — appears smoothly at 38%..54%, perfectly stationary
+  const midOpacity = useTransform(smoothProgress, [0.38, 0.54], [0, 1]);
 
   const scrollHintOpacity = useTransform(smoothProgress, [0, 0.08], [1, 0]);
 
-  // Subtle, GPU-accelerated parallax for low-end static background on scroll
-  const staticScale = useTransform(smoothProgress, [0, 1], [1, 1.06]);
-  const staticY = useTransform(smoothProgress, [0, 1], ['0%', '-3%']);
-
-  // Resilient 3-tier preloader:
-  // - slow / low-end: 0 frames, preloads static hero, readies immediately upon image load (no fake timers)
-  // - moderate: progressive batching with concurrency 2, readies after 6 frames, loads rest in background
-  // - fast: full sequence with concurrency 6, readies after 15 frames, loads rest in background
-  // Frame preloader — loads frames immediately, no loading screen delay
-  useEffect(() => {
-    const isLowEndDevice = checkIsLowEnd();
-    setIsLowEnd(isLowEndDevice);
-    const netTier = getNetworkTier();
-
-    if (isLowEndDevice) {
-      // LOW-END: preload static hero only, ready immediately on load
-      const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-      const staticSrc = isMobile
-        ? '/assets/images/scroll-static-mobile.webp'
-        : '/assets/images/scroll-static-desktop.webp';
-
-      const img = new window.Image();
-      let done = false;
-      const finish = () => {
-        if (done) return;
-        done = true;
-        setReady(true);
-      };
-      img.onload = finish;
-      img.onerror = finish;
-      img.src = staticSrc;
-
-      // Failsafe
-      const failsafe = setTimeout(finish, 1500);
-      return () => clearTimeout(failsafe);
-    }
-
-    // MODERATE / FAST TIER: load frames, ready as soon as enough are decoded
-    const PRELOAD_CONCURRENCY = netTier === 'moderate' ? 2 : 6;
-    const TARGET_INITIAL_FRAMES = netTier === 'moderate' ? 6 : 15;
-
-    const images: HTMLImageElement[] = new Array(TOTAL_FRAMES);
-    let loadedCount = 0;
-    let cursor = 0;
-    let isTransitioning = false;
-
-    const checkReady = () => {
-      if (isTransitioning) return;
-      if (loadedCount >= TARGET_INITIAL_FRAMES || loadedCount >= 1) {
-        isTransitioning = true;
-        setReady(true);
-      }
-    };
-
-    const resolve = () => {
-      loadedCount++;
-      checkReady();
-      pump();
-    };
-
-    const loadImage = (i: number) => {
-      const img = new window.Image();
-      img.decoding = 'async';
-      img.fetchPriority = i < TARGET_INITIAL_FRAMES ? 'high' : 'low';
-      img.onload = () => {
-        if ('decode' in img) {
-          img.decode().then(() => resolve()).catch(() => resolve());
-        } else {
-          resolve();
-        }
-      };
-      img.onerror = resolve;
-      img.src = frameSrc(i);
-      images[i] = img;
-    };
-
-    const pump = () => {
-      while (cursor < TOTAL_FRAMES && cursor - loadedCount < PRELOAD_CONCURRENCY) {
-        loadImage(cursor);
-        cursor++;
-      }
-    };
-
-    pump();
-    framesRef.current = images;
-
-    // Failsafe: if frames stall, force ready
-    const failsafe = setTimeout(() => {
-      if (!isTransitioning) {
-        isTransitioning = true;
-        setReady(true);
-      }
-    }, 5500);
-
-    return () => clearTimeout(failsafe);
-  }, []);
-
-  const drawFrame = useCallback((index: number) => {
-    if (isLowEnd) return;
+  const drawFrame = useCallback((sourceIndex: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Find requested frame or closest loaded frame fallback to prevent blank flashes during fast scrub
-    let img = framesRef.current[index];
+    let img = framesRef.current[sourceIndex];
     if (!img || !img.complete || img.naturalWidth === 0) {
-      for (let offset = 1; offset < TOTAL_FRAMES; offset++) {
-        const prev = framesRef.current[index - offset];
+      // Find closest loaded frame
+      for (let offset = 1; offset < TOTAL_SOURCE_FRAMES; offset++) {
+        const prev = framesRef.current[sourceIndex - offset];
         if (prev && prev.complete && prev.naturalWidth > 0) {
           img = prev;
           break;
         }
-        const next = framesRef.current[index + offset];
+        const next = framesRef.current[sourceIndex + offset];
         if (next && next.complete && next.naturalWidth > 0) {
           img = next;
           break;
@@ -314,19 +184,92 @@ export default function LandingReveal() {
     const dh = img.naturalHeight * scale;
 
     ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
-  }, [isLowEnd]);
+  }, []);
+
+  // Frame preloader — loads frame 0 immediately, batches sampled frames in parallel
+  useEffect(() => {
+    let isCancelled = false;
+    const images: (HTMLImageElement | null)[] = new Array(TOTAL_SOURCE_FRAMES).fill(null);
+    framesRef.current = images as HTMLImageElement[];
+
+    // 1. Immediately load frame 0 so the canvas paints within 50ms
+    const firstImg = new window.Image();
+    firstImg.decoding = 'async';
+    const onFirstLoad = () => {
+      if (isCancelled) return;
+      images[0] = firstImg;
+      setReady(true);
+      drawFrame(0);
+    };
+    firstImg.onload = onFirstLoad;
+    firstImg.onerror = () => {
+      if (isCancelled) return;
+      setReady(true);
+    };
+    firstImg.src = frameSrc(0);
+    if (firstImg.complete) {
+      onFirstLoad();
+    }
+
+    // Safety fallback: ensure ready is set even if image callbacks delay
+    const fallbackTimer = setTimeout(() => {
+      if (!isCancelled) setReady(true);
+    }, 250);
+
+    // 2. Concurrently load sampled frames in batches of 6
+    const CONCURRENCY = 6;
+    let indexCursor = 0;
+    let activeWorkers = 0;
+
+    const loadNext = () => {
+      if (isCancelled) return;
+      while (activeWorkers < CONCURRENCY && indexCursor < SAMPLED_INDICES.length) {
+        const frameIdx = SAMPLED_INDICES[indexCursor++];
+        activeWorkers++;
+
+        const img = new window.Image();
+        img.decoding = 'async';
+        const onFinish = () => {
+          activeWorkers--;
+          if (!isCancelled) {
+            images[frameIdx] = img;
+            if (frameIdx === currentFrameRef.current) {
+              drawFrame(frameIdx);
+            }
+            loadNext();
+          }
+        };
+        img.onload = onFinish;
+        img.onerror = onFinish;
+        img.src = frameSrc(frameIdx);
+      }
+    };
+
+    loadNext();
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(fallbackTimer);
+    };
+  }, [drawFrame]);
 
   // Drive the canvas frame smoothly on scroll change (0% CPU when stationary)
   useEffect(() => {
-    if (!ready || isLowEnd) return;
-    drawFrame(currentFrameRef.current);
+    if (!ready) return;
+
+    // Draw frame matching initial scroll position
+    const initialProgress = Math.max(0, Math.min(1, smoothProgress.get()));
+    const initialIdx = Math.min(Math.floor(initialProgress * TOTAL_SOURCE_FRAMES), TOTAL_SOURCE_FRAMES - 1);
+    currentFrameRef.current = initialIdx;
+    drawFrame(initialIdx);
 
     let rafId: number | null = null;
-    let lastDrawn = currentFrameRef.current;
+    let lastDrawn = initialIdx;
 
-    const unsub = smoothProgress.on('change', (v) => {
+    const unsub = smoothProgress.on('change', (rawVal) => {
+      const v = typeof rawVal === 'number' ? rawVal : parseFloat(String(rawVal)) || 0;
       const clamped = Math.max(0, Math.min(1, v));
-      const idx = Math.min(Math.floor(clamped * TOTAL_FRAMES), TOTAL_FRAMES - 1);
+      const idx = Math.min(Math.floor(clamped * TOTAL_SOURCE_FRAMES), TOTAL_SOURCE_FRAMES - 1);
 
       if (idx !== lastDrawn) {
         lastDrawn = idx;
@@ -344,20 +287,20 @@ export default function LandingReveal() {
       unsub();
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, [ready, isLowEnd, smoothProgress, drawFrame]);
+  }, [ready, smoothProgress, drawFrame]);
 
   // Toggle whether the mid-section (Showcase + button) can capture pointer input
   const [showMid, setShowMid] = useState(false);
   useEffect(() => {
-    const unsub = smoothProgress.on('change', (v) => {
-      setShowMid(v > 0.40);
+    const unsub = smoothProgress.on('change', (rawVal) => {
+      const v = typeof rawVal === 'number' ? rawVal : parseFloat(String(rawVal)) || 0;
+      setShowMid(v > 0.38);
     });
     return () => unsub();
   }, [smoothProgress]);
 
   // Canvas resize with DPR clamp & address-bar debounce to prevent black frame flashes on mobile
   useEffect(() => {
-    if (isLowEnd) return;
     let prevWidth = 0;
     let prevHeight = 0;
 
@@ -390,7 +333,7 @@ export default function LandingReveal() {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
     };
-  }, [ready, isLowEnd, drawFrame]);
+  }, [ready, drawFrame]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -407,52 +350,63 @@ export default function LandingReveal() {
 
     setSubmitting(true);
     login({ name: name.trim(), department, email: email.trim(), avatar: selectedAvatar.image });
-    const submitted = getSubmittedFeedbackForUser(email);
-    const complete = submitted.length >= 25 || (typeof window !== 'undefined' && localStorage.getItem(`completion_${email}`) === 'true');
+    const emailKey = email.trim().toLowerCase();
+    const isConcluded =
+      typeof window !== 'undefined' &&
+      (localStorage.getItem('techx_certificate_downloaded_global') === 'true' ||
+        localStorage.getItem('techx_expedition_concluded_global') === 'true' ||
+        localStorage.getItem(`techx_certificate_downloaded_${emailKey}`) === 'true' ||
+        localStorage.getItem(`techx_expedition_concluded_${emailKey}`) === 'true');
+
     setTimeout(() => {
-      router.push(complete ? '/finish' : '/labs');
+      router.push(isConcluded ? '/finish' : '/labs');
     }, 250);
   };
 
   return (
-    <section ref={containerRef} className="relative bg-black" style={{ height: `${SCROLL_HEIGHT_VH}vh` }}>
-      <div className="sticky top-0 h-[100dvh] w-full overflow-hidden bg-black transform-gpu">
-        {/* Upscaled Static Scroll Background (serves low-end devices & instant 0ms underlay for high-end) */}
-        <motion.div
-          className={`absolute inset-0 h-full w-full pointer-events-none select-none transform-gpu transition-opacity duration-500 ${isLowEnd ? 'opacity-100' : ready ? 'opacity-0' : 'opacity-100'
-            }`}
-          style={isLowEnd ? { scale: staticScale, y: staticY } : undefined}
+    <section
+      ref={containerRef}
+      className="relative bg-black"
+      style={{
+        height: `${SCROLL_HEIGHT_VH}vh`,
+      }}
+    >
+      <div
+        className="fixed inset-0 h-[100dvh] w-full overflow-hidden bg-black transform-gpu pointer-events-none"
+      >
+        {/* Instant static underlay while frame 0 decodes */}
+        <div
+          className={`absolute inset-0 h-full w-full pointer-events-none select-none transform-gpu transition-opacity duration-500 ${
+            ready ? 'opacity-0' : 'opacity-100'
+          }`}
         >
-          {/* Desktop upscaled static image */}
+          {/* Desktop static underlay */}
           <Image
             src="/assets/images/scroll-static-desktop.webp"
             alt="TechX Expedition Camp"
             fill
-            priority={isLowEnd}
+            priority
             className="hidden md:block object-cover object-center"
             sizes="100vw"
           />
-          {/* Mobile upscaled static image */}
+          {/* Mobile static underlay */}
           <Image
             src="/assets/images/scroll-static-mobile.webp"
             alt="TechX Expedition Camp"
             fill
-            priority={isLowEnd}
+            priority
             className="block md:hidden object-cover object-center"
             sizes="100vw"
           />
-        </motion.div>
+        </div>
 
-        {/* Frame sequence canvas, scrubbed by scroll (completely omitted on low-end devices to save >400MB GPU texture memory) */}
-        {!isLowEnd && (
-          <canvas
-            ref={canvasRef}
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 transform-gpu ${ready ? 'opacity-100' : 'opacity-0'
-              }`}
-          />
-        )}
-
-
+        {/* Frame sequence canvas scrubbed by scroll — ALWAYS MOUNTED & GPU ACCELERATED */}
+        <canvas
+          ref={canvasRef}
+          className={`pointer-events-none select-none absolute inset-0 h-full w-full object-cover transition-opacity duration-300 transform-gpu ${
+            ready ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
 
         {/* Centered logo, visible at the very top of the page */}
         <motion.div
@@ -464,7 +418,7 @@ export default function LandingReveal() {
 
         {/* Scroll hint */}
         <motion.div
-          className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2 text-center text-white/90 font-cinzel"
+          className="pointer-events-none absolute bottom-8 left-1/2 z-10 -translate-x-1/2 text-center text-white/90 font-cinzel"
           style={{ opacity: scrollHintOpacity, willChange: 'transform, opacity', transform: 'translateZ(0)' }}
         >
           <div className="flex flex-col items-center gap-2">
@@ -476,8 +430,8 @@ export default function LandingReveal() {
         </motion.div>
 
         <motion.div
-          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 text-center px-4"
-          style={{ opacity: midOpacity, y: midY, pointerEvents: showMid ? 'auto' : 'none', willChange: 'transform, opacity', transform: 'translateZ(0)' }}
+          className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 text-center px-4"
+          style={{ opacity: midOpacity, willChange: 'transform, opacity', transform: 'translateZ(0)' }}
         >
           {/* Hidden treasure hint — clean, crisp, visible Cinzel font */}
           <p
@@ -495,39 +449,28 @@ export default function LandingReveal() {
             Product Showcase
           </h2>
 
-          {/* Lab 1, 2, 3 indicator — Clear, bold, high-contrast badges */}
-          <div className="flex items-center gap-2 sm:gap-4 my-1">
-            <span
-              style={{ fontFamily: "var(--font-oswald), var(--font-geist-sans), sans-serif", letterSpacing: '0.12em' }}
-              className="text-xs sm:text-sm font-bold uppercase px-3 py-1 rounded-full bg-emerald-950/70 border border-emerald-400/60 text-emerald-300 drop-shadow-[0_2px_8px_rgba(16,185,129,0.6)] shadow-md"
-            >
-              Lab 502
-            </span>
-            <span className="text-amber-400/80 font-bold">•</span>
-            <span
-              style={{ fontFamily: "var(--font-oswald), var(--font-geist-sans), sans-serif", letterSpacing: '0.12em' }}
-              className="text-xs sm:text-sm font-bold uppercase px-3 py-1 rounded-full bg-sky-950/70 border border-sky-400/60 text-sky-300 drop-shadow-[0_2px_8px_rgba(56,189,248,0.6)] shadow-md"
-            >
-              Lab 508
-            </span>
-            <span className="text-amber-400/80 font-bold">•</span>
-            <span
-              style={{ fontFamily: "var(--font-oswald), var(--font-geist-sans), sans-serif", letterSpacing: '0.12em' }}
-              className="text-xs sm:text-sm font-bold uppercase px-3 py-1 rounded-full bg-orange-950/70 border border-orange-400/60 text-orange-300 drop-shadow-[0_2px_8px_rgba(249,115,22,0.6)] shadow-md"
-            >
-              Lab 509
-            </span>
-            <span className="text-amber-400/80 font-bold">•</span>
-            <span
-              style={{ fontFamily: "var(--font-oswald), var(--font-geist-sans), sans-serif", letterSpacing: '0.12em' }}
-              className="text-xs sm:text-sm font-bold uppercase px-3 py-1 rounded-full bg-amber-950/70 border border-amber-400/60 text-amber-300 drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)] shadow-md"
-            >
-              Lab 510
-            </span>
+          {/* Expedition Lab Sectors — Authentic Uncharted expedition badge styling */}
+          <div className="flex items-center gap-2 sm:gap-3 my-1">
+            {['Lab 502', 'Lab 508', 'Lab 509', 'Lab 510'].map((lab, index) => (
+              <div key={lab} className="flex items-center gap-2 sm:gap-3">
+                <span
+                  style={{
+                    fontFamily: "var(--font-cinzel), 'Cinzel', serif",
+                    letterSpacing: '0.14em',
+                  }}
+                  className="text-xs sm:text-sm font-bold uppercase px-3 py-1 rounded-md bg-[#16100a]/85 border border-[#8c6d23]/60 text-[#f5e6cc] shadow-[0_2px_8px_rgba(0,0,0,0.85)] tracking-wider"
+                >
+                  {lab}
+                </span>
+                {index < 3 && (
+                  <span className="text-[#8c6d23] text-xs select-none">✦</span>
+                )}
+              </div>
+            ))}
           </div>
 
           {/* Circular Avatar Choosing Menu instead of Enter button */}
-          <div className="flex flex-col items-center mt-1 sm:mt-2">
+          <div className={`flex flex-col items-center mt-1 sm:mt-2 ${showMid ? 'pointer-events-auto' : 'pointer-events-none'}`}>
             <div className="flex items-start justify-center gap-3 sm:gap-6 md:gap-8">
               {AVATAR_OPTIONS.map((avatar, idx) => {
                 const isSelected = selectedAvatar.id === avatar.id;
@@ -541,22 +484,17 @@ export default function LandingReveal() {
                     transition={{ delay: 0.2 + idx * 0.08, duration: 0.4 }}
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.94 }}
-                    className="flex flex-col items-center group cursor-pointer focus:outline-none touch-manipulation"
+                    className="flex flex-col items-center group cursor-pointer focus:outline-none touch-manipulation pointer-events-auto"
                     aria-label={`Select ${avatar.name}`}
                   >
-                    {/* Circular Avatar Medallion */}
+                    {/* Circular Avatar Medallion — Clean, historic adventurer coin */}
                     <div
                       className={`relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full transition-all duration-200 ${
                         isSelected
-                          ? 'border-[3px] border-[#ffd700] ring-4 ring-[#d4af37]/60 shadow-[0_0_24px_rgba(255,215,0,0.85)] scale-105'
-                          : 'border-2 sm:border-[3px] border-[#8c6d23] group-hover:border-[#ffd700] shadow-[0_6px_18px_rgba(0,0,0,0.9)] group-hover:shadow-[0_0_18px_rgba(212,175,55,0.7)]'
+                          ? 'border-2 sm:border-[3px] border-[#d4af37] shadow-[0_6px_16px_rgba(0,0,0,0.85)]'
+                          : 'border-2 sm:border-[2.5px] border-[#8c6d23]/75 group-hover:border-[#d4af37] shadow-[0_6px_16px_rgba(0,0,0,0.85)]'
                       }`}
                     >
-                      {/* Rotating Celestial Dashed Ring on Selected */}
-                      {isSelected && (
-                        <span className="absolute -inset-1.5 rounded-full border border-dashed border-[#ffd700] animate-[spin_12s_linear_infinite] pointer-events-none" />
-                      )}
-
                       {/* Avatar Image */}
                       <div className="relative w-full h-full rounded-full overflow-hidden bg-[#1c0f05]">
                         <Image
@@ -574,10 +512,10 @@ export default function LandingReveal() {
                     <div className="mt-2 flex flex-col items-center max-w-[76px] sm:max-w-[100px] md:max-w-[120px]">
                       <span
                         style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
-                        className={`text-[11px] sm:text-xs md:text-sm font-black tracking-wide leading-tight text-center transition-colors ${
+                        className={`text-[11px] sm:text-xs md:text-sm font-bold tracking-wide leading-tight text-center transition-colors ${
                           isSelected
-                            ? 'text-[#ffd700] drop-shadow-[0_2px_6px_rgba(212,175,55,1)]'
-                            : 'text-[#f5e6cc] group-hover:text-[#ffd700] drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]'
+                            ? 'text-[#ffd700] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]'
+                            : 'text-[#f5e6cc] group-hover:text-[#ffd700] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]'
                         }`}
                       >
                         {avatar.displayName}
@@ -600,7 +538,7 @@ export default function LandingReveal() {
             <motion.div
               animate={{ opacity: [0.9, 1, 0.9], y: [0, -2, 0] }}
               transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
-              className="mt-4 sm:mt-5 flex flex-col items-center gap-1.5 cursor-pointer select-none"
+              className={`mt-4 sm:mt-5 flex flex-col items-center gap-1.5 cursor-pointer select-none ${showMid ? 'pointer-events-auto' : 'pointer-events-none'}`}
               onClick={() => handleSelectAvatar(selectedAvatar)}
             >
               <p
@@ -629,7 +567,7 @@ export default function LandingReveal() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-6"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-6 pointer-events-auto"
               onClick={(e) => { if (e.target === e.currentTarget) setShowFormOverlay(false); }}
             >
               <motion.div

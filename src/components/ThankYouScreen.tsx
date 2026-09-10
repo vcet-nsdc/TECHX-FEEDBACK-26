@@ -53,7 +53,7 @@ export default function ThankYouScreen({ userName, userEmail }: ThankYouScreenPr
         className="fixed inset-0 w-full h-full bg-cover bg-center pointer-events-none z-0 brightness-40"
       />
       <div
-        style={{ backgroundImage: `url('/treasure.png')` }}
+        style={{ backgroundImage: `url('/treasure.webp')` }}
         className="fixed inset-0 w-full h-full bg-cover bg-center opacity-10 pointer-events-none z-0"
       />
 

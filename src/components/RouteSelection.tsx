@@ -14,7 +14,6 @@ import ExpeditionStatusHeader from './ExpeditionStatusHeader';
 import TreasureCard from './TreasureCard';
 import ProductIcon from './ProductIcon';
 import CertificateModal from './CertificateModal';
-import ThankYouScreen from './ThankYouScreen';
 import { motion } from 'framer-motion';
 
 interface LabSectorConfig {
@@ -23,10 +22,10 @@ interface LabSectorConfig {
 }
 
 const LAB_CONFIGS: Record<string, LabSectorConfig> = {
-  '1': { number: '502', bgImage: '/cards/jungle.png' },
-  '2': { number: '508', bgImage: '/cards/ice.png' },
-  '3': { number: '509', bgImage: '/cards/lava.png' },
-  '4': { number: '510', bgImage: '/cards/dessert.png' },
+  '1': { number: '502', bgImage: '/cards/jungle.webp' },
+  '2': { number: '508', bgImage: '/cards/ice.webp' },
+  '3': { number: '509', bgImage: '/cards/lava.webp' },
+  '4': { number: '510', bgImage: '/cards/dessert.webp' },
 };
 
 function getLabSectorConfig(lab: ExpeditionLab, index: number): LabSectorConfig {
@@ -39,7 +38,7 @@ function getLabSectorConfig(lab: ExpeditionLab, index: number): LabSectorConfig 
     return byId;
   }
   const fallbackNumbers = ['502', '508', '509', '510'];
-  const fallbackImages = ['/cards/jungle.png', '/cards/ice.png', '/cards/lava.png', '/cards/dessert.png'];
+  const fallbackImages = ['/cards/jungle.webp', '/cards/ice.webp', '/cards/lava.webp', '/cards/dessert.webp'];
   return {
     number: fallbackNumbers[index % fallbackNumbers.length],
     bgImage: fallbackImages[index % fallbackImages.length],
@@ -158,9 +157,15 @@ export default function RouteSelection() {
     router.push(`/labs/${labId}`);
   };
 
-  // If certificate was downloaded, permanently lock routes and display Thank You Screen!
+  // If certificate was downloaded, permanently lock routes and redirect to /finish!
+  useEffect(() => {
+    if (isConcluded) {
+      router.replace('/finish');
+    }
+  }, [isConcluded, router]);
+
   if (isConcluded) {
-    return <ThankYouScreen userName={user?.name} userEmail={userEmail} />;
+    return null;
   }
 
   return (
@@ -184,31 +189,32 @@ export default function RouteSelection() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="w-full relative overflow-hidden rounded-xl border-2 border-[#d4af37] bg-gradient-to-b from-[#2e190b] via-[#1a0e05] to-[#0d0702] p-4 sm:p-5 text-center shadow-[0_12px_32px_rgba(212,175,55,0.45)]"
+            className="w-full relative overflow-hidden rounded-2xl border-2 border-[#d4af37] bg-gradient-to-b from-[#2e190b] via-[#1a0e05] to-[#0d0702] p-5 sm:p-6 text-center shadow-[0_12px_36px_rgba(212,175,55,0.45)]"
           >
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#d4af37]/20 rounded-full blur-2xl pointer-events-none" />
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#d4af37]/20 border border-[#d4af37]/50 text-[#fef08a] font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1.5">
-              <span>✦ ALL 30 REVIEWS COMPLETED ✦</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d4af37]/20 border border-[#d4af37]/50 text-[#fef08a] font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2">
+              <span>✦ ALL LABS COMPLETED ✦</span>
             </div>
             <h3
               style={{ fontFamily: "var(--font-cinzel), 'Cinzel', Georgia, serif" }}
-              className="text-lg sm:text-2xl font-black text-[#fdf8e2] tracking-wide"
+              className="text-lg sm:text-2xl font-black text-[#ffd700] tracking-wide"
             >
-              ALL REVIEWS SEALED & ARCHIVED
+              You have completed all labs! Great work Explorer {user?.name || 'Explorer'}!
             </h3>
-            <p className="text-[11px] sm:text-xs text-[#d4b988] font-serif italic max-w-sm mx-auto mt-1 mb-3.5 leading-relaxed">
-              You have surveyed all 4 research sectors and recorded observations across all product innovations. Claim your official TechX 2026 Certificate of Discovery now!
+            <p className="text-xs sm:text-sm text-[#e6d5c1] font-serif max-w-md mx-auto mt-2 mb-4 leading-relaxed">
+              Click on this button to download your certificate.
             </p>
             <button
               type="button"
               onClick={() => setIsCertModalOpen(true)}
               style={{
+                fontFamily: "var(--font-cinzel), 'Cinzel', Georgia, serif",
                 clipPath:
                   'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
               }}
-              className="w-full py-3 px-4 bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#b45309] text-[#1c0f05] font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer border border-[#fff3cc]"
+              className="w-full py-3.5 px-5 bg-gradient-to-r from-[#ffd700] via-[#d4af37] to-[#b45309] text-[#1c0f05] font-black text-sm sm:text-base uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer border border-[#fff3cc]"
             >
-              <span>🎓 GET YOUR CERTIFICATE</span>
+              <span>📜 DOWNLOAD YOUR CERTIFICATE</span>
               <span className="text-base leading-none">➔</span>
             </button>
           </motion.div>
