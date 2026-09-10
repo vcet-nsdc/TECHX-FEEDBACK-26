@@ -158,7 +158,7 @@ export function TechXLogoText({
               data-angel-one-sponsor
             >
               <img
-                src="/assets/images/angel-one.jpg"
+                src="/assets/images/angel-one.webp"
                 alt="Angel One — Authorized Person: Kalpesh Mali, Contact: 8949327700"
                 className="h-9 sm:h-12 md:h-14 w-auto object-contain bg-white/95 rounded-lg px-2 py-1 shadow-[0_4px_16px_rgba(0,0,0,0.6)]"
                 onError={(e) => {

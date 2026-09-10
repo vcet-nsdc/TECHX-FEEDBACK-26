@@ -1,5 +1,5 @@
 // Service Worker for TechX Expedition: Cache-first for static fonts and textures, network-first for navigation
-const CACHE_NAME = 'techx-expedition-v2';
+const CACHE_NAME = 'techx-expedition-v3';
 
 const STATIC_PRECACHE = [
   '/site.webmanifest',
@@ -7,9 +7,9 @@ const STATIC_PRECACHE = [
   '/assets/images/worn-parchment-bg.webp',
   '/assets/images/avery-pirate-coin.webp',
   '/assets/images/review-card.webp',
-  '/assets/images/journal-spread-lab1.jpg',
-  '/assets/images/journal-spread-lab2.jpg',
-  '/assets/images/journal-spread-lab3.jpg',
+  '/assets/images/journal-spread-lab1.webp',
+  '/assets/images/journal-spread-lab2.webp',
+  '/assets/images/journal-spread-lab3.webp',
 ];
 
 self.addEventListener('install', (event) => {

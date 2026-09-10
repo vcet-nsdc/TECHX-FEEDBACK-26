@@ -212,7 +212,7 @@ export default function PublicLeaderboardPage() {
 
         {/* Fallback scenic image behind video */}
         <img
-          src="/assets/images/leaderboard_scenic_bg.jpg"
+          src="/assets/images/leaderboard_scenic_bg.webp"
           alt="Expedition Background"
           className="pointer-events-none fixed inset-0 h-full w-full object-cover z-0"
         />
@@ -226,7 +226,7 @@ export default function PublicLeaderboardPage() {
             muted={false}
             playsInline
             preload="auto"
-            poster="/assets/images/leaderboard_scenic_bg.jpg"
+            poster="/assets/images/leaderboard_scenic_bg.webp"
             onError={() => {
               console.error('Failed to load /videos/leaderboard-background.mp4');
               setVideoError(true);

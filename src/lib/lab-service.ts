@@ -50,7 +50,7 @@ export async function getLabsFromDb(): Promise<Record<string, ExpeditionLab>> {
       labs[key] = {
         ...base,
         ...byKey[key].lab,
-        mapImage: byKey[key].lab?.mapImage || base.mapImage,
+        mapImage: (byKey[key].lab?.mapImage || base.mapImage)?.replace(/\.jpg$/, '.webp'),
         themeType: byKey[key].lab?.themeType || base.themeType,
         inkColor: byKey[key].lab?.inkColor || base.inkColor,
         glowColor: byKey[key].lab?.glowColor || base.glowColor,
