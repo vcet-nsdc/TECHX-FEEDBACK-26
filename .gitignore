@@ -37,3 +37,7 @@ next-env.d.ts
 # IDE
 .vscode
 .idea
+
+# stray local artifacts
+dev-server.log*
+/TECHX-FEEDBACK-26/
