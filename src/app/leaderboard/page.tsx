@@ -20,7 +20,7 @@ export default function PublicLeaderboardPage() {
 
   const fetchLeaderboard = useCallback(async () => {
     try {
-      const response = await fetch('/api/leaderboard?limit=50');
+      const response = await fetch('/api/leaderboard?limit=50', { cache: 'no-store' });
       if (!response.ok) throw new Error('Failed to fetch leaderboard');
       const data = await response.json();
       const publicData = data.map(
@@ -53,7 +53,7 @@ export default function PublicLeaderboardPage() {
 
   const fetchProductStats = useCallback(async () => {
     try {
-      const response = await fetch('/api/product-stats');
+      const response = await fetch('/api/product-stats', { cache: 'no-store' });
       if (!response.ok) throw new Error('Failed to fetch product stats');
       const data = await response.json();
       setProductStats(data);

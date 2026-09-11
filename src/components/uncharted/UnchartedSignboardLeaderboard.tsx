@@ -150,7 +150,7 @@ function getShimmerClass(index: number) {
 
 function ScaleRating({ rating }: { rating: number }) {
   const safeRating = Math.max(0, Math.min(5, Number(rating) || 0));
-  const rounded = safeRating > 0 ? safeRating.toFixed(2) : '5.00';
+  const rounded = safeRating.toFixed(2);
 
   return (
     <div className="inline-flex items-center gap-1.5 shrink-0 select-none">
@@ -306,7 +306,7 @@ export default function UnchartedSignboardLeaderboard({
         e.email || '',
         e.department || '',
         e.totalFeedback,
-        (e.averageRating || 5).toFixed(2),
+        e.totalFeedback > 0 && e.averageRating ? e.averageRating.toFixed(2) : '—',
       ]);
       const csvContent = [headers, ...rows].map((r) => r.map(csvCell).join(',')).join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
@@ -326,7 +326,7 @@ export default function UnchartedSignboardLeaderboard({
         p.productName,
         cleanLabName(p.labName),
         p.totalRatings,
-        p.averageRating.toFixed(2),
+        p.totalRatings > 0 && p.averageRating ? p.averageRating.toFixed(2) : '—',
       ]);
       const csvContent = [headers, ...rows].map((r) => r.map(csvCell).join(',')).join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
@@ -633,10 +633,10 @@ export default function UnchartedSignboardLeaderboard({
 
                       {/* Avg Rating (scale of 5) */}
                       <div className="flex items-center pl-2 sm:pl-3 h-full">
-                        {isPlaceholder ? (
-                          <span className="text-[#F1F5F9]/60">—</span>
+                        {isPlaceholder || !entry.totalRatings || entry.averageRating <= 0 ? (
+                          <span className="text-[#F1F5F9]/50 font-mono text-sm sm:text-base md:text-lg">—</span>
                         ) : (
-                          <ScaleRating rating={entry.averageRating || 5.0} />
+                          <ScaleRating rating={entry.averageRating} />
                         )}
                       </div>
                     </div>

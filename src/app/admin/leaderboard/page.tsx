@@ -62,7 +62,7 @@ export default function AdminLeaderboardPage() {
   // Declared before the effects below consume them (react-hooks/immutability).
   const fetchLeaderboard = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/leaderboard');
+      const response = await fetch('/api/admin/leaderboard', { cache: 'no-store' });
       if (!response.ok) throw new Error('Failed to fetch leaderboard');
       const data = await response.json();
       const formatted = data.map(
@@ -99,7 +99,7 @@ export default function AdminLeaderboardPage() {
 
   const fetchProductStats = useCallback(async () => {
     try {
-      const response = await fetch('/api/product-stats');
+      const response = await fetch('/api/product-stats', { cache: 'no-store' });
       if (!response.ok) throw new Error('Failed to fetch product stats');
       const data = await response.json();
       setProductStats(data);
