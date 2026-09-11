@@ -363,6 +363,7 @@ export async function getProductStatsAggregated(): Promise<
   Array<{
     productId: string;
     totalRatings: number;
+    totalCoins: number;
     averageRating: number;
     ratingDistribution: { 1: number; 2: number; 3: number; 4: number; 5: number };
     totalComments: number;
@@ -377,6 +378,7 @@ export async function getProductStatsAggregated(): Promise<
       $group: {
         _id: '$tableId',
         totalRatings: { $sum: 1 },
+        totalCoins: { $sum: '$rating' },
         avgRating: { $avg: '$rating' },
         rating1: { $sum: { $cond: [{ $eq: ['$rating', 1] }, 1, 0] } },
         rating2: { $sum: { $cond: [{ $eq: ['$rating', 2] }, 1, 0] } },
@@ -402,6 +404,7 @@ export async function getProductStatsAggregated(): Promise<
     },
     {
       $sort: {
+        totalCoins: -1,
         avgRating: -1,
         totalRatings: -1,
         lastRated: -1,
@@ -414,6 +417,7 @@ export async function getProductStatsAggregated(): Promise<
   return docs.map((d) => ({
     productId: d._id as string,
     totalRatings: d.totalRatings as number,
+    totalCoins: (d.totalCoins as number) || 0,
     averageRating: Number(((d.avgRating as number) || 0).toFixed(2)),
     ratingDistribution: {
       1: d.rating1 as number,

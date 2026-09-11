@@ -31,6 +31,7 @@ export interface ProductStatsEntry {
   productName: string;
   labName: string;
   totalRatings: number;
+  totalCoins?: number;
   averageRating: number;
   ratingDistribution: { 1: number; 2: number; 3: number; 4: number; 5: number };
   totalComments: number;
@@ -241,21 +242,27 @@ export default function UnchartedSignboardLeaderboard({
       );
     }
     return [...list].sort((a, b) => {
-      // 1. Highest average rating on top
+      // 1. More coins earned (sum of all ratings) -> on top!
+      const coinsA = a.totalCoins ?? Math.round((a.averageRating || 0) * (a.totalRatings || 0));
+      const coinsB = b.totalCoins ?? Math.round((b.averageRating || 0) * (b.totalRatings || 0));
+      if (coinsB !== coinsA) {
+        return coinsB - coinsA;
+      }
+      // 2. Highest average rating as tiebreaker
       if (b.averageRating !== a.averageRating) {
         return b.averageRating - a.averageRating;
       }
-      // 2. Highest total ratings count as tiebreaker
+      // 3. Highest total ratings count as tiebreaker
       if (b.totalRatings !== a.totalRatings) {
         return b.totalRatings - a.totalRatings;
       }
-      // 3. Most recently rated (lastRated timestamp) as tiebreaker (Option B)
+      // 4. Most recently rated (lastRated timestamp) as tiebreaker (Option B)
       const timeA = a.lastRated ? new Date(a.lastRated).getTime() : 0;
       const timeB = b.lastRated ? new Date(b.lastRated).getTime() : 0;
       if (timeB !== timeA) {
         return timeB - timeA;
       }
-      // 4. Stable deterministic fallback: Product ID
+      // 5. Stable deterministic fallback: Product ID
       return a.productId.localeCompare(b.productId);
     });
   }, [productStats, searchQuery]);
@@ -287,6 +294,7 @@ export default function UnchartedSignboardLeaderboard({
         productName: '',
         labName: '',
         totalRatings: 0,
+        totalCoins: 0,
         averageRating: 0,
         ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         totalComments: 0,
@@ -319,12 +327,13 @@ export default function UnchartedSignboardLeaderboard({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } else {
-      const headers = ['Rank', 'Product ID', 'Product Name', 'Lab', 'Total Ratings', 'Avg Rating'];
+      const headers = ['Rank', 'Product ID', 'Product Name', 'Lab', 'Coins Earned', 'Total Reviews', 'Avg Rating'];
       const rows = filteredProducts.map((p, idx) => [
         idx + 1,
         p.productId || '',
         p.productName,
         cleanLabName(p.labName),
+        p.totalCoins ?? Math.round((p.averageRating || 0) * (p.totalRatings || 0)),
         p.totalRatings,
         p.totalRatings > 0 && p.averageRating ? p.averageRating.toFixed(2) : '—',
       ]);
@@ -513,7 +522,7 @@ export default function UnchartedSignboardLeaderboard({
                   LAB
                 </div>
                 <div className="text-center font-black text-sm sm:text-base md:text-lg truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
-                  RATINGS
+                  COINS
                 </div>
                 <div className="text-left pl-2 sm:pl-3 font-black text-sm sm:text-base md:text-lg truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
                   AVG RATING
@@ -626,9 +635,20 @@ export default function UnchartedSignboardLeaderboard({
                         </span>
                       </div>
 
-                      {/* Total Ratings (Number) */}
-                      <div className="flex items-center justify-center h-full font-mono font-medium text-sm sm:text-base md:text-lg lg:text-xl">
-                        <span className="text-[#FFFFFF] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">{isPlaceholder ? '—' : entry.totalRatings}</span>
+                      {/* Total Coins (Sum of ratings) */}
+                      <div
+                        className="flex items-center justify-center h-full font-mono font-medium text-sm sm:text-base md:text-lg lg:text-xl"
+                        title={`${entry.totalRatings} explorer reviews`}
+                      >
+                        <span className="text-[#FFFFFF] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] flex items-center justify-center gap-1">
+                          {isPlaceholder
+                            ? '—'
+                            : (entry.totalCoins ?? Math.round((entry.averageRating || 0) * (entry.totalRatings || 0)))}
+                          {!isPlaceholder &&
+                            (entry.totalCoins ?? entry.totalRatings) > 0 && (
+                              <span className="text-amber-400 text-xs sm:text-sm drop-shadow-xs">🪙</span>
+                            )}
+                        </span>
                       </div>
 
                       {/* Avg Rating (scale of 5) */}

@@ -52,6 +52,7 @@ export type ProductStatEntry = {
   productName: string;
   labName: string;
   totalRatings: number;
+  totalCoins: number;
   averageRating: number;
   ratingDistribution: { 1: number; 2: number; 3: number; 4: number; 5: number };
   totalComments: number;
@@ -328,11 +329,12 @@ export async function getProductStats(): Promise<Array<ProductStatEntry>> {
   }
 
   // Helper to create blank stats for a primary product
-  const createBlankStats = (id: string, name: string, labName: string) => ({
+  const createBlankStats = (id: string, name: string, labName: string): ProductStatEntry => ({
     productId: id,
     productName: name,
     labName,
     totalRatings: 0,
+    totalCoins: 0,
     averageRating: 0,
     ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
     totalComments: 0,
@@ -341,7 +343,7 @@ export async function getProductStats(): Promise<Array<ProductStatEntry>> {
 
   const mongoStats = await withMongo(() => mongo.getProductStatsAggregated());
   if (mongoStats) {
-    const statsMap = new Map<string, ReturnType<typeof createBlankStats>>();
+    const statsMap = new Map<string, ProductStatEntry>();
     // Seed all 30 canonical products
     for (const [id, info] of productMap.entries()) {
       if (legacyKeys.has(id)) continue;
@@ -370,12 +372,17 @@ export async function getProductStats(): Promise<Array<ProductStatEntry>> {
           target.ratingDistribution[3] * 3 +
           target.ratingDistribution[4] * 4 +
           target.ratingDistribution[5] * 5;
+        target.totalCoins = sum;
         target.averageRating = Number((sum / target.totalRatings).toFixed(2));
       }
     }
     const list = Array.from(statsMap.values());
     list.sort((a, b) => {
+      // 1. More coins earned by a product -> on top!
+      if (b.totalCoins !== a.totalCoins) return b.totalCoins - a.totalCoins;
+      // 2. Average rating tiebreaker
       if (b.averageRating !== a.averageRating) return b.averageRating - a.averageRating;
+      // 3. Total ratings tiebreaker
       if (b.totalRatings !== a.totalRatings) return b.totalRatings - a.totalRatings;
       const timeA = a.lastRated ? new Date(a.lastRated).getTime() : 0;
       const timeB = b.lastRated ? new Date(b.lastRated).getTime() : 0;
@@ -388,7 +395,7 @@ export async function getProductStats(): Promise<Array<ProductStatEntry>> {
 
   // In-memory fallback calculation
   const allFeedback = memoryStore.feedback;
-  const productStats = new Map<string, ReturnType<typeof createBlankStats>>();
+  const productStats = new Map<string, ProductStatEntry>();
 
   // Initialize all canonical products so full allotment is visible
   for (const [id, info] of productMap.entries()) {
@@ -424,15 +431,20 @@ export async function getProductStats(): Promise<Array<ProductStatEntry>> {
         stats.ratingDistribution[3] * 3 +
         stats.ratingDistribution[4] * 4 +
         stats.ratingDistribution[5] * 5;
+      stats.totalCoins = sum;
       stats.averageRating = Number((sum / stats.totalRatings).toFixed(2));
     }
   }
 
   const list = Array.from(productStats.values());
   list.sort((a, b) => {
+    // 1. More coins earned by a product -> on top!
+    if (b.totalCoins !== a.totalCoins) return b.totalCoins - a.totalCoins;
+    // 2. Average rating tiebreaker
     if (b.averageRating !== a.averageRating) {
       return b.averageRating - a.averageRating;
     }
+    // 3. Total ratings tiebreaker
     if (b.totalRatings !== a.totalRatings) {
       return b.totalRatings - a.totalRatings;
     }
