@@ -149,40 +149,8 @@ function getShimmerClass(index: number) {
   return '';
 }
 
-function ScaleRating({ rating }: { rating: number }) {
-  const safeRating = Math.max(0, Math.min(5, Number(rating) || 0));
-  const rounded = safeRating.toFixed(2);
-
-  return (
-    <div className="inline-flex items-center gap-1.5 shrink-0 select-none">
-      <span className="font-mono font-medium text-sm sm:text-base md:text-lg lg:text-xl text-[#FEF08A] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-        {rounded}
-      </span>
-      {/* 5 visual gold stars proportionally filled on a 5-point scale */}
-      <div className="hidden xs:inline-flex sm:inline-flex items-center gap-0.5 text-amber-400 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-        {[1, 2, 3, 4, 5].map((starIndex) => {
-          const fillRatio = Math.max(0, Math.min(1, safeRating - (starIndex - 1)));
-          return (
-            <span key={starIndex} className="relative inline-block text-xs sm:text-sm md:text-base leading-none">
-              <span className="text-[#3b200d]/80">★</span>
-              {fillRatio > 0 && (
-                <span
-                  className="absolute inset-0 overflow-hidden text-amber-400"
-                  style={{ width: `${Math.round(fillRatio * 100)}%` }}
-                >
-                  ★
-                </span>
-              )}
-            </span>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 const USER_GRID_COLS = "grid grid-cols-[50px_minmax(0,2.6fr)_minmax(0,1.8fr)_120px] sm:grid-cols-[60px_minmax(0,2.6fr)_minmax(0,1.8fr)_140px] md:grid-cols-[70px_minmax(0,2.7fr)_minmax(0,1.9fr)_160px] lg:grid-cols-[80px_minmax(0,2.8fr)_minmax(0,2.0fr)_180px] items-center";
-const PRODUCT_GRID_COLS = "grid grid-cols-[46px_minmax(0,2.1fr)_minmax(0,1.5fr)_78px_110px] sm:grid-cols-[56px_minmax(0,2.1fr)_minmax(0,1.5fr)_90px_128px] md:grid-cols-[66px_minmax(0,2.2fr)_minmax(0,1.6fr)_100px_140px] lg:grid-cols-[72px_minmax(0,2.3fr)_minmax(0,1.6fr)_110px_150px] items-center";
+const PRODUCT_GRID_COLS = USER_GRID_COLS;
 
 export default function UnchartedSignboardLeaderboard({
   leaderboard,
@@ -327,7 +295,7 @@ export default function UnchartedSignboardLeaderboard({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } else {
-      const headers = ['Rank', 'Product ID', 'Product Name', 'Lab', 'Coins Earned', 'Total Reviews', 'Avg Rating'];
+      const headers = ['Rank', 'Product ID', 'Product Name', 'Lab', 'Coins Earned', 'Total Reviews'];
       const rows = filteredProducts.map((p, idx) => [
         idx + 1,
         p.productId || '',
@@ -335,7 +303,6 @@ export default function UnchartedSignboardLeaderboard({
         cleanLabName(p.labName),
         p.totalCoins ?? Math.round((p.averageRating || 0) * (p.totalRatings || 0)),
         p.totalRatings,
-        p.totalRatings > 0 && p.averageRating ? p.averageRating.toFixed(2) : '—',
       ]);
       const csvContent = [headers, ...rows].map((r) => r.map(csvCell).join(',')).join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
@@ -524,9 +491,6 @@ export default function UnchartedSignboardLeaderboard({
                 <div className="text-center font-black text-sm sm:text-base md:text-lg truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
                   COINS
                 </div>
-                <div className="text-left pl-2 sm:pl-3 font-black text-sm sm:text-base md:text-lg truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
-                  AVG RATING
-                </div>
               </div>
             )}
 
@@ -649,15 +613,6 @@ export default function UnchartedSignboardLeaderboard({
                               <span className="text-amber-400 text-xs sm:text-sm drop-shadow-xs">🪙</span>
                             )}
                         </span>
-                      </div>
-
-                      {/* Avg Rating (scale of 5) */}
-                      <div className="flex items-center pl-2 sm:pl-3 h-full">
-                        {isPlaceholder || !entry.totalRatings || entry.averageRating <= 0 ? (
-                          <span className="text-[#F1F5F9]/50 font-mono text-sm sm:text-base md:text-lg">—</span>
-                        ) : (
-                          <ScaleRating rating={entry.averageRating} />
-                        )}
                       </div>
                     </div>
                   );
