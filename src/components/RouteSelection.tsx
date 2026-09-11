@@ -202,11 +202,23 @@ export default function RouteSelection() {
               You have completed all labs! Great work Explorer {user?.name || 'Explorer'}!
             </h3>
             <p className="text-xs sm:text-sm text-[#e6d5c1] font-serif max-w-md mx-auto mt-2 mb-4 leading-relaxed">
-              Click on this button to download your certificate.
+              Click on this button to claim your reward and download your certificate.
             </p>
             <button
               type="button"
-              onClick={() => setIsCertModalOpen(true)}
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  const emailKey = (userEmail || user?.email || '').trim().toLowerCase();
+                  if (emailKey) {
+                    localStorage.setItem(`techx_certificate_downloaded_${emailKey}`, 'true');
+                    localStorage.setItem(`techx_expedition_concluded_${emailKey}`, 'true');
+                  }
+                  localStorage.setItem('techx_certificate_downloaded_global', 'true');
+                  localStorage.setItem('techx_expedition_concluded_global', 'true');
+                  window.dispatchEvent(new Event('certificateDownloaded'));
+                }
+                router.push('/finish');
+              }}
               style={{
                 fontFamily: "var(--font-cinzel), 'Cinzel', Georgia, serif",
                 clipPath:
@@ -214,7 +226,7 @@ export default function RouteSelection() {
               }}
               className="w-full py-3.5 px-5 bg-gradient-to-r from-[#ffd700] via-[#d4af37] to-[#b45309] text-[#1c0f05] font-black text-sm sm:text-base uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer border border-[#fff3cc]"
             >
-              <span>📜 DOWNLOAD YOUR CERTIFICATE</span>
+              <span>📜 CLAIM REWARD & CERTIFICATE</span>
               <span className="text-base leading-none">➔</span>
             </button>
           </motion.div>

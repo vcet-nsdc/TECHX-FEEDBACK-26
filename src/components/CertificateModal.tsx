@@ -213,8 +213,8 @@ export default function CertificateModal({
 
           {/* Modal Header */}
           <div className="flex flex-col items-center text-center pb-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#d4af37]/15 border border-[#d4af37]/40 text-[#fde047] font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1.5 shadow-xs">
-              <span>✦ OFFICIAL EXPEDITION CERTIFICATE ✦</span>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#d4af37]/20 border border-[#d4af37]/60 text-[#fde047] font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1.5 shadow-xs">
+              <span>✦ YOUR CERTIFICATE HAS BEEN GENERATED ✦</span>
             </div>
             <h2
               style={{ fontFamily: "var(--font-cinzel), 'Cinzel', Georgia, serif" }}
@@ -285,22 +285,42 @@ export default function CertificateModal({
             </div>
           )}
 
-          {/* Action Button: Download Now — Single prominent button */}
-          <div className="w-full mt-4 pt-3 border-t border-[#8c6d23]/40">
+          {/* Action Buttons: Go to Certificate Page (Primary) & Direct Download */}
+          <div className="w-full mt-4 pt-3 border-t border-[#8c6d23]/40 flex flex-col gap-2.5">
             <button
               type="button"
-              onClick={handleDownloadPNG}
-              disabled={isDownloading}
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  const emailKey = (_userEmail || user?.email || '').trim().toLowerCase();
+                  if (emailKey) {
+                    localStorage.setItem(`techx_certificate_downloaded_${emailKey}`, 'true');
+                    localStorage.setItem(`techx_expedition_concluded_${emailKey}`, 'true');
+                  }
+                  localStorage.setItem('techx_certificate_downloaded_global', 'true');
+                  localStorage.setItem('techx_expedition_concluded_global', 'true');
+                  window.dispatchEvent(new Event('certificateDownloaded'));
+                }
+                onClose();
+                router.push('/finish');
+              }}
               style={{
                 fontFamily: "var(--font-cinzel), 'Cinzel', Georgia, serif",
                 clipPath:
                   'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
               }}
-              className="w-full py-3.5 px-6 bg-gradient-to-r from-[#ffd700] via-[#d4af37] to-[#996515] text-[#140802] font-black text-sm sm:text-base uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer border border-[#fff9d6] disabled:opacity-50"
+              className="w-full py-3.5 px-6 bg-gradient-to-r from-[#ffd700] via-[#d4af37] to-[#996515] text-[#140802] font-black text-sm sm:text-base uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer border border-[#fff9d6]"
             >
-              <span>
-                {isDownloading ? 'Downloading Certificate...' : '⬇ DOWNLOAD NOW'}
-              </span>
+              <span>📜 GO TO CERTIFICATE & REWARDS PAGE</span>
+              <span className="text-base leading-none">➔</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDownloadPNG}
+              disabled={isDownloading}
+              className="w-full py-2 px-4 rounded-lg bg-[#241308]/60 hover:bg-[#241308] border border-[#8c6d23]/50 text-[#e6c265] text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <span>{isDownloading ? 'Downloading...' : '⬇ Or Download PNG Directly'}</span>
             </button>
           </div>
         </motion.div>

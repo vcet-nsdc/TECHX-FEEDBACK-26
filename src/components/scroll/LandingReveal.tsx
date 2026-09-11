@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
+import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
 import { DEPARTMENT_OPTIONS } from '@/lib/mock-data';
@@ -15,8 +15,6 @@ const TOTAL_SOURCE_FRAMES = 65;
 const FRAME_PREFIX = '/frames/frame_';
 // WebP frames downscaled for smooth mobile & desktop scrub
 const FRAME_SUFFIX = '_delay-0.016s.webp';
-// Scroll distance in viewport heights: 200vh gives a tight 2-swipe journey directly to the showcase.
-const SCROLL_HEIGHT_VH = 200;
 
 function frameSrc(i: number, suffix: string = FRAME_SUFFIX) {
   return `${FRAME_PREFIX}${String(i).padStart(3, '0')}${suffix}`;
@@ -113,16 +111,22 @@ export default function LandingReveal() {
     []
   );
 
-  // Lock body scroll when the registration tablet modal is open
+  // Lock window and body scroll completely so no blank space or viewport jumping occurs
   useEffect(() => {
-    if (showFormOverlay) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-  }, [showFormOverlay]);
+    const origOverflow = document.body.style.overflow;
+    const origTouchAction = document.body.style.touchAction;
+    const origOverscroll = document.body.style.overscrollBehavior;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+    document.body.style.overscrollBehavior = 'none';
+
+    return () => {
+      document.body.style.overflow = origOverflow;
+      document.body.style.touchAction = origTouchAction;
+      document.body.style.overscrollBehavior = origOverscroll;
+    };
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -132,15 +136,75 @@ export default function LandingReveal() {
     }
   }, [user]);
 
-  const { scrollYProgress } = useScroll();
+  // Virtual progress scrubber: 0 (initial logo) to 1 (full showcase + avatars)
+  const virtualProgress = useMotionValue(0);
 
   // Smooth spring interpolation for silky 60fps frame scrubbing
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 300,
-    damping: 32,
-    mass: 0.08,
+  const smoothProgress = useSpring(virtualProgress, {
+    stiffness: 260,
+    damping: 30,
+    mass: 0.1,
     restDelta: 0.001,
   });
+
+  // Attach non-passive gesture scrubber to drive frames without moving the browser window
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (showFormOverlay) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY;
+      const step = delta / 850;
+      const current = virtualProgress.get();
+      const next = Math.max(0, Math.min(1, current + step));
+      virtualProgress.set(next);
+    };
+
+    let touchStartY = 0;
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        touchStartY = e.touches[0].clientY;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 0) return;
+      e.preventDefault();
+      const currentY = e.touches[0].clientY;
+      const deltaY = touchStartY - currentY;
+      touchStartY = currentY;
+      const step = deltaY / (window.innerHeight * 0.75);
+      const current = virtualProgress.get();
+      const next = Math.max(0, Math.min(1, current + step));
+      virtualProgress.set(next);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (showFormOverlay) return;
+      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        virtualProgress.set(Math.min(1, virtualProgress.get() + 0.12));
+      } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+        e.preventDefault();
+        virtualProgress.set(Math.max(0, virtualProgress.get() - 0.12));
+      }
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showFormOverlay, virtualProgress]);
 
   // Scroll 1: Logo — fully visible at top, fades out cleanly
   const logoOpacity = useTransform(smoothProgress, [0, 0.12, 0.35], [1, 1, 0]);
@@ -364,16 +428,11 @@ export default function LandingReveal() {
   };
 
   return (
-    <section
+    <div
       ref={containerRef}
-      className="relative bg-black"
-      style={{
-        height: `${SCROLL_HEIGHT_VH}vh`,
-      }}
+      className="fixed inset-0 h-[100dvh] w-full overflow-hidden bg-black select-none touch-none transform-gpu"
+      style={{ touchAction: 'none' }}
     >
-      <div
-        className="fixed inset-0 h-[100dvh] w-full overflow-hidden bg-black transform-gpu pointer-events-none"
-      >
         {/* Instant static underlay while frame 0 decodes */}
         <div
           className={`absolute inset-0 h-full w-full pointer-events-none select-none transform-gpu transition-opacity duration-500 ${
@@ -418,7 +477,8 @@ export default function LandingReveal() {
 
         {/* Scroll hint */}
         <motion.div
-          className="pointer-events-none absolute bottom-8 left-1/2 z-10 -translate-x-1/2 text-center text-white/90 font-cinzel"
+          onClick={() => virtualProgress.set(0.6)}
+          className="cursor-pointer pointer-events-auto absolute bottom-8 left-1/2 z-20 -translate-x-1/2 text-center text-white/90 font-cinzel select-none"
           style={{ opacity: scrollHintOpacity, willChange: 'transform, opacity', transform: 'translateZ(0)' }}
         >
           <div className="flex flex-col items-center gap-2">
@@ -724,7 +784,6 @@ export default function LandingReveal() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-    </section>
+    </div>
   );
 }

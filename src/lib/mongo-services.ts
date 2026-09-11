@@ -404,6 +404,8 @@ export async function getProductStatsAggregated(): Promise<
       $sort: {
         avgRating: -1,
         totalRatings: -1,
+        lastRated: -1,
+        _id: 1,
       },
     },
   ];

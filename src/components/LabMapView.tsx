@@ -1043,14 +1043,26 @@ export default function LabMapView({ labId, userEmail: propUserEmail }: LabMapVi
                     {isAllReviewsCompleted ? (
                       <button
                         type="button"
-                        onClick={() => setIsCertModalOpen(true)}
+                        onClick={() => {
+                          if (typeof window !== 'undefined') {
+                            const emailKey = (userEmail || user?.email || '').trim().toLowerCase();
+                            if (emailKey) {
+                              localStorage.setItem(`techx_certificate_downloaded_${emailKey}`, 'true');
+                              localStorage.setItem(`techx_expedition_concluded_${emailKey}`, 'true');
+                            }
+                            localStorage.setItem('techx_certificate_downloaded_global', 'true');
+                            localStorage.setItem('techx_expedition_concluded_global', 'true');
+                            window.dispatchEvent(new Event('certificateDownloaded'));
+                          }
+                          router.push('/finish');
+                        }}
                         style={{
                           clipPath:
                             'polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px)',
                         }}
                         className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#b45309] text-[#1c0f05] font-black text-xs uppercase tracking-widest shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2 font-['Cinzel',_serif] cursor-pointer border-t border-[#fff3cc]"
                       >
-                        <span>🎓 GET YOUR CERTIFICATE</span>
+                        <span>🎓 CLAIM REWARD & CERTIFICATE</span>
                         <span className="text-xs">➔</span>
                       </button>
                     ) : (

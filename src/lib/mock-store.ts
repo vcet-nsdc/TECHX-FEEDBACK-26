@@ -6,7 +6,7 @@
 
 import { FeedbackEntry, ExpeditionUser } from './models';
 import { defaultUsers, defaultFeedback } from './seed-data';
-import { LABS } from './mock-data';
+import { LABS, LEGACY_PRODUCT_ID_MAP } from './mock-data';
 
 type GlobalWithStore = typeof globalThis & {
   __unchartedMemoryStore?: {
@@ -30,11 +30,18 @@ export const memoryStore = g.__unchartedMemoryStore;
 
 // Product catalog is static — expose a lookup so callers can validate
 // tableIds without reaching into mock-data directly.
-export function getProductLookup(): Map<string, { name: string; labName: string; labId: string }> {
-  const map = new Map<string, { name: string; labName: string; labId: string }>();
+export function getProductLookup(): Map<string, { id: string; name: string; labName: string; labId: string }> {
+  const map = new Map<string, { id: string; name: string; labName: string; labId: string }>();
   for (const lab of LABS) {
     for (const product of lab.products) {
-      map.set(product.id, { name: product.name, labName: lab.labName, labId: lab.labId });
+      map.set(product.id, { id: product.id, name: product.name, labName: lab.labName, labId: lab.labId });
+    }
+  }
+  // Also map legacy IDs for smooth backward compatibility
+  for (const [legacyId, newId] of Object.entries(LEGACY_PRODUCT_ID_MAP)) {
+    const info = map.get(newId);
+    if (info && !map.has(legacyId)) {
+      map.set(legacyId, { id: newId, name: info.name, labName: info.labName, labId: info.labId });
     }
   }
   return map;

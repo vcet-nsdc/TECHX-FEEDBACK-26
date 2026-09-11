@@ -199,6 +199,15 @@ function AdminDashboard() {
     return map;
   }, [labs]);
 
+  // Product stats lookup map for quick rating access
+  const productStatsMap = useMemo(() => {
+    const map: Record<string, ProductStat> = {};
+    for (const p of productStats) {
+      map[p.productId] = p;
+    }
+    return map;
+  }, [productStats]);
+
   // Group feedback entries by student user
   const usersFeedbackGrouped = useMemo(() => {
     const map = new Map<
@@ -360,11 +369,12 @@ function AdminDashboard() {
 
   // Export CSV of all feedback
   const handleExportCSV = () => {
-    const headers = ['Student Name', 'Email', 'Department', 'Product Name', 'Rating', 'Comment', 'Date & Time'];
+    const headers = ['Student Name', 'Email', 'Department', 'Product ID', 'Product Name', 'Rating', 'Comment', 'Date & Time'];
     const rows = feedbackList.map((f) => [
       f.studentName || '',
       f.studentEmail || '',
       f.studentDepartment || '',
+      f.tableId || '',
       productLookup[f.tableId]?.name || f.tableId,
       f.rating,
       f.comment || '',
@@ -686,9 +696,16 @@ function AdminDashboard() {
                                   <h4 className="text-sm font-bold text-[#fdfbf7] truncate">
                                     {product.name}
                                   </h4>
-                                  <p className="text-[11px] text-[#9e8369]">
-                                    Product ID: <span className="font-mono text-[#c99f58]">{product.id}</span>
-                                  </p>
+                                  <div className="flex items-center gap-2.5 text-[11px] text-[#9e8369]">
+                                    <span>
+                                      Product ID: <span className="font-mono text-[#c99f58] font-bold">{product.id}</span>
+                                    </span>
+                                    {productStatsMap[product.id] && productStatsMap[product.id].totalRatings > 0 && (
+                                      <span className="text-[#f59e0b] font-semibold">
+                                        • {productStatsMap[product.id].averageRating.toFixed(1)} ⭐ ({productStatsMap[product.id].totalRatings} reviews)
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
 
@@ -853,6 +870,9 @@ function AdminDashboard() {
                                           <div className="flex items-center gap-1.5 min-w-0">
                                             <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden text-base">
                                               <ProductIcon icon={prodIcon} fallback="📦" />
+                                            </span>
+                                            <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#2a1a0f] border border-[#54361e] text-[#c99f58] shrink-0">
+                                              {f.tableId}
                                             </span>
                                             <span className="font-bold text-xs text-[#fdfbf7] truncate">
                                               {prodName}

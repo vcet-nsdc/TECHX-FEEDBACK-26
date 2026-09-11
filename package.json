@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "db:clean": "node scripts/db-clean.mjs",
+    "db:backup": "node scripts/db-backup.mjs",
     "clean:reviews": "node scripts/clean-reviews.mjs",
     "seed:reviews": "node scripts/seed-reviews.mjs",
     "seed:products": "node scripts/seed-products.mjs"

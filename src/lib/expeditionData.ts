@@ -52,7 +52,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
     badgeClass: 'bg-[#14532d]/20 text-[#166534] border-[#166534]/40',
     checkpoints: [
       {
-        id: 'c2-p5',
+        id: '502-01',
         name: 'ASTRON',
         description: 'Advanced space exploration telemetry and celestial observation platform.',
         icon: '🔭',
@@ -60,7 +60,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 76,
       },
       {
-        id: 'c1-p4',
+        id: '502-02',
         name: 'MAITRI',
         description: 'Inclusive assistive intelligence and community collaboration platform.',
         icon: '🤝',
@@ -68,7 +68,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 38,
       },
       {
-        id: 'c3-p10',
+        id: '502-03',
         name: 'ROBOT',
         description: 'Autonomous mobile robot with precision navigation and obstacle avoidance.',
         icon: '🤖',
@@ -76,7 +76,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 80,
       },
       {
-        id: 'c4-p2',
+        id: '502-04',
         name: 'LEARNAIMO',
         description: 'Interactive gamified learning platform and adaptive digital education suite.',
         icon: '📚',
@@ -84,7 +84,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 28,
       },
       {
-        id: 'c3-p9',
+        id: '502-05',
         name: 'AVG',
         description: 'Real-time cybersecurity shield and endpoint threat prevention system.',
         icon: '🛡️',
@@ -92,7 +92,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 78,
       },
       {
-        id: 'c2-p1',
+        id: '502-06',
         name: 'BYTEVERSE',
         description: 'Decentralized spatial metaverse and interactive 3D virtual environment.',
         icon: '🌌',
@@ -100,7 +100,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 22,
       },
       {
-        id: 'c2-p2',
+        id: '502-07',
         name: 'IN-OUT DESK',
         description: 'Smart biometric ergonomic workstation and attendance tracking telemetry.',
         icon: '🪑',
@@ -108,7 +108,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 28,
       },
       {
-        id: 'c1-p10',
+        id: '502-08',
         name: 'LED LIGHT (frequency)',
         description: 'Tunable high-frequency illumination and optical frequency analysis system.',
         icon: '💡',
@@ -116,7 +116,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 80,
       },
       {
-        id: 'c3-p8',
+        id: '502-09',
         name: 'FODUU',
         description: 'Creative web development, digital solutions and interactive web portal design.',
         icon: '🚀',
@@ -124,7 +124,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 64,
       },
       {
-        id: 'c2-p3',
+        id: '502-10',
         name: 'MEND-X',
         description: 'Automated digital first-aid and rapid medical triage assistant.',
         icon: '🩹',
@@ -153,7 +153,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
     badgeClass: 'bg-[#0369a1]/20 text-[#0284c7] border-[#0284c7]/40',
     checkpoints: [
       {
-        id: 'c3-p6',
+        id: '508-01',
         name: 'SYNERGY AUTOMATION',
         description: 'Industrial process automation and coordinated smart workflow integration.',
         icon: '⚙️',
@@ -161,7 +161,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 48,
       },
       {
-        id: 'c3-p7',
+        id: '508-02',
         name: 'TECH SAI CARE',
         description: 'Digital healthcare monitoring and smart medical diagnostic telemetry.',
         icon: '🩺',
@@ -169,7 +169,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 58,
       },
       {
-        id: 'c2-p4',
+        id: '508-03',
         name: 'DEUEX',
         description: 'Portable dual-display productivity setup and visual hardware interface.',
         icon: '⚡',
@@ -177,7 +177,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 66,
       },
       {
-        id: 'c4-p1',
+        id: '508-04',
         name: 'GLOBALNET',
         description: 'Worldwide distributed telecommunications network and high-capacity satellite routing.',
         icon: '📡',
@@ -185,7 +185,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 22,
       },
       {
-        id: 'c4-p3',
+        id: '508-05',
         name: 'TECH CRYPTERS',
         description: 'Next-gen cryptographic protocols and decentralized blockchain security ledger.',
         icon: '🔐',
@@ -193,7 +193,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 48,
       },
       {
-        id: 'c4-p4',
+        id: '508-06',
         name: 'MICROSOFT POWER AUTOMATE',
         description: 'Enterprise robotic process automation and cross-service workflow streamlining.',
         icon: '⚡',
@@ -222,7 +222,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
     badgeClass: 'bg-[#9a3412]/20 text-[#c2410c] border-[#ea580c]/40',
     checkpoints: [
       {
-        id: 'c1-p6',
+        id: '509-01',
         name: 'PAPERPAL',
         description: 'AI-powered scholarly writing assistant and manuscript editor.',
         icon: '📝',
@@ -230,7 +230,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 48,
       },
       {
-        id: 'c1-p5',
+        id: '509-02',
         name: 'R DISCOVERY',
         description: 'Academic paper recommendation and scholarly literature discovery suite.',
         icon: '🔬',
@@ -238,7 +238,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 42,
       },
       {
-        id: 'c1-p1',
+        id: '509-03',
         name: 'ASSETORBIT',
         description: 'Asset management and orbital telemetry tracking platform.',
         icon: '🪐',
@@ -246,7 +246,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 18,
       },
       {
-        id: 'c1-p2',
+        id: '509-04',
         name: 'SYNKARO',
         description: 'Real-time synchronization and cross-platform data orchestration engine.',
         icon: '🔄',
@@ -254,7 +254,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 16,
       },
       {
-        id: 'c1-p3',
+        id: '509-05',
         name: 'ABCD IT SOLUTIONS',
         description: 'Enterprise IT infrastructure and digital solutions architecture.',
         icon: '💻',
@@ -262,7 +262,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 22,
       },
       {
-        id: 'c3-p1',
+        id: '509-06',
         name: 'SETH COMPUTERS',
         description: 'High-performance computing architectures and customized workstation systems.',
         icon: '🖥️',
@@ -270,7 +270,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 18,
       },
       {
-        id: 'c3-p2',
+        id: '509-07',
         name: 'ANAY IT SOLUTIONS',
         description: 'Business intelligence analytics and agile enterprise cloud services.',
         icon: '📊',
@@ -278,7 +278,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 16,
       },
       {
-        id: 'c3-p3',
+        id: '509-08',
         name: 'SHIVAM STOCK',
         description: 'Real-time financial market analytics and stock portfolio intelligence.',
         icon: '📈',
@@ -286,7 +286,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 24,
       },
       {
-        id: 'c3-p4',
+        id: '509-09',
         name: 'SAMSUNG ECOSYSTEMS',
         description: 'Interconnected multi-device smart ecosystem and unified mobile relay.',
         icon: '📱',
@@ -294,7 +294,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 38,
       },
       {
-        id: 'c3-p5',
+        id: '509-10',
         name: 'IOS SYSTEM',
         description: 'Modern iOS application ecosystem and mobile experience stack.',
         icon: '🍏',
@@ -323,7 +323,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
     badgeClass: 'bg-[#b45309]/20 text-[#d97706] border-[#d97706]/40',
     checkpoints: [
       {
-        id: 'c4-p5',
+        id: '510-01',
         name: 'MICROSOFT ACCESS',
         description: 'Rapid database application system and structured data inventory management.',
         icon: '🗄️',
@@ -331,7 +331,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 76,
       },
       {
-        id: 'c1-p7',
+        id: '510-02',
         name: 'ADSNEX AI',
         description: 'Next-generation neural targeting and predictive marketing AI engine.',
         icon: '🤖',
@@ -339,7 +339,7 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 60,
       },
       {
-        id: 'c1-p8',
+        id: '510-03',
         name: 'META GLASSES',
         description: 'Smart augmented reality vision and spatial audio computing interface.',
         icon: '👓',
@@ -347,8 +347,8 @@ export const baseExpeditionLabs: Record<string, ExpeditionLab> = {
         y: 64,
       },
       {
-        id: 'c1-p9',
-        name: 'OPTINEXT',
+        id: '510-04',
+        name: 'OPTINEX',
         description: 'Global optical networking and low-latency optical routing gateway.',
         icon: '🌐',
         x: 62,

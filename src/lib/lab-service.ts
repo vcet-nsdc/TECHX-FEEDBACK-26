@@ -169,6 +169,18 @@ export async function getCheckpointCatalog(): Promise<Map<string, CheckpointRef>
       });
     }
   }
+
+  // Register legacy IDs as aliases
+  try {
+    const { LEGACY_PRODUCT_ID_MAP } = await import('./mock-data');
+    for (const [legacyId, newId] of Object.entries(LEGACY_PRODUCT_ID_MAP)) {
+      const ref = catalog.get(newId);
+      if (ref && !catalog.has(legacyId)) {
+        catalog.set(legacyId, { ...ref, tableId: legacyId });
+      }
+    }
+  } catch {}
+
   return catalog;
 }
 
@@ -182,14 +194,19 @@ export async function findCheckpoint(tableId: string): Promise<CheckpointRef | n
 // award shards/unlocks once every waypoint of a sector has been rated.
 export async function getCheckpointGroups(): Promise<CheckpointGroup[]> {
   const catalog = await getCheckpointCatalog();
+  const { LEGACY_PRODUCT_ID_MAP } = await import('./mock-data');
+  const legacyKeys = new Set(Object.keys(LEGACY_PRODUCT_ID_MAP));
   const byLab = new Map<string, CheckpointGroup>();
   for (const ref of catalog.values()) {
+    if (legacyKeys.has(ref.tableId)) continue;
     let group = byLab.get(ref.labKey);
     if (!group) {
       group = { labKey: ref.labKey, canonicalLabId: ref.canonicalLabId, checkpointIds: [] };
       byLab.set(ref.labKey, group);
     }
-    group.checkpointIds.push(ref.tableId);
+    if (!group.checkpointIds.includes(ref.tableId)) {
+      group.checkpointIds.push(ref.tableId);
+    }
   }
   return Array.from(byLab.values());
 }

@@ -4,59 +4,97 @@
 
 import { Lab, Clue, Treasure } from './models';
 
+// Legacy ID alias map to ensure seamless backward compatibility with any past submissions
+export const LEGACY_PRODUCT_ID_MAP: Record<string, string> = {
+  // Lab 502
+  'c2-p5': '502-01',
+  'c1-p4': '502-02',
+  'c3-p10': '502-03',
+  'c4-p2': '502-04',
+  'c3-p9': '502-05',
+  'c2-p1': '502-06',
+  'c2-p2': '502-07',
+  'c1-p10': '502-08',
+  'c3-p8': '502-09',
+  'c2-p3': '502-10',
+  // Lab 508
+  'c3-p6': '508-01',
+  'c3-p7': '508-02',
+  'c2-p4': '508-03',
+  'c4-p1': '508-04',
+  'c4-p3': '508-05',
+  'c4-p4': '508-06',
+  // Lab 509
+  'c1-p6': '509-01',
+  'c1-p5': '509-02',
+  'c1-p1': '509-03',
+  'c1-p2': '509-04',
+  'c1-p3': '509-05',
+  'c3-p1': '509-06',
+  'c3-p2': '509-07',
+  'c3-p3': '509-08',
+  'c3-p4': '509-09',
+  'c3-p5': '509-10',
+  // Lab 510
+  'c4-p5': '510-01',
+  'c1-p7': '510-02',
+  'c1-p8': '510-03',
+  'c1-p9': '510-04',
+};
+
 export const LABS: Lab[] = [
   {
     labId: 'a',
     labName: 'Lab 502',
     products: [
-      { id: 'c2-p5', name: 'ASTRON', icon: '🔭' },
-      { id: 'c1-p4', name: 'MAITRI', icon: '🤝' },
-      { id: 'c3-p10', name: 'ROBOT', icon: '🤖' },
-      { id: 'c4-p2', name: 'LEARNAIMO', icon: '📚' },
-      { id: 'c3-p9', name: 'AVG', icon: '🛡️' },
-      { id: 'c2-p1', name: 'BYTEVERSE', icon: '🌌' },
-      { id: 'c2-p2', name: 'IN-OUT DESK', icon: '🪑' },
-      { id: 'c1-p10', name: 'LED LIGHT (frequency)', icon: '💡' },
-      { id: 'c3-p8', name: 'FODUU', icon: '🚀' },
-      { id: 'c2-p3', name: 'MEND-X', icon: '🩹' },
+      { id: '502-01', name: 'ASTRON', icon: '🔭' },
+      { id: '502-02', name: 'MAITRI', icon: '🤝' },
+      { id: '502-03', name: 'ROBOT', icon: '🤖' },
+      { id: '502-04', name: 'LEARNAIMO', icon: '📚' },
+      { id: '502-05', name: 'AVG', icon: '🛡️' },
+      { id: '502-06', name: 'BYTEVERSE', icon: '🌌' },
+      { id: '502-07', name: 'IN-OUT DESK', icon: '🪑' },
+      { id: '502-08', name: 'LED LIGHT (frequency)', icon: '💡' },
+      { id: '502-09', name: 'FODUU', icon: '🚀' },
+      { id: '502-10', name: 'MEND-X', icon: '🩹' },
     ],
   },
   {
     labId: 'c',
     labName: 'Lab 508',
     products: [
-      { id: 'c3-p6', name: 'SYNERGY AUTOMATION', icon: '⚙️' },
-      { id: 'c3-p7', name: 'TECH SAI CARE', icon: '🩺' },
-      { id: 'c2-p4', name: 'DEUEX', icon: '⚡' },
-      { id: 'c4-p1', name: 'GLOBALNET', icon: '📡' },
-      { id: 'c4-p3', name: 'TECH CRYPTERS', icon: '🔐' },
-      { id: 'c4-p4', name: 'MICROSOFT POWER AUTOMATE', icon: '⚡' },
+      { id: '508-01', name: 'SYNERGY AUTOMATION', icon: '⚙️' },
+      { id: '508-02', name: 'TECH SAI CARE', icon: '🩺' },
+      { id: '508-03', name: 'DEUEX', icon: '⚡' },
+      { id: '508-04', name: 'GLOBALNET', icon: '📡' },
+      { id: '508-05', name: 'TECH CRYPTERS', icon: '🔐' },
+      { id: '508-06', name: 'MICROSOFT POWER AUTOMATE', icon: '⚡' },
     ],
   },
   {
     labId: 'd',
     labName: 'Lab 509',
     products: [
-      { id: 'c1-p6', name: 'PAPERPAL', icon: '📝' },
-      { id: 'c1-p5', name: 'R DISCOVERY', icon: '🔬' },
-      { id: 'c1-p1', name: 'ASSETORBIT', icon: '🪐' },
-      { id: 'c1-p2', name: 'SYNKARO', icon: '🔄' },
-      { id: 'c1-p3', name: 'ABCD IT SOLUTIONS', icon: '💻' },
-      { id: 'c3-p1', name: 'SETH COMPUTERS', icon: '🖥️' },
-      { id: 'c3-p2', name: 'ANAY IT SOLUTIONS', icon: '📊' },
-      { id: 'c3-p3', name: 'SHIVAM STOCK', icon: '📈' },
-      { id: 'c3-p4', name: 'SAMSUNG ECOSYSTEMS', icon: '📱' },
-      { id: 'c3-p5', name: 'IOS SYSTEM', icon: '🍏' },
+      { id: '509-01', name: 'PAPERPAL', icon: '📝' },
+      { id: '509-02', name: 'R DISCOVERY', icon: '🔬' },
+      { id: '509-03', name: 'ASSETORBIT', icon: '🪐' },
+      { id: '509-04', name: 'SYNKARO', icon: '🔄' },
+      { id: '509-05', name: 'ABCD IT SOLUTIONS', icon: '💻' },
+      { id: '509-06', name: 'SETH COMPUTERS', icon: '🖥️' },
+      { id: '509-07', name: 'ANAY IT SOLUTIONS', icon: '📊' },
+      { id: '509-08', name: 'SHIVAM STOCK', icon: '📈' },
+      { id: '509-09', name: 'SAMSUNG ECOSYSTEMS', icon: '📱' },
+      { id: '509-10', name: 'IOS SYSTEM', icon: '🍏' },
     ],
   },
   {
     labId: 'e',
     labName: 'Lab 510',
     products: [
-      { id: 'c4-p5', name: 'MICROSOFT ACCESS', icon: '🗄️' },
-      { id: 'c1-p7', name: 'ADSNEX AI', icon: '🤖' },
-      { id: 'c1-p8', name: 'META GLASSES', icon: '👓' },
-      { id: 'c1-p9', name: 'OPTINEXT', icon: '🌐' },
+      { id: '510-01', name: 'MICROSOFT ACCESS', icon: '🗄️' },
+      { id: '510-02', name: 'ADSNEX AI', icon: '🤖' },
+      { id: '510-03', name: 'META GLASSES', icon: '👓' },
+      { id: '510-04', name: 'OPTINEX', icon: '🌐' },
     ],
   },
 ];
@@ -68,8 +106,9 @@ export function getLabById(labId: string): Lab | undefined {
 }
 
 export function getProductById(productId: string): { product: { id: string; name: string; icon: string }; lab: Lab } | undefined {
+  const normalizedId = LEGACY_PRODUCT_ID_MAP[productId] || productId;
   for (const lab of LABS) {
-    const product = lab.products.find((p) => p.id === productId);
+    const product = lab.products.find((p) => p.id === normalizedId || p.id === productId);
     if (product) return { product, lab };
   }
   return undefined;

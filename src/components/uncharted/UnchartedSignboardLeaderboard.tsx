@@ -236,6 +236,7 @@ export default function UnchartedSignboardLeaderboard({
       list = list.filter(
         (p) =>
           p.productName?.toLowerCase().includes(q) ||
+          p.productId?.toLowerCase().includes(q) ||
           p.labName?.toLowerCase().includes(q)
       );
     }
@@ -245,7 +246,17 @@ export default function UnchartedSignboardLeaderboard({
         return b.averageRating - a.averageRating;
       }
       // 2. Highest total ratings count as tiebreaker
-      return b.totalRatings - a.totalRatings;
+      if (b.totalRatings !== a.totalRatings) {
+        return b.totalRatings - a.totalRatings;
+      }
+      // 3. Most recently rated (lastRated timestamp) as tiebreaker (Option B)
+      const timeA = a.lastRated ? new Date(a.lastRated).getTime() : 0;
+      const timeB = b.lastRated ? new Date(b.lastRated).getTime() : 0;
+      if (timeB !== timeA) {
+        return timeB - timeA;
+      }
+      // 4. Stable deterministic fallback: Product ID
+      return a.productId.localeCompare(b.productId);
     });
   }, [productStats, searchQuery]);
 
@@ -308,9 +319,10 @@ export default function UnchartedSignboardLeaderboard({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } else {
-      const headers = ['Rank', 'Product Name', 'Lab', 'Total Ratings', 'Avg Rating'];
-      const rows = productStats.map((p, idx) => [
+      const headers = ['Rank', 'Product ID', 'Product Name', 'Lab', 'Total Ratings', 'Avg Rating'];
+      const rows = filteredProducts.map((p, idx) => [
         idx + 1,
+        p.productId || '',
         p.productName,
         cleanLabName(p.labName),
         p.totalRatings,
@@ -595,8 +607,13 @@ export default function UnchartedSignboardLeaderboard({
                         )}
                       </div>
 
-                      {/* Product Name */}
-                      <div className="flex items-center pl-2 sm:pl-3 h-full min-w-0 truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
+                      {/* Product Name & ID */}
+                      <div className="flex items-center pl-2 sm:pl-3 h-full min-w-0 gap-1.5 sm:gap-2 truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
+                        {!isPlaceholder && entry.productId && (
+                          <span className="shrink-0 font-mono text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-[#EFBF04] border border-[#EFBF04]/40 shadow-xs">
+                            {entry.productId}
+                          </span>
+                        )}
                         <span className={`truncate font-bold text-sm sm:text-base md:text-lg lg:text-xl ${isTop3 ? getShimmerClass(index) : 'text-[#F8FAFC]'}`}>
                           {entry.productName || '—'}
                         </span>

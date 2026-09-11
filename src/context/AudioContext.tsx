@@ -33,7 +33,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   // Lazy getters to prevent network requests and audio decoding on mount
   const getBgm = useCallback(() => {
     if (!bgmRef.current && typeof window !== 'undefined') {
-      const audio = new Audio('/sounds/BGM_NEW.m4a');
+      const audio = new Audio('/sounds/theme.opus');
       audio.loop = true;
       audio.volume = volume;
       audio.preload = 'none';
@@ -118,10 +118,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   }, [getButtonSound]);
 
   const playCoinSound = useCallback(() => {
-    if (isMutedRef.current) return;
+    // Coins sound is kept ON always — does not turn off with the BGM mute button
     const sound = getCoinSound();
     if (sound) {
       sound.currentTime = 0;
+      sound.volume = 0.85;
       sound.play().catch(() => {});
     }
   }, [getCoinSound]);

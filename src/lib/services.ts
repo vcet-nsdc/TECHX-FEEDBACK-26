@@ -47,11 +47,34 @@ async function withMongo<T>(op: () => Promise<T>): Promise<T | null> {
   }
 }
 
+export type ProductStatEntry = {
+  productId: string;
+  productName: string;
+  labName: string;
+  totalRatings: number;
+  averageRating: number;
+  ratingDistribution: { 1: number; 2: number; 3: number; 4: number; 5: number };
+  totalComments: number;
+  lastRated: string | null;
+};
+
+// Short in-process memory cache for heavy aggregation endpoints (leaderboard, productStats)
+// Protects MongoDB from thundering herd during peak concurrency (e.g. 500 participants polling).
+let leaderboardCache: Record<string, { data: LeaderboardEntry[]; timestamp: number }> = {};
+let productStatsCache: { data: ProductStatEntry[]; timestamp: number } | null = null;
+const CACHE_TTL_MS = 3000; // 3 seconds
+
+export function invalidateAggregateCaches(): void {
+  leaderboardCache = {};
+  productStatsCache = null;
+}
+
 // ---------- Feedback ----------
 
 export async function saveFeedback(
   feedback: Omit<FeedbackEntry, '_id' | 'createdAt'> & { createdAt?: Date }
 ): Promise<FeedbackEntry> {
+  invalidateAggregateCaches();
   const saved = await withMongo(() => mongo.saveFeedback(feedback));
   if (saved) return saved;
 
@@ -174,11 +197,15 @@ async function applyProgressRules(user: ExpeditionUser): Promise<void> {
   //    use canonical lab ids, shared with rule 1.
   try {
     const { getCheckpointGroups } = await import('./lab-service');
+    const { LEGACY_PRODUCT_ID_MAP } = await import('./mock-data');
     const groups = await getCheckpointGroups();
+    const userDoneSet = new Set(
+      (user.completedProducts || []).map((id) => LEGACY_PRODUCT_ID_MAP[id] || id)
+    );
     for (const group of groups) {
       if (group.checkpointIds.length === 0) continue;
       if (user.completedLabs.includes(group.canonicalLabId)) continue;
-      const allDone = group.checkpointIds.every((id) => user.completedProducts.includes(id));
+      const allDone = group.checkpointIds.every((id) => userDoneSet.has(id));
       if (!allDone) continue;
       user.completedLabs.push(group.canonicalLabId);
       if (!user.shards.includes(group.canonicalLabId)) user.shards.push(group.canonicalLabId);
@@ -248,41 +275,48 @@ function rank(users: ExpeditionUser[], allFeedback: FeedbackEntry[]): Leaderboar
       if (a.completedProducts.length !== b.completedProducts.length)
         return b.completedProducts.length - a.completedProducts.length;
       return b.averageRating - a.averageRating;
-    });
+    })
+    .map((entry, idx) => ({ ...entry, rank: idx + 1 }));
 }
 
 export async function getLeaderboard(limit?: number): Promise<LeaderboardEntry[]> {
+  const cacheKey = String(limit ?? 'all');
+  const cached = leaderboardCache[cacheKey];
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data;
+  }
+
   const users = await withMongo(async () => mongo.getLeaderboardAggregated(limit));
-  if (users) return users;
+  if (users) {
+    leaderboardCache[cacheKey] = { data: users, timestamp: Date.now() };
+    return users;
+  }
 
   const ranked = rank(
     Array.from(memoryStore.users.values()),
     memoryStore.feedback.slice()
   );
-  return typeof limit === 'number' && limit > 0 ? ranked.slice(0, limit) : ranked;
+  const res = typeof limit === 'number' && limit > 0 ? ranked.slice(0, limit) : ranked;
+  leaderboardCache[cacheKey] = { data: res, timestamp: Date.now() };
+  return res;
 }
 
-export async function getProductStats(): Promise<Array<{
-  productId: string;
-  productName: string;
-  labName: string;
-  totalRatings: number;
-  averageRating: number;
-  ratingDistribution: { 1: number; 2: number; 3: number; 4: number; 5: number };
-  totalComments: number;
-  lastRated: string | null;
-}>> {
+export async function getProductStats(): Promise<Array<ProductStatEntry>> {
+  if (productStatsCache && Date.now() - productStatsCache.timestamp < CACHE_TTL_MS) {
+    return productStatsCache.data;
+  }
+
   const { getProductLookup } = await import('./mock-store');
+  const { LEGACY_PRODUCT_ID_MAP } = await import('./mock-data');
+  const legacyKeys = new Set(Object.keys(LEGACY_PRODUCT_ID_MAP));
   const productMap = getProductLookup();
 
-  // Overlay the admin-managed checkpoint catalog so waypoints submitted by
-  // the active journal flow resolve to human-readable names instead of raw
-  // checkpoint ids (static seed fallback applies while MongoDB is down).
   try {
     const { getCheckpointCatalog } = await import('./lab-service');
     for (const ref of (await getCheckpointCatalog()).values()) {
       if (!productMap.has(ref.tableId)) {
         productMap.set(ref.tableId, {
+          id: ref.tableId,
           name: ref.name,
           labName: ref.labName,
           labId: ref.canonicalLabId,
@@ -293,47 +327,80 @@ export async function getProductStats(): Promise<Array<{
     // Catalog unavailable — fall back to static product names only.
   }
 
+  // Helper to create blank stats for a primary product
+  const createBlankStats = (id: string, name: string, labName: string) => ({
+    productId: id,
+    productName: name,
+    labName,
+    totalRatings: 0,
+    averageRating: 0,
+    ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+    totalComments: 0,
+    lastRated: null as string | null,
+  });
+
   const mongoStats = await withMongo(() => mongo.getProductStatsAggregated());
   if (mongoStats) {
-    return mongoStats.map((st) => {
-      const info = productMap.get(st.productId);
-      return {
-        ...st,
-        productName: info?.name || st.productId,
-        labName: info?.labName || 'Expedition Sector',
-      };
+    const statsMap = new Map<string, ReturnType<typeof createBlankStats>>();
+    // Seed all 30 canonical products
+    for (const [id, info] of productMap.entries()) {
+      if (legacyKeys.has(id)) continue;
+      statsMap.set(id, createBlankStats(id, info.name, info.labName));
+    }
+    // Overlay mongo aggregation results (merging legacy IDs if any)
+    for (const st of mongoStats) {
+      const canonicalId = LEGACY_PRODUCT_ID_MAP[st.productId] || st.productId;
+      const target = statsMap.get(canonicalId);
+      if (target) {
+        target.totalRatings += st.totalRatings;
+        target.totalComments += st.totalComments;
+        for (let r = 1; r <= 5; r++) {
+          target.ratingDistribution[r as 1 | 2 | 3 | 4 | 5] += st.ratingDistribution[r as 1 | 2 | 3 | 4 | 5] || 0;
+        }
+        if (st.lastRated && (!target.lastRated || new Date(st.lastRated) > new Date(target.lastRated))) {
+          target.lastRated = st.lastRated;
+        }
+      }
+    }
+    for (const target of statsMap.values()) {
+      if (target.totalRatings > 0) {
+        const sum =
+          target.ratingDistribution[1] * 1 +
+          target.ratingDistribution[2] * 2 +
+          target.ratingDistribution[3] * 3 +
+          target.ratingDistribution[4] * 4 +
+          target.ratingDistribution[5] * 5;
+        target.averageRating = Number((sum / target.totalRatings).toFixed(2));
+      }
+    }
+    const list = Array.from(statsMap.values());
+    list.sort((a, b) => {
+      if (b.averageRating !== a.averageRating) return b.averageRating - a.averageRating;
+      if (b.totalRatings !== a.totalRatings) return b.totalRatings - a.totalRatings;
+      const timeA = a.lastRated ? new Date(a.lastRated).getTime() : 0;
+      const timeB = b.lastRated ? new Date(b.lastRated).getTime() : 0;
+      if (timeB !== timeA) return timeB - timeA;
+      return a.productId.localeCompare(b.productId);
     });
+    productStatsCache = { data: list, timestamp: Date.now() };
+    return list;
   }
 
   // In-memory fallback calculation
   const allFeedback = memoryStore.feedback;
-  const productStats = new Map<string, {
-    productId: string;
-    productName: string;
-    labName: string;
-    totalRatings: number;
-    averageRating: number;
-    ratingDistribution: { 1: number; 2: number; 3: number; 4: number; 5: number };
-    totalComments: number;
-    lastRated: string | null;
-  }>();
+  const productStats = new Map<string, ReturnType<typeof createBlankStats>>();
+
+  // Initialize all canonical products so full allotment is visible
+  for (const [id, info] of productMap.entries()) {
+    if (legacyKeys.has(id)) continue;
+    productStats.set(id, createBlankStats(id, info.name, info.labName));
+  }
 
   for (const feedback of allFeedback) {
-    const info = productMap.get(feedback.tableId);
-    if (!info) continue;
-    if (!productStats.has(feedback.tableId)) {
-      productStats.set(feedback.tableId, {
-        productId: feedback.tableId,
-        productName: info.name,
-        labName: info.labName,
-        totalRatings: 0,
-        averageRating: 0,
-        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-        totalComments: 0,
-        lastRated: null,
-      });
-    }
-    const stats = productStats.get(feedback.tableId)!;
+    const canonicalId = LEGACY_PRODUCT_ID_MAP[feedback.tableId] || feedback.tableId;
+    const stats = productStats.get(canonicalId);
+    if (!stats) continue;
+
     stats.totalRatings++;
     const tier = Math.max(1, Math.min(5, feedback.rating)) as 1 | 2 | 3 | 4 | 5;
     stats.ratingDistribution[tier]++;
@@ -366,8 +433,15 @@ export async function getProductStats(): Promise<Array<{
     if (b.averageRating !== a.averageRating) {
       return b.averageRating - a.averageRating;
     }
-    return b.totalRatings - a.totalRatings;
+    if (b.totalRatings !== a.totalRatings) {
+      return b.totalRatings - a.totalRatings;
+    }
+    const timeA = a.lastRated ? new Date(a.lastRated).getTime() : 0;
+    const timeB = b.lastRated ? new Date(b.lastRated).getTime() : 0;
+    if (timeB !== timeA) return timeB - timeA;
+    return a.productId.localeCompare(b.productId);
   });
+  productStatsCache = { data: list, timestamp: Date.now() };
   return list;
 }
 

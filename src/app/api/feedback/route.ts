@@ -16,8 +16,42 @@ function asString(value: unknown, max: number): string {
 //      flow, e.g. "c1-p1") — falls back to the static seed config while
 //      MongoDB is unreachable.
 //   2. Static product ids from mock-data (legacy /discover flow, e.g. "a1").
+// In-memory sliding window rate limiter: protects against scripted floods or duplicate click bursts
+interface RateLimitBucket {
+  count: number;
+  resetAt: number;
+}
+
+const rateLimitMap = new Map<string, RateLimitBucket>();
+
+function isRateLimited(key: string, maxRequests = 15, windowMs = 10000): boolean {
+  const now = Date.now();
+  const bucket = rateLimitMap.get(key);
+
+  if (!bucket || now > bucket.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+
+  if (bucket.count >= maxRequests) {
+    return true;
+  }
+
+  bucket.count += 1;
+  return false;
+}
+
 export async function POST(request: Request) {
   try {
+    const forwarded = request.headers.get('x-forwarded-for');
+    const clientIp = (forwarded ? forwarded.split(',')[0] : null) || request.headers.get('x-real-ip') || 'anonymous';
+    if (isRateLimited(`ip:${clientIp}`, 20, 10000)) {
+      return NextResponse.json(
+        { message: 'Too many requests. Please explore at your own pace.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
 
     const tableId = asString(body?.tableId, 64);
@@ -50,6 +84,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { message: 'A valid student email is required.' },
         { status: 400 }
+      );
+    }
+
+    if (isRateLimited(`email:${studentEmail}`, 10, 10000)) {
+      return NextResponse.json(
+        { message: 'Submission rate limit reached. Please wait a few moments before logging another discovery.' },
+        { status: 429 }
       );
     }
 

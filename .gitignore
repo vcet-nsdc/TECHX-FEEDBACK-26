@@ -41,3 +41,5 @@ next-env.d.ts
 # stray local artifacts
 dev-server.log*
 /TECHX-FEEDBACK-26/
+/backups/
+

@@ -143,106 +143,261 @@ export const EXPEDITION_REWARD_ITEMS: ExpeditionItemReward[] = [
   },
 ];
 
-// Generates an authentic Uncharted-style letter cipher pattern
+// Cryptic domain and silhouette definitions for all 30 projects
+export interface CrypticClueDef {
+  description: string;
+  shape: string;
+}
+
+export const PRODUCT_CRYPTIC_CLUES: Record<string, CrypticClueDef> = {
+  // Lab 502
+  '502-01': {
+    description: 'An observatory mechanism calibrated to peer beyond our atmosphere, mapping celestial wanderers and cosmic horizons.',
+    shape: 'A cylindrical silhouette tilted diagonally upward, resting atop a slender tripod stand.',
+  },
+  '502-02': {
+    description: 'A collective alliance initiative engineered to foster mutual solidarity, empathy, and shared companionship across diverse communities.',
+    shape: 'Two angled limbs converging symmetrically at the center with interlaced fingers in mutual contact.',
+  },
+  '502-03': {
+    description: 'A self-guided mechanical construct engineered to traverse unknown corridors with automated mobility and spatial obstacle avoidance.',
+    shape: 'A square-jawed metallic head featuring twin circular visual receptors and an upright antenna stem.',
+  },
+  '502-04': {
+    description: 'An instructional proving ground that transforms the pursuit of intellect into an interactive, gamified adventure for scholars.',
+    shape: 'A horizontal tier of three rectangular blocks stacked evenly with visible spine ridges.',
+  },
+  '502-05': {
+    description: 'An impregnable defensive bulwark operating silently along digital perimeters to repel covert cyber intrusions and malicious payloads.',
+    shape: 'A heraldic crest with a flat horizontal upper rim and curved edges tapering down to a sharp lower tip.',
+  },
+  '502-06': {
+    description: 'An expansive realm forged from pure code and spatial geometry, inviting voyagers to wander an alternate digital plane.',
+    shape: 'A swirling celestial disc with concentric spiral arms curling inward toward a dense central nucleus.',
+  },
+  '502-07': {
+    description: 'A specialized physical command station logging the arrival, ergonomics, posture, and departure of personnel at work.',
+    shape: 'A four-legged angular frame supporting a flat horizontal tier accompanied by a raised vertical backrest.',
+  },
+  '502-08': {
+    description: 'An experimental luminary instrument designed to oscillate at precise spectral intervals to analyze optical radiation.',
+    shape: 'A rounded pear-shaped bulb tapering down to a grooved metallic base, ringed by subtle outward rays.',
+  },
+  '502-09': {
+    description: 'A creative launchpad crafting bespoke digital portals and visual storefronts for expeditions across the world wide web.',
+    shape: 'A tapered aerodynamic fuselage pointing diagonally upward with stabilizing triangular delta fins at its base.',
+  },
+  '502-10': {
+    description: 'A rapid response triage mechanism engineered to swiftly bind ruptures, disinfect trauma, and stabilize wounded explorers.',
+    shape: 'An oblong rectangular strip with curved safety ends, displaying a perforated square pad at its midpoint.',
+  },
+
+  // Lab 508
+  '508-01': {
+    description: 'An interconnected orchestration network that coordinates disparate heavy industrial apparatuses into seamless clockwork harmony.',
+    shape: 'A circular mechanical wheel bordered with evenly spaced interlocking teeth encircling a central hollow axle.',
+  },
+  '508-02': {
+    description: 'A vigilant guardian station continuously interpreting subtle physiological rhythms and biological vital signs to preserve human health.',
+    shape: 'A flexible dual-stem tube looping downward and converging into a flat circular acoustic disc.',
+  },
+  '508-03': {
+    description: 'A twin-panel visual interface engineered to duplicate perspective and double an operative\'s functional field of view.',
+    shape: 'A sharp zigzag silhouette formed by acute diagonal angles snapping downward to an apex.',
+  },
+  '508-04': {
+    description: 'A planetary relay infrastructure beaming rapid transmissions across oceans and continental divides through orbital paths.',
+    shape: 'A curved dish-shaped reflector tilted diagonally upward, mounted to an angled lattice mast.',
+  },
+  '508-05': {
+    description: 'A cryptographic sanctuary encoding valuable transactional ledgers within an unbreachable mathematical labyrinth.',
+    shape: 'A solid rectangular base with an arched U-shaped curved shackle, accompanied by a notched metallic key.',
+  },
+  '508-06': {
+    description: 'An enterprise powerhouse driving digital automatons to shoulder repetitive administrative duties without manual intervention.',
+    shape: 'A high-voltage zigzag flash with crisp diagonal facets terminating in a pointed directional apex.',
+  },
+
+  // Lab 509
+  '509-01': {
+    description: 'A discerning literary companion that polishes academic treatises, rectifies prose, and elevates scholarly manuscripts for publication.',
+    shape: 'A ruled rectangular parchment sheet flanked diagonally by a slender writing stylus along its margin.',
+  },
+  '509-02': {
+    description: 'An intellectual compass surveying vast repositories of published literature to uncover cutting-edge scientific revelations.',
+    shape: 'A curved vertical arm supporting an angled eyepiece directed down toward a flat specimen stage plate.',
+  },
+  '509-03': {
+    description: 'A navigational tracking grid monitoring the path, coordinates, and operational lifecycle of vital mission equipment in motion.',
+    shape: 'A spherical central body bisected diagonally by an encircling elliptical tilted ring.',
+  },
+  '509-04': {
+    description: 'A silent synchronization conduit aligning scattered data repositories into an unbroken, harmonious current in real time.',
+    shape: 'Two curved arrows forming a continuous circular loop, following each other\'s path in perpetual motion.',
+  },
+  '509-05': {
+    description: 'A comprehensive architectural guild that designs, configures, and maintains the underlying digital framework of enterprises.',
+    shape: 'A dual-tier clamshell silhouette showing a flat horizontal keypad plane hinged to an upright rectangular screen.',
+  },
+  '509-06': {
+    description: 'A formidable computing monolith assembled with high-grade silicon processors to execute intense computational simulations.',
+    shape: 'A broad widescreen monitor mounted upon a single vertical pedestal with a flat pedestal base.',
+  },
+  '509-07': {
+    description: 'A strategic intelligence bureau translating raw operational figures into meaningful guidance and statistical dashboards.',
+    shape: 'A series of three adjacent vertical rectangular pillars rising in ascending stair-step heights.',
+  },
+  '509-08': {
+    description: 'A financial barometer recording the turbulent ebbs and surges of equity shares, commercial valuation, and market capital.',
+    shape: 'An upward-trending diagonal line charting a jagged path toward the upper right corner, crowned with an arrow point.',
+  },
+  '509-09': {
+    description: 'A synchronized constellation of portable electronics, wearables, and smart glass portals that communicate in total synergy.',
+    shape: 'A sleek vertical handheld slate with rounded bezels and a single central flat glass facade.',
+  },
+  '509-10': {
+    description: 'A celebrated proprietary mobile operating environment distinguished by fluid tactile gestures and unified design elegance.',
+    shape: 'A rounded organic fruit silhouette crowned with a single curved leaf angled along the top.',
+  },
+
+  // Lab 510
+  '510-01': {
+    description: 'A venerable desktop repository organizing complex grids, relational queries, and operational records under one roof.',
+    shape: 'A tall vertical rectangular unit stacked with multiple horizontal pull-out drawer compartments with handles.',
+  },
+  '510-02': {
+    description: 'A neural algorithmic intelligence predicting consumer inclinations to deliver targeted commercial transmissions with precision.',
+    shape: 'A geometric angular head silhouette with visor-like horizontal apertures and bilateral bolt features.',
+  },
+  '510-03': {
+    description: 'A lightweight optical headset blending digital sensory overlays directly with the wearer\'s physical sight and spatial sound.',
+    shape: 'Dual oval lenses joined across a center nose bridge, flanked by slender horizontal temple arms.',
+  },
+  '510-04': {
+    description: 'An ultra-fast transmission channel directing pulses of pure concentrated light through optical fiber filaments spanning continents.',
+    shape: 'A sphere crossed by curved latitude arcs and longitudinal meridian lines resembling a wireframe orb.',
+  },
+};
+
+// Generates an authentic Uncharted-style letter cipher pattern:
+// - Very short names (<= 3 letters, e.g. "AVG"): strictly 1 letter visible (first letter)
+// - Short names (4 to 8 letters): strictly 2 letters visible (first & last)
+// - 9+ letters: strictly 3 letters visible (first, middle/word initial, last)
 export function generateCipherPattern(name: string): string {
   if (!name) return 'A _ _ Z';
-  const words = name.trim().split(/\s+/);
-  return words
-    .map((word) => {
-      const clean = word.replace(/[^a-zA-Z0-9]/g, '');
-      if (!clean) return word;
-      if (clean.length === 1) return clean.toUpperCase();
-      if (clean.length === 2) return `${clean[0].toUpperCase()} _`;
-      if (clean.length <= 4) {
-        return `${clean[0].toUpperCase()} _ ${clean[clean.length - 1].toUpperCase()}`;
+
+  // Strip frequency tag if present for cipher display
+  const cleanedTitle = name.replace(/\s*\([^)]*\)/g, '').trim();
+
+  // Find all alphanumeric character positions
+  const lettersOnly: number[] = [];
+  for (let i = 0; i < cleanedTitle.length; i++) {
+    if (/[a-zA-Z0-9]/.test(cleanedTitle[i])) {
+      lettersOnly.push(i);
+    }
+  }
+
+  const totalLetters = lettersOnly.length;
+  const visibleIndices = new Set<number>();
+
+  if (totalLetters <= 3) {
+    // For very short names (<= 3 letters, e.g. "AVG"): exactly 1 letter visible (first letter)
+    if (lettersOnly.length > 0) visibleIndices.add(lettersOnly[0]);
+  } else if (totalLetters <= 8) {
+    // For short names (4-8 letters): exactly 2 letters visible (first and last letter)
+    visibleIndices.add(lettersOnly[0]);
+    visibleIndices.add(lettersOnly[lettersOnly.length - 1]);
+  } else {
+    // For 9+ letters: exactly 3 letters visible (first letter, middle/word letter, last letter)
+    visibleIndices.add(lettersOnly[0]);
+    visibleIndices.add(lettersOnly[lettersOnly.length - 1]);
+
+    // Choose 1 good middle index
+    const words = cleanedTitle.split(/\s+/);
+    if (words.length >= 2) {
+      let runningIdx = 0;
+      for (let w = 0; w < words.length; w++) {
+        const wordStart = cleanedTitle.indexOf(words[w], runningIdx);
+        if (w === 1) {
+          const match = words[w].search(/[a-zA-Z0-9]/);
+          if (match !== -1) {
+            visibleIndices.add(wordStart + match);
+            break;
+          }
+        }
+        runningIdx = wordStart + words[w].length;
       }
-      const mid = Math.floor(clean.length / 2);
-      return clean
+    }
+
+    // If still less than 3, pick the true middle letter
+    if (visibleIndices.size < 3) {
+      const midLetterIdx = lettersOnly[Math.floor(lettersOnly.length / 2)];
+      visibleIndices.add(midLetterIdx);
+    }
+  }
+
+  // Format characters with 1 space between letters and 4 spaces between words
+  return cleanedTitle
+    .split(/\s+/)
+    .map((word) => {
+      const wordPos = cleanedTitle.indexOf(word);
+      return word
         .split('')
         .map((ch, idx) => {
-          if (idx === 0 || idx === clean.length - 1 || idx === mid) {
-            return ch.toUpperCase();
+          const globalIdx = wordPos + idx;
+          if (/[a-zA-Z0-9]/.test(ch)) {
+            if (visibleIndices.has(globalIdx)) {
+              return ch.toUpperCase();
+            }
+            return '_';
           }
-          return '_';
+          return ch; // keep hyphens and punctuation
         })
         .join(' ');
     })
     .join('    ');
 }
 
-// Clean dynamic clue generator for projects from DB
+// Clean dynamic clue generator with enigmatic clues and non-leaking shapes
 export function getProductClues(product: ProductWithLab): ProductClues {
   const labNum =
     (product.labName + ' ' + (product.labTitle || '')).match(/\b(5\d{2}|\d{3})\b/)?.[1] ||
     (product.labId === '1' ? '502' : product.labId === '2' ? '508' : product.labId === '3' ? '509' : '510');
 
-  const desc = product.description?.trim() || 'Software and technology project.';
-  const icon = product.icon || '📦';
+  // Look up cryptic info by product ID or normalized fallback
+  const crypticInfo =
+    PRODUCT_CRYPTIC_CLUES[product.id] || {
+      description: 'An exploratory engineering venture deployed to pioneer digital operations in this sector.',
+      shape: 'An intricate geometric sigil etched with balanced proportions and distinct perimeter angles.',
+    };
 
-  const emojiNames: Record<string, string> = {
-    '🪐': 'planet with rings',
-    '☀️': 'sun',
-    '💻': 'laptop',
-    '🤖': 'robot',
-    '👓': 'glasses',
-    '🌐': 'globe',
-    '🚀': 'rocket',
-    '🤝': 'handshake',
-    '🔬': 'microscope',
-    '📝': 'notepad',
-    '💡': 'lightbulb',
-    '🖥️': 'desktop computer',
-    '📊': 'bar chart',
-    '📈': 'growth graph',
-    '📱': 'mobile phone',
-    '🍏': 'green apple',
-    '🛡️': 'shield',
-    '🦾': 'robotic arm',
-    '🪑': 'office desk',
-    '🩹': 'bandage',
-    '🌪️': 'sandstorm',
-    '⚡': 'lightning bolt',
-    '🚙': 'rover',
-    '💧': 'water drop',
-    '🏛️': 'pyramid temple',
-    '🪲': 'scarab beetle',
-    '🔄': 'sync arrows',
-    '⚙️': 'gear',
-    '🩺': 'stethoscope',
-    '🌌': 'galaxy',
-    '🔭': 'telescope',
-    '📡': 'satellite antenna',
-    '📚': 'books',
-    '🔐': 'lock and key',
-    '🗄️': 'file cabinet',
-  };
-  const emojiLabel = emojiNames[icon] || 'symbol';
-
-  const words = product.name.trim().split(/\s+/);
-  const cleanLetters = product.name.replace(/[^a-zA-Z0-9]/g, '');
-  const firstChar = cleanLetters[0]?.toUpperCase() || 'A';
-  const lastChar = cleanLetters[cleanLetters.length - 1]?.toUpperCase() || 'Z';
   const cipherPattern = generateCipherPattern(product.name);
-
-  // Clue 1: What it is & where
-  const clue1 = `Located in Lab ${labNum}. ${desc}`;
-
-  // Clue 2: The logo / emoji
-  const clue2 = `The project logo is the ${icon} (${emojiLabel}) emoji.`;
-
-  // Clue 3: The project name & fill-in-the-blank letters
+  const cleanTitle = product.name.replace(/\s*\([^)]*\)/g, '').trim();
+  const cleanLetters = cleanTitle.replace(/[^a-zA-Z0-9]/g, '');
+  const words = cleanTitle.split(/\s+/);
   const wordCountStr = words.length === 1 ? '1 word' : `${words.length} words`;
-  const clue3 = `The name has ${wordCountStr} (${cleanLetters.length} letters), starts with '${firstChar}' and ends with '${lastChar}':`;
+
+  // Clue 1: Atmospheric enigmatic description (no product names or card giveaways)
+  const clue1 = `Housed in Lab ${labNum}. ${crypticInfo.description}`;
+
+  // Clue 2: Abstract insignia silhouette (no direct emoji or concrete name)
+  const clue2 = `Insignia Silhouette: ${crypticInfo.shape}`;
+
+  // Clue 3: Cipher pattern with strictly 1 letter for short names (<=3 letters) and 2-3 letters for others
+  const clue3 =
+    cleanLetters.length <= 3
+      ? `A concise ${cleanLetters.length}-letter designation. Decipher the nameplate below:`
+      : `Encrypted nameplate (${cleanLetters.length} letters, ${wordCountStr}). Decipher the code below:`;
 
   return {
     clue1,
     clue2,
     clue3,
-    aboutText: desc,
-    icon,
-    iconLabel: emojiLabel,
+    aboutText: crypticInfo.description,
+    icon: product.icon || '📦',
+    iconLabel: crypticInfo.shape,
     cipherPattern,
-    nameHint: `Starts with '${firstChar}' • Ends with '${lastChar}'`,
+    nameHint: `${cleanLetters.length} Letters • ${wordCountStr}`,
     labNum,
   };
 }
@@ -516,22 +671,22 @@ export default function TreasureCard({
     return chosen;
   }, [allProducts, normalizedEmail, userEmail]);
 
-  // Generate & store 3 clues randomly and persistently for this user
+  // Generate & store 3 clues randomly and persistently for this user (v3 cache)
   const targetClues = useMemo(() => {
     if (!targetProduct) return null;
     if (typeof window !== 'undefined') {
       try {
         const stored =
-          localStorage.getItem(`treasure_clues_${normalizedEmail}`) ||
-          localStorage.getItem(`treasure_clues_${userEmail}`);
+          localStorage.getItem(`treasure_clues_v3_${normalizedEmail}`) ||
+          localStorage.getItem(`treasure_clues_v3_${userEmail}`);
         if (stored) return JSON.parse(stored) as ProductClues;
       } catch {}
     }
     const generated = getProductClues(targetProduct);
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem(`treasure_clues_${normalizedEmail}`, JSON.stringify(generated));
-        localStorage.setItem(`treasure_clues_${userEmail}`, JSON.stringify(generated));
+        localStorage.setItem(`treasure_clues_v3_${normalizedEmail}`, JSON.stringify(generated));
+        localStorage.setItem(`treasure_clues_v3_${userEmail}`, JSON.stringify(generated));
       } catch {}
     }
     return generated;
@@ -566,36 +721,35 @@ export default function TreasureCard({
     return chosen;
   }, [normalizedEmail, userEmail]);
 
-  // Has the user submitted feedback for this target product in its lab?
+  // Has the user submitted feedback for this target product in its lab? (Only shown as a badge if solved)
   const isTargetSubmitted = useMemo(() => {
     if (!targetProduct) return false;
     return submittedProductIds.includes(targetProduct.id);
   }, [targetProduct, submittedProductIds]);
 
-  // Are all 3 clues unlocked? (Clue 3 is the final clue waypoint on the map)
-  const areAllCluesUnlocked = Boolean(unlockedClues[3] || (unlockedClues[1] && unlockedClues[2] && unlockedClues[3]));
+  // Are all 3 clues unlocked? (Strictly requires all 3 clues: Clue 1, Clue 2, AND Clue 3)
+  const areAllCluesUnlocked = Boolean(unlockedClues[1] && unlockedClues[2] && unlockedClues[3]);
 
-  // Did the user solve or review the secret product early before all 3 clues?
-  const isFoundEarly = Boolean((isVerified || isTargetSubmitted) && !areAllCluesUnlocked);
+  // Did the user solve the secret product early via guess before all 3 clues are unlocked?
+  const isFoundEarly = Boolean(isVerified && !areAllCluesUnlocked);
 
-  // If user completed all reviews across all labs
+  // If user completed all reviews across all labs (informational)
   const isAllReviewsCompleted = useMemo(() => {
     return totalProductsCount > 0 && completedProductsCount >= totalProductsCount;
   }, [completedProductsCount, totalProductsCount]);
 
-  // Auto-reveal: solved if user verified guess, or submitted target product, or got all clues
-  const isAutoRevealed = areAllCluesUnlocked;
-  const isSolved = isVerified || isTargetSubmitted || isAutoRevealed;
+  // The secret product is revealed ONLY when:
+  // 1. All 3 clues have been unlocked, OR
+  // 2. The user correctly guesses early
+  const isProductRevealed = Boolean(isVerified || areAllCluesUnlocked);
+  const isSolved = isProductRevealed;
 
-  // Artifact is unlocked if:
-  // 1. User found/guessed the product early (guaranteed to award artifact immediately)
-  // 2. All clues are unlocked (blocks form and directly reveals artifact)
-  // 3. User completed all reviews
-  const isArtifactUnlocked = isSolved || areAllCluesUnlocked || isAllReviewsCompleted;
+  // The surprise item (relic) MUST ONLY be revealed once the product is revealed!
+  const isArtifactUnlocked = isProductRevealed;
 
   // Load verified state from localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') return;
+    if (typeof window === 'undefined') return;
     try {
       const storedVerified =
         localStorage.getItem(`treasure_verified_${normalizedEmail}`) ||
@@ -610,33 +764,37 @@ export default function TreasureCard({
     } catch { }
   }, [normalizedEmail, userEmail, localFeedbackVersion]);
 
-  // Handle User Guess / Verification (unlimited attempts allowed)
+  // Handle User Guess / Verification
   const handleVerifyGuess = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!targetProduct || isSolved || areAllCluesUnlocked) return;
 
     const cleanInput = normalizeName(guessInput);
-    if (!cleanInput) {
-      setStatusMessage('Please enter a project name.');
+    if (!cleanInput || cleanInput.length < 2) {
+      setStatusMessage('Please enter at least 2 letters of the project name.');
       return;
     }
 
     const cleanTargetName = normalizeName(targetProduct.name);
+    const cleanTargetBase = normalizeName(targetProduct.name.replace(/\s*\([^)]*\)/g, ''));
+
     const noSpaceInput = cleanInput.replace(/\s+/g, '');
     const noSpaceTarget = cleanTargetName.replace(/\s+/g, '');
+    const noSpaceBase = cleanTargetBase.replace(/\s+/g, '');
 
     // Allow flexible matching:
-    // 1. Exact match
-    // 2. Space-agnostic match (e.g. 'asset orbit' vs 'assetorbit')
-    // 3. Substring match for substantial names (>= 3 chars)
-    // 4. Parentheses stripped match (e.g. 'led light' for 'led light (frequency)')
-    const isCorrect =
-      cleanInput === cleanTargetName ||
-      noSpaceInput === noSpaceTarget ||
-      cleanTargetName.startsWith(cleanInput) ||
-      cleanInput.startsWith(cleanTargetName) ||
-      (cleanInput.length >= 4 && cleanTargetName.includes(cleanInput)) ||
-      (cleanTargetName.length >= 4 && cleanInput.includes(cleanTargetName));
+    // 1. Exact match (e.g. 'astron', 'avg', 'led light')
+    // 2. Space-agnostic match (e.g. 'assetorbit' vs 'asset orbit')
+    // 3. Exact match with the base name (ignoring parenthesized "(frequency)")
+    // 4. Substantial match if input length >= 4 and covers at least 75% of name
+    const isExact = cleanInput === cleanTargetName || cleanInput === cleanTargetBase;
+    const isNoSpace = noSpaceInput === noSpaceTarget || noSpaceInput === noSpaceBase;
+    const isSubstantial =
+      cleanInput.length >= 4 &&
+      ((cleanTargetName.startsWith(cleanInput) && cleanInput.length >= Math.ceil(cleanTargetName.length * 0.75)) ||
+        (cleanTargetBase.startsWith(cleanInput) && cleanInput.length >= Math.ceil(cleanTargetBase.length * 0.75)));
+
+    const isCorrect = isExact || isNoSpace || isSubstantial;
 
     if (isCorrect) {
       setIsVerified(true);
@@ -647,7 +805,7 @@ export default function TreasureCard({
       }
     } else {
       setIsShaking(true);
-      setStatusMessage('Not quite right — guesses are unlimited! Check the clues or keep trying.');
+      setStatusMessage('Not quite right — check the clues or try another guess.');
       setTimeout(() => setIsShaking(false), 500);
     }
   };
@@ -733,7 +891,7 @@ export default function TreasureCard({
                 style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
                 className="text-xs sm:text-[13px] font-semibold text-[#3d1f05] mt-0.5 leading-snug"
               >
-                Find and submit your review for the mystery product in its lab before you get all 3 clues! Once you get all three clues, the secret product is automatically revealed.
+                Guess the secret mystery product using the clues before all 3 clues are unlocked! Once all 3 clues are uncovered, the mystery product and your expedition artifact are automatically revealed.
               </p>
             </div>
           </div>
@@ -1092,16 +1250,24 @@ export default function TreasureCard({
               </div>
 
               {unlockedClues[2] ? (
-                <div className="flex items-center gap-3 pt-0.5">
-                  <div className="w-10 h-10 rounded-full bg-[#fef3c7] border border-[#d4af37] flex items-center justify-center text-2xl shrink-0 shadow-xs overflow-hidden">
-                    <ProductIcon icon={targetClues?.icon || targetProduct?.icon} fallback="📦" imgClassName="w-7 h-7" />
+                <div className="flex items-start sm:items-center gap-3 pt-0.5">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-b from-[#fef3c7] to-[#fde68a] border-2 border-[#d4af37] flex items-center justify-center text-lg sm:text-xl shrink-0 shadow-xs">
+                    <span title="Insignia Recon">🔍</span>
                   </div>
-                  <p
-                    style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
-                    className="text-sm sm:text-[15px] font-semibold text-[#1c0f05] leading-relaxed"
-                  >
-                    {targetClues?.clue2}
-                  </p>
+                  <div className="flex flex-col">
+                    <span
+                      style={{ fontFamily: "var(--font-oswald), sans-serif" }}
+                      className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#b45309]"
+                    >
+                      Insignia Silhouette Clue
+                    </span>
+                    <p
+                      style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
+                      className="text-sm sm:text-[15px] font-semibold text-[#1c0f05] leading-relaxed"
+                    >
+                      {targetClues?.clue2}
+                    </p>
+                  </div>
                 </div>
               ) : completedLabsCount >= 2 ? (
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1">
@@ -1231,7 +1397,7 @@ export default function TreasureCard({
                 </span>
               ) : (
                 <span className="shrink-0 whitespace-nowrap px-2 py-0.5 rounded bg-[#8b6943]/15 text-[#6d3e16] border border-[#8b6943]/30 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
-                  ✦ Unlimited Guesses
+                  ✦ Guessing Open
                 </span>
               )}
             </div>
@@ -1303,7 +1469,7 @@ export default function TreasureCard({
                     type="text"
                     value={guessInput}
                     onChange={(e) => setGuessInput(e.target.value)}
-                    placeholder="Guess project or company name (unlimited attempts)..."
+                    placeholder="Guess project or company name..."
                     style={{ fontFamily: "var(--font-geist-sans), sans-serif" }}
                     className="flex-1 min-w-0 px-3 py-2 sm:py-2.5 rounded-lg border-2 border-[#8b6943]/60 bg-[#fffbf2] text-[#1c0f05] text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:border-[#b38920] shadow-inner placeholder:font-normal placeholder:italic placeholder:text-[#8b6943]/60 transition"
                   />
@@ -1320,7 +1486,7 @@ export default function TreasureCard({
                   </button>
                 </div>
                 <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between text-[10px] sm:text-[11px] font-mono text-[#7a481c] italic px-1">
-                  <span>✦ Unlimited guesses — guess early to unlock your artifact!</span>
+                  <span>✦ Guess early to unlock your artifact!</span>
                   <span className="hidden sm:inline sm:shrink-0">All 3 clues closes guessing & directly reveals artifact</span>
                 </div>
               </form>
@@ -1372,19 +1538,15 @@ export default function TreasureCard({
                   <span className="inline-block text-[10px] sm:text-xs font-mono font-bold uppercase tracking-widest text-[#854d0e]">
                     {isFoundEarly
                       ? '✦ EARLY DISCOVERY REWARD SECURED ✦'
-                      : areAllCluesUnlocked
-                      ? '✦ EXPEDITION ARTIFACT REVEALED ✦'
-                      : '✦ SURPRISE REWARD REVEALED ✦'}
+                      : '✦ EXPEDITION ARTIFACT REVEALED ✦'}
                   </span>
                   <p
                     style={{ fontFamily: "var(--font-cinzel), 'Cinzel', serif" }}
                     className="text-xs sm:text-sm font-black text-[#1c0f05] mt-0.5"
                   >
                     {isFoundEarly
-                      ? 'You correctly found the mystery product early and unlocked your expedition artifact!'
-                      : areAllCluesUnlocked
-                      ? 'All clues unlocked! Your unique expedition relic has been directly revealed!'
-                      : 'You completed all reviews and have unlocked your unique expedition relic!'}
+                      ? 'You correctly guessed the mystery product early and unlocked your expedition artifact!'
+                      : 'All 3 clues unlocked! Your unique expedition relic has been directly revealed!'}
                   </p>
                   <p className="text-[10px] sm:text-[11px] text-[#6b4516] font-serif italic mt-0.5">
                     Click the artifact below to inspect its archaeological lore and inscription.
@@ -1448,7 +1610,7 @@ export default function TreasureCard({
                   <div className="flex items-center gap-2">
                     <span className="text-base">🔒</span>
                     <p className="text-[11px] sm:text-xs text-[#5c3710] font-serif italic">
-                      Surprise artifact remains sealed! Guess the product early with unlimited attempts or unlock all 3 clues to reveal your relic.
+                      Surprise artifact remains sealed! Guess the product early or unlock all 3 clues to reveal your relic.
                     </p>
                   </div>
                   <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-[#241308]/10 text-[#7a5a3a] border border-[#8b6943]/30 shrink-0">
@@ -1477,7 +1639,7 @@ export default function TreasureCard({
                       Locked Mystery Artifact
                     </h4>
                     <p className="text-[11px] sm:text-xs text-[#6b4516] font-serif italic max-w-md">
-                      Find and guess the product early with unlimited guesses, or uncover all 3 clues along the expedition trail to unlock this artifact!
+                      Find and guess the product early, or uncover all 3 clues along the expedition trail to unlock this artifact!
                     </p>
                   </div>
                 </div>
